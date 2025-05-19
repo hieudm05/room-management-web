@@ -3,7 +3,7 @@
 @section('title', 'Dashboard')
 
 @section('content')
-    <div class="row">
+ 
         <div class="col">
             <div class="h-100">
                 <div class="row mb-3 pb-1">
@@ -1418,5 +1418,4 @@
             </div> <!-- end .rightbar-->
 
         </div> <!-- end col -->
-    </div>
 @endsection
