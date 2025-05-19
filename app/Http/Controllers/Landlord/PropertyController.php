@@ -14,7 +14,9 @@ class PropertyController extends Controller
     public function index()
     {
         //
-        return view("landlord.properties Management.list");
+        $listProperties = Property::all();
+        dd($listProperties);
+        return view("landlord.propertyManagement.list");
     }
 
     /**

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
         return view('landlord.dashboard');
     })->name('dashboard');
     // Quản lý khu trọ/bất động sản
-    Route::get('/list', [PropertyController::class, 'listLandlord'])->name("list");
+    Route::get('/list', [PropertyController::class, 'index'])->name("list");
     
 });
 // end Landlord
