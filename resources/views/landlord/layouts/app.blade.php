@@ -2,14 +2,14 @@
 <html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
 <!-- Mirrored from themesbrand.com/velzon/html/material/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 12 May 2025 03:47:58 GMT -->
 {{-- Head --}}
-    @include("admin.blocks.head")
+@include("landlord.blocks.head")
 {{-- End Head --}}
 <body>
     <!-- Begin page -->
     <div id="layout-wrapper">
 
         <header id="page-topbar">
-            @include("admin.blocks.header")
+            @include("landlord.blocks.header")
         </header>
 
 <!-- removeNotificationModal -->
@@ -64,7 +64,7 @@
             </div>
 
             <div id="scrollbar">
-               @include("admin.blocks.sidebar")
+               @include("landlord.blocks.sidebar")
                 <!-- Sidebar -->
             </div>
 
@@ -89,7 +89,7 @@
             </div>
             <!-- End Page-content -->
 
-          @include("admin.blocks.footer")
+          @include("landlord.blocks.footer")
         </div>
         <!-- end main content-->
 
@@ -111,7 +111,7 @@
     </div>
 
     <!-- JAVASCRIPT -->
-   @include("admin.blocks.js")
+   @include("landlord.blocks.js")
 </body>
 <!-- Mirrored from themesbrand.com/velzon/html/material/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 12 May 2025 03:48:01 GMT -->
 </html>

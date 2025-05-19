@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Landlord;
 
 use App\Http\Controllers\Controller;
+use App\Models\Landlord\Property ;
 use Illuminate\Http\Request;
 
-class LandlordController extends Controller
+class PropertyController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -13,7 +14,7 @@ class LandlordController extends Controller
     public function index()
     {
         //
-        return view("landlord.dashboard");
+        return view("landlord.properties Management.list");
     }
 
     /**
@@ -27,7 +28,7 @@ class LandlordController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $Property )
     {
         //
     }
@@ -35,7 +36,7 @@ class LandlordController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Landlord $landlord)
+    public function show(Property  $Property )
     {
         //
     }
@@ -43,7 +44,7 @@ class LandlordController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Landlord $landlord)
+    public function edit(Property  $Property )
     {
         //
     }
@@ -51,7 +52,7 @@ class LandlordController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Landlord $landlord)
+    public function update(Request $request, Property  $Property )
     {
         //
     }
@@ -59,7 +60,7 @@ class LandlordController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Landlord $landlord)
+    public function destroy(Property  $Property )
     {
         //
     }

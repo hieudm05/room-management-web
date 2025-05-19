@@ -1,15 +1,18 @@
 <?php
 
-use App\Http\Controllers\Landlord\LandlordController;
+use App\Http\Controllers\Landlord\PropertyController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+
 
 // Landlord
-   Route::prefix('landlord')->name('landlord.')->group(function () {
-    Route::get('/', [LandlordController::class, 'index'])->name("dashboard");
+   Route::prefix('landlords')->name('landlord.')->group(function () {
+    // Home dashboard
+    Route::get('/', function () {
+        return view('landlord.dashboard');
+    })->name('dashboard');
+    // Quản lý khu trọ/bất động sản
+    Route::get('/list', [PropertyController::class, 'listLandlord'])->name("list");
+    
 });
 // end Landlord
-
