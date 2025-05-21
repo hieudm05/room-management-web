@@ -15,7 +15,7 @@ class PropertyController extends Controller
     {
         //
         $listProperties = Property::all();
-        dd($listProperties);
+        // dd($listProperties);
         return view("landlord.propertyManagement.list");
     }
 
