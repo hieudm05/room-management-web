@@ -11,8 +11,4 @@ class HomeController extends Controller
     {
         return view('home.render');
     }
-    public function landlordindex()
-    {
-        return view('landlord.dashboard');
-    }
 }

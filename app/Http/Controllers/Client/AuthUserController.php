@@ -81,7 +81,7 @@ public function Login(Request $request)
 
     // ✅ Phân hướng theo role
     if ($user->role === 'Landlord') {
-        return redirect()->route('landlord')->with('success', 'Đăng nhập thành công với vai trò Landlord');
+        return redirect()->route('landlords.dashboard')->with('success', 'Đăng nhập thành công với vai trò Landlord');
     }
 
     // Mặc định: Renter (và các vai trò khác như Admin, Staff, Manager đều coi là Renter)

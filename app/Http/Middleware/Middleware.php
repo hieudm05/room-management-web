@@ -15,9 +15,9 @@ class Middleware
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // if(!\Illuminate\Support\Facades\Auth::check()){
-        //     return \redirect()->route('login');
-        // }
+        if(!\Illuminate\Support\Facades\Auth::check()){
+            return \redirect()->route('login');
+        }
 
         // $userRole = \auth()->user()->role;
 
