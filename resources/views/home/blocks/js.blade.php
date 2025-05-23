@@ -1,0 +1,12 @@
+	<script src="{{ asset('assets/client/js/jquery.min.js') }}"></script>
+<script src="{{ asset('assets/client/js/popper.min.js') }}"></script>
+<script src="{{ asset('assets/client/js/bootstrap.min.js') }}"></script>
+<script src="{{ asset('assets/client/js/ion.rangeSlider.min.js') }}"></script>
+<script src="{{ asset('assets/client/js/select2.min.js') }}"></script>
+<script src="{{ asset('assets/client/js/jquery.magnific-popup.min.js') }}"></script>
+<script src="{{ asset('assets/client/js/slick.js') }}"></script>
+<script src="{{ asset('assets/client/js/slider-bg.js') }}"></script>
+<script src="{{ asset('assets/client/js/lightbox.js') }}"></script>
+<script src="{{ asset('assets/client/js/imagesloaded.js') }}"></script>
+<script src="{{ asset('assets/client/js/daterangepicker.js') }}"></script>
+<script src="{{ asset('assets/client/js/custom.js') }}"></script>
