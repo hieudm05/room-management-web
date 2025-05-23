@@ -26,7 +26,6 @@ return new class extends Migration
 
             // Khóa ngoại (nếu muốn ràng buộc FK)
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('verified_by')->references('id')->on('users')->nullOnDelete();
         });
     }
 

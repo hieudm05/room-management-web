@@ -20,7 +20,7 @@ class UserController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->paginate(12);
+        $users = $query->paginate(6);
 
         return view('admin.AccountManagement.index', compact('users'));
     }

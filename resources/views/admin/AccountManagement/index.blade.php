@@ -1,4 +1,6 @@
-@extends('admin.layouts.app') {{-- hoặc layouts.admin nếu bạn có layout riêng --}}
+@extends('admin.layouts.app')
+
+@section('title', 'List Accounts') 
 
 @section('content')
     @if (session('success'))
@@ -81,7 +83,7 @@
         </table>
     </div>
 
-    <div class="d-flex justify-content-center">
-        {{ $users->links() }} {{-- Phân trang --}}
+    <div class="mt-3 d-flex justify-content-center">
+        {{ $users->links() }}
     </div>
 @endsection
