@@ -18,10 +18,10 @@ Route::get('/wards/{districtCode}', [AddressController::class, 'getWards']);
 
 // Landlord
  // Landlord
-Route::prefix('landlords')->name('landlords.')->middleware('auth')->group(function () {
+Route::prefix('landlords')->name('landlords.')->middleware(['is_admin'])->group(function () {
     // Trang dashboard
     Route::get('/', [HomeLandlordController::class, 'index'])->name('dashboard');
-    
+
     // Nhóm routes liên quan đến properties
     Route::prefix('properties')->name('properties.')->group(function () {
         Route::get('/list', [PropertyController::class, 'index'])->name('list');
@@ -31,13 +31,16 @@ Route::prefix('landlords')->name('landlords.')->middleware('auth')->group(functi
 });
 // end Landlord
 //Auth user
-Route::prefix('auth')->name('auth.')->group(function () {   
+Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
+Route::prefix('auth')->name('auth.')->group(function () {
    // Đăng ký
     Route::get('/register', [AuthUserController::class, 'registerForm'])->name('register');
-    Route::post('/register', [AuthUserController::class, 'register'])->name('register.post'); 
+    Route::post('/register', [AuthUserController::class, 'register'])->name('register.post');
     // Đăng nhập
     Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
     Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
+    // Đăng xuất
+    Route::get('/logout', [AuthUserController::class, 'logout'])->name('logout');
 });
     Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
     Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');

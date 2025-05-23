@@ -262,7 +262,8 @@
                                 </div>
                                 <div class="col">
                                     <a class="dropdown-icon-item" href="#!">
-                                        <img src="{{ asset('assets/admin/images/brands/dribbble.png') }}" alt="dribbble">
+                                        <img src="{{ asset('assets/admin/images/brands/dribbble.png') }}"
+                                            alt="dribbble">
                                         <span>Dribbble</span>
                                     </a>
                                 </div>
@@ -271,7 +272,8 @@
                             <div class="row g-0">
                                 <div class="col">
                                     <a class="dropdown-icon-item" href="#!">
-                                        <img src="{{ asset('assets/admin/images/brands/dropbox.png') }}" alt="dropbox">
+                                        <img src="{{ asset('assets/admin/images/brands/dropbox.png') }}"
+                                            alt="dropbox">
                                         <span>Dropbox</span>
                                     </a>
                                 </div>
@@ -284,7 +286,8 @@
                                 </div>
                                 <div class="col">
                                     <a class="dropdown-icon-item" href="#!">
-                                        <img src="{{ asset('assets/admin/images/brands/slack.png') }}" alt="slack">
+                                        <img src="{{ asset('assets/admin/images/brands/slack.png') }}"
+                                            alt="slack">
                                         <span>Slack</span>
                                     </a>
                                 </div>
@@ -837,7 +840,7 @@
                             <i class="mdi mdi-lock text-muted fs-16 align-middle me-1"></i>
                             <span class="align-middle">Lock screen</span>
                         </a>
-                        <a class="dropdown-item" href="auth-logout-basic.html">
+                        <a class="dropdown-item" href="{{ route('auth.logout') }}">
                             <i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>
                             <span class="align-middle" data-key="t-logout">Logout</span>
                         </a>

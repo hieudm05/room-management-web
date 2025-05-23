@@ -14,7 +14,7 @@ class ResetPasswordController extends Controller
     // Hiển thị form đặt lại mật khẩu
     public function showResetForm(Request $request, $token = null)
     {
-        return view('auth.client.restPassWord')->with(
+        return view('Auth.client.restPassWord')->with(
             ['token' => $token, 'email' => $request->email]
         );
     }

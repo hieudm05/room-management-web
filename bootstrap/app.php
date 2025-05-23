@@ -1,5 +1,4 @@
 <?php
-
 use App\Http\Middleware\IsAdmin;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Configuration\Middleware;
