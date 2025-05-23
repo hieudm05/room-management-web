@@ -12,7 +12,7 @@ class AuthUserController extends Controller
 {
     public function RegisterForm()
     {
-        return view('auth.client.registerUser');
+        return view('Auth.client.registerUser');
     }
 
     public function register(Request $request)
@@ -25,10 +25,10 @@ class AuthUserController extends Controller
                 'required',
                 'string',
                 'min:8',
-                'regex:/[a-z]/',      
-                'regex:/[A-Z]/',      
-                'regex:/[0-9]/',      
-                'confirmed'           
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'confirmed'
             ],
         ], [
             'email.unique' => 'Email này đã được sử dụng.',
@@ -49,11 +49,11 @@ class AuthUserController extends Controller
         // auth()->login($user);
 
         // Redirect to a desired location
-        return view('auth.client.register-success');
+        return view('Auth.client.register-success');
     }
    public function loginForm()
 {
-    return view('auth.client.singinUser');
+    return view('Auth.client.singinUser');
 }
 
 public function Login(Request $request)
@@ -86,6 +86,21 @@ public function Login(Request $request)
 
     // Mặc định: Renter (và các vai trò khác như Admin, Staff, Manager đều coi là Renter)
     return redirect()->route('renter')->with('success', 'Đăng nhập thành công với vai trò Renter');
+}
+public function logout(Request $request)
+{
+    Auth::logout();
+
+    // \dd(Auth::user()); // Kiểm tra xem đã đăng xuất chưa
+
+    // Hủy session hiện tại để bảo mật
+    $request->session()->invalidate();
+
+    // Tạo session token mới
+    $request->session()->regenerateToken();
+
+    // Redirect về trang đăng nhập hoặc trang chủ
+    return redirect()->route('auth.login')->with('success', 'Bạn đã đăng xuất thành công.');
 }
 
 }

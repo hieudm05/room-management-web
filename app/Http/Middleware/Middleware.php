@@ -16,7 +16,8 @@ class Middleware
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
         if(!\Illuminate\Support\Facades\Auth::check()){
-            return \redirect()->route('login');
+            \dd('Bạn chưa đăng nhập');
+            // return \redirect()->route('auth.login');
         }
 
         // $userRole = \auth()->user()->role;
@@ -25,5 +26,12 @@ class Middleware
         //     \abort(403, 'Unauthorized action.');
         // }
         return $next($request);
+
     }
+    protected function redirectTo($request)
+{
+    if (! $request->expectsJson()) {
+        return route('auth.login'); // Đổi tên route login phù hợp với bạn
+    }
+}
 }

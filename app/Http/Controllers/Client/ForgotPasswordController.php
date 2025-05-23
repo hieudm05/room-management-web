@@ -11,7 +11,7 @@ class ForgotPasswordController extends Controller
 {
     public function showLinkRequestForm()
     {
-        return view('auth.client.forgotPassword'); // Tạo view này sau
+        return view('Auth.client.forgotPassword'); // Tạo view này sau
     }
 
     // Gửi email reset password
