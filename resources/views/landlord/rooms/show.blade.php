@@ -52,6 +52,31 @@
                     </ul>
                 </div>
 
+                {{-- Dịch vụ --}}
+                @if ($room->services->count())
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dịch vụ</label>
+                        <ul class="list-group">
+                            @foreach ($room->services as $service)
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">{{ $service->name }}</div>
+                                        <small class="text-muted">{{ $service->description }}</small>
+                                    </div>
+                                    <span class="badge bg-{{ $service->pivot->is_free ? 'success' : 'primary' }}">
+                                        {{ $service->pivot->is_free ? 'Miễn phí' : number_format($service->pivot->price) . ' VNĐ' }}
+                                    </span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @else
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dịch vụ</label>
+                        <p class="text-muted">Không có dịch vụ nào.</p>
+                    </div>
+                @endif
+
                 {{-- Ảnh phòng --}}
                 @if ($room->photos->count())
                     <div class="mb-3">

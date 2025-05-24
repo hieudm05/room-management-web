@@ -121,6 +121,32 @@
                         </div>
                     </div>
 
+                    {{-- Dịch vụ --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dịch vụ</label>
+                        <div class="row">
+                            @foreach ($services as $service)
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox"
+                                            name="services[{{ $service->service_id }}][enabled]" value="1"
+                                            id="service{{ $service->service_id }}">
+                                        <label class="form-check-label" for="service{{ $service->service_id }}">
+                                            {{ $service->name }} — <small
+                                                class="text-muted">{{ $service->description }}</small>
+                                        </label>
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Giá:</span>
+                                        <input type="number" name="services[{{ $service->service_id }}][price]"
+                                            step="1000" class="form-control" placeholder="Miễn phí nếu để trống">
+                                        <span class="input-group-text">VNĐ</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
                     {{-- Ảnh phòng --}}
                     <div class="mb-3">
                         <label for="photos" class="form-label">Ảnh phòng</label>

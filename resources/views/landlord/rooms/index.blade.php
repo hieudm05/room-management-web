@@ -34,6 +34,7 @@
                                     <th>Giá thuê</th>
                                     <th>Trạng thái</th>
                                     <th>Tiện nghi</th>
+                                    <th>Dịch vụ</th>
                                     <th>Ảnh</th>
                                     <th style="width: 150px;">Hành động</th>
                                 </tr>
@@ -59,6 +60,15 @@
                                             <span class="{{ $badgeClass }}">{{ $room->status }}</span>
                                         </td>
                                         <td>{{ $room->facilities_count }}</td>
+                                        <td>
+                                            @if ($room->services->count())
+                                                @foreach ($room->services->take(2) as $service)
+                                                    <span class="badge bg-secondary">{{ $service->name }}</span>
+                                                @endforeach
+                                            @else
+                                                <span class="text-muted">Không có</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             @if ($room->photos->first())
                                                 <img src="{{ $room->photos->first()->image_url }}" width="50">

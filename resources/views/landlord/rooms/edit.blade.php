@@ -105,6 +105,36 @@
                         <div class="form-text">Chỉ thêm ảnh mới, ảnh cũ sẽ được giữ nguyên.</div>
                     </div>
 
+                    {{-- Dịch vụ --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dịch vụ</label>
+                        <div class="row">
+                            @foreach ($services as $service)
+                                @php
+                                    $existing = $roomServices[$service->service_id] ?? null;
+                                @endphp
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox"
+                                            name="services[{{ $service->service_id }}][enabled]" value="1"
+                                            id="service{{ $service->service_id }}" {{ $existing ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="service{{ $service->service_id }}">
+                                            {{ $service->name }} — <small
+                                                class="text-muted">{{ $service->description }}</small>
+                                        </label>
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Giá:</span>
+                                        <input type="number" name="services[{{ $service->service_id }}][price]"
+                                            step="1000" class="form-control" value="{{ $existing['price'] ?? '' }}"
+                                            placeholder="Miễn phí nếu để trống">
+                                        <span class="input-group-text">VNĐ</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
                     {{-- Ảnh hiện tại --}}
                     @if ($room->photos->count())
                         <div class="mb-3">

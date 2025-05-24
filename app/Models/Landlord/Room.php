@@ -24,8 +24,13 @@ class Room extends Model
         return $this->belongsTo(Property::class, 'property_id');
     }
 
-        public function photos()
+    public function photos()
     {
         return $this->hasMany(RoomPhoto::class, 'room_id');
+    }
+
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'room_services', 'room_id', 'service_id')->withPivot('is_free', 'price');
     }
 }

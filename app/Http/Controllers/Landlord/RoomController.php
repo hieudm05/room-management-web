@@ -8,6 +8,7 @@ use App\Models\Landlord\Property;
 use App\Models\Landlord\Room;
 
 use App\Models\Landlord\RoomPhoto;
+use App\Models\Landlord\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,8 +16,9 @@ class RoomController extends Controller
 {
     public function index(Request $request)
     {
-        $rooms = Room::with(['facilities', 'property', 'photos'])
+        $rooms = Room::with(['facilities', 'property', 'photos', 'services'])
             ->withCount('facilities')
+            ->orderBy('created_at', 'desc')
             ->paginate(5);
 
         return view('landlord.rooms.index', compact('rooms'));
@@ -26,8 +28,9 @@ class RoomController extends Controller
     {
         $properties = Property::all(); // Lấy toàn bộ danh sách khu trọ
         $facilities = Facility::all();
+        $services = Service::all();
 
-        return view('landlord.rooms.create', compact('facilities', 'properties'));
+        return view('landlord.rooms.create', compact('facilities', 'properties', 'services'));
     }
 
     public function store(Request $request)
@@ -72,6 +75,22 @@ class RoomController extends Controller
             }
         }
 
+        // Gắn dịch vụ nếu có
+        if ($request->filled('services')) {
+            $serviceData = [];
+
+            foreach ($request->input('services') as $serviceId => $data) {
+                if (isset($data['enabled'])) {
+                    $serviceData[$serviceId] = [
+                        'is_free' => empty($data['price']),
+                        'price' => $data['price'] ?? null
+                    ];
+                }
+            }
+
+            $room->services()->sync($serviceData);
+        }
+
         return redirect()->route('landlords.rooms.index')
             ->with('success', 'Bạn đã thêm phòng thành công!');
     }
@@ -79,15 +98,27 @@ class RoomController extends Controller
 
     public function show(Room $room)
     {
-        $room->load('property', 'facilities', 'photos');
+        $room->load('property', 'facilities', 'photos', 'services'); // 🔹 thêm services
         return view('landlord.rooms.show', compact('room'));
     }
 
     public function edit(Room $room)
     {
         $facilities = Facility::all();
+        $services = Service::all(); // 🔹 Thêm
         $roomFacilities = $room->facilities->pluck('facility_id')->toArray();
-        return view('landlord.rooms.edit', compact('room', 'facilities', 'roomFacilities'));
+
+        // 🔹 Dịch vụ đã gán (dùng pivot)
+        $roomServices = $room->services->mapWithKeys(function ($service) {
+            return [
+                $service->service_id => [
+                    'is_free' => $service->pivot->is_free,
+                    'price' => $service->pivot->price,
+                ]
+            ];
+        })->toArray();
+
+        return view('landlord.rooms.edit', compact('room', 'facilities', 'roomFacilities', 'services', 'roomServices'));
     }
 
     public function update(Request $request, Room $room)
@@ -128,6 +159,24 @@ class RoomController extends Controller
             }
         }
 
+        // 🔄 Cập nhật dịch vụ
+        if ($request->filled('services')) {
+            $serviceData = [];
+
+            foreach ($request->input('services') as $serviceId => $data) {
+                if (isset($data['enabled'])) {
+                    $serviceData[$serviceId] = [
+                        'is_free' => empty($data['price']),
+                        'price' => $data['price'] ?? null
+                    ];
+                }
+            }
+
+            $room->services()->sync($serviceData); // Ghi đè các dịch vụ cũ
+        } else {
+            $room->services()->detach(); // Không chọn gì thì xoá hết
+        }
+
         return redirect()->route('landlords.rooms.index', ['property_id' => $room->property_id])
             ->with('success', 'Cập nhật phòng thành công!');
     }
@@ -148,6 +197,6 @@ class RoomController extends Controller
         $room->facilities()->detach();
         $room->delete();
         return redirect()->route('landlords.rooms.index', ['property_id' => $room->property_id])
-    ->with('success', 'Phòng đã được xóa thành công!');
+            ->with('success', 'Phòng đã được xóa thành công!');
     }
 }

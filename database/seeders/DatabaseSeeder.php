@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
             FacilitySeeder::class,
             RoomSeeder::class,
             RoomPhotoSeeder::class,
+            ServiceSeeder::class,
+            AttachAllServicesToRoomsSeeder::class,
         ]);
         // Tạo dữ liệu PropertySeeder
     //      $this->call([
