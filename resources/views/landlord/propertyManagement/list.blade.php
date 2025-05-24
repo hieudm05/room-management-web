@@ -30,6 +30,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @if($listProperties->count() > 0 )
                                 @foreach ($listProperties as $key => $Property)
                                     @php
                                         $status = $Property->status;
@@ -57,11 +58,13 @@
                                         <td>{{ $Property->created_at }}</td>
                                         <td><span class="{{ $badgeClass }}">{{ $status }}</span></td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-light">Details</button>
+                                           <a href="{{route("landlords.properties.show",['id' => $Property->id])}}" class="text-center"><i class=" bx bx-hide"></i></a>
                                         </td>
                                     </tr>
                                 @endforeach
-
+                                @else
+                                <td colspan="6"> <p class="text-danger text-center">No properties have been listed.</p></td>
+                                 @endif
                             </tbody>
                         </table>
                     </div>

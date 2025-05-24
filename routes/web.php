@@ -17,8 +17,7 @@ Route::get('/wards/{districtCode}', [AddressController::class, 'getWards']);
 // End API 63 tỉnh thành
 
 // Landlord
- // Landlord
-Route::prefix('landlords')->name('landlords.')->middleware(['is_admin'])->group(function () {
+Route::prefix('landlords')->name('landlords.')->middleware(['is_landlord'])->group(function () {
     // Trang dashboard
     Route::get('/', [HomeLandlordController::class, 'index'])->name('dashboard');
 
@@ -27,6 +26,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['is_admin'])->group(
         Route::get('/list', [PropertyController::class, 'index'])->name('list');
         Route::get('/create', [PropertyController::class, 'create'])->name('create');
         Route::post('/store', [PropertyController::class, 'store'])->name('store');
+        Route::get('/show/{id}', [PropertyController::class, 'show'])->name('show');
     });
 });
 // end Landlord
