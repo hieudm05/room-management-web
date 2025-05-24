@@ -7,7 +7,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('properties', function (Blueprint $table) {
-            $table->id(); // property_id (PK, AI)
+            $table->id('property_id'); // property_id (PK, AI)
             $table->unsignedBigInteger('landlord_id'); // FK
             $table->string('name', 100);
             $table->text('address');

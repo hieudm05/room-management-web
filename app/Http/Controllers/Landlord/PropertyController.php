@@ -17,14 +17,14 @@ class PropertyController extends Controller
      */
     public function index()
     {
-        //
-  // Lấy danh sách ID của người dùng có role là 'Landlord'
-    $landlordIds = User::where('role', 'Landlord')->pluck('id');
+            $landlordIds = User::where('role', 'Landlord')->pluck('id');
 
     // Lấy danh sách property thuộc về các landlord
     $listProperties = Property::whereIn('landlord_id', $landlordIds)->paginate(5);;
         return view("landlord.propertyManagement.list",compact("listProperties"));
     }
+  // Lấy danh sách ID của người dùng có role là 'Landlord'
+
     /**
      * Show the form for creating a new resource.
      */
