@@ -58,4 +58,7 @@ class User extends Authenticatable
     protected $attributes = [
         'role' => self::ROLE_RENTER,
     ];
+    public function IsRoleLandlord(){
+        return $this->role === self::ROLE_LANDLORD;
+    }
 }
