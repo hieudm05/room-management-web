@@ -13,11 +13,11 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     // Define role constants
-        const ROLE_ADMIN = 'Admin';
-        const ROLE_RENTER = 'Renter';
-        const ROLE_LANDLORD = 'Landlord';
-        const ROLE_STAFF = 'Staff';
-        const ROLE_MANAGER = 'Manager';
+    const ROLE_ADMIN = 'Admin';
+    const ROLE_RENTER = 'Renter';
+    const ROLE_LANDLORD = 'Landlord';
+    const ROLE_STAFF = 'Staff';
+    const ROLE_MANAGER = 'Manager';
     /**
      * The attributes that are mass assignable.
      *
@@ -58,7 +58,18 @@ class User extends Authenticatable
     protected $attributes = [
         'role' => self::ROLE_RENTER,
     ];
-    public function IsRoleLandlord(){
+    public function IsRoleLandlord()
+    {
         return $this->role === self::ROLE_LANDLORD;
+    }
+
+    public function tenant()
+    {
+        return $this->hasOne(Tenant::class);
+    }
+
+    public function adminProfile()
+    {
+        return $this->hasOne(AdminProfile::class);
     }
 }
