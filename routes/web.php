@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Client\AuthLandlordController;
 use App\Http\Controllers\Client\AuthUserController;
 use App\Http\Controllers\Client\ForgotPasswordController;
 use App\Http\Controllers\Client\HomeController;
@@ -16,11 +17,18 @@ Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
 Route::get('/wards/{districtCode}', [AddressController::class, 'getWards']);
 // Landlord
+    Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
+    Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
+// Landlord
 Route::prefix('landlords')->name('landlords.')->group(function () {
     // Trang dashboard
     Route::get('/', function () {
         return view('landlord.dashboard');
     })->name('dashboard');
+
+    // Đăng ký làm chủ trọ (chỉ khi user chưa là landlord)
+    Route::get('/register', [AuthLandlordController::class, 'showForm'])->name('register.form');
+    Route::post('/register', [AuthLandlordController::class, 'submit'])->name('register.submit');
 
     // Nhóm routes liên quan đến properties
     Route::prefix('properties')->name('properties.')->group(function () {

@@ -119,6 +119,8 @@
 
     <!-- JAVASCRIPT -->
     @include('landlord.blocks.js')
+    @yield('scripts')
+
 </body>
 <!-- Mirrored from themesbrand.com/velzon/html/material/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 12 May 2025 03:48:01 GMT -->
 
