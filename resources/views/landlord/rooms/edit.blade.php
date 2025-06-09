@@ -26,6 +26,29 @@
                     @csrf
                     @method('PUT')
 
+                    <div class="mb-4 p-3 border rounded bg-light">
+                        <h6 class="fw-bold">👤 Thông tin người tạo (Chủ trọ)</h6>
+
+                        <div class="mb-2">
+                            <label class="form-label">Họ tên <span class="text-danger">*</span></label>
+                            <input type="text" name="creator_name" class="form-control" required
+                                value="{{ old('creator_name', Auth::user()?->name) }}">
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="text" name="creator_phone" class="form-control" required
+                                value="{{ old('creator_phone', Auth::user()?->phone_number) }}">
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">CCCD <span class="text-danger">*</span></label>
+                            <input type="text" name="creator_identity" class="form-control" required
+                                value="{{ old('creator_identity', Auth::user()?->identity_number) }}">
+                        </div>
+                    </div>
+
+
                     {{-- Hiển thị tên khu trọ --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Khu trọ</label>
@@ -98,13 +121,6 @@
                         </div>
                     </div>
 
-                    {{-- Thêm ảnh mới --}}
-                    <div class="mb-3">
-                        <label for="photos" class="form-label">Ảnh mới (có thể chọn nhiều)</label>
-                        <input type="file" name="photos[]" id="photos" multiple accept="image/*" class="form-control">
-                        <div class="form-text">Chỉ thêm ảnh mới, ảnh cũ sẽ được giữ nguyên.</div>
-                    </div>
-
                     {{-- Dịch vụ --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Dịch vụ</label>
@@ -123,16 +139,66 @@
                                                 class="text-muted">{{ $service->description }}</small>
                                         </label>
                                     </div>
-                                    <div class="input-group">
+
+                                    {{-- Giá dịch vụ --}}
+                                    <div class="input-group mb-1">
                                         <span class="input-group-text">Giá:</span>
                                         <input type="number" name="services[{{ $service->service_id }}][price]"
                                             step="1000" class="form-control" value="{{ $existing['price'] ?? '' }}"
                                             placeholder="Miễn phí nếu để trống">
                                         <span class="input-group-text">VNĐ</span>
                                     </div>
+
+                                    {{-- Kiểu tính dịch vụ riêng cho nước và wifi --}}
+                                    @if ($service->service_id == 2)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="services[2][unit]"
+                                                value="per_person"
+                                                {{ ($existing['unit'] ?? 'per_person') == 'per_person' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo người</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="services[2][unit]"
+                                                value="per_m3"
+                                                {{ ($existing['unit'] ?? '') == 'per_m3' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo khối (m³)</label>
+                                        </div>
+                                    @elseif ($service->service_id == 3)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="services[3][unit]"
+                                                value="per_person"
+                                                {{ ($existing['unit'] ?? 'per_person') == 'per_person' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo người</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="services[3][unit]"
+                                                value="per_room"
+                                                {{ ($existing['unit'] ?? '') == 'per_room' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo phòng</label>
+                                        </div>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
+                    </div>
+
+                    {{-- Số người ở --}}
+                    <div class="mb-3">
+                        <label for="occupants" class="form-label">Số người ở <span class="text-danger">*</span></label>
+                        <input type="number" name="occupants" id="occupants"
+                            class="form-control @error('occupants') is-invalid @enderror"
+                            value="{{ old('occupants', $room->occupants ?? 0) }}" min="0" required>
+                        @error('occupants')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Thêm ảnh mới --}}
+                    <div class="mb-3">
+                        <label for="photos" class="form-label">Ảnh mới (có thể chọn nhiều)</label>
+                        <input type="file" name="photos[]" id="photos" multiple accept="image/*"
+                            class="form-control">
+                        <div class="form-text">Chỉ thêm ảnh mới, ảnh cũ sẽ được giữ nguyên.</div>
                     </div>
 
                     {{-- Ảnh hiện tại --}}
