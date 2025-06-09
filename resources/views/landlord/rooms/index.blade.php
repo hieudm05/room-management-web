@@ -30,6 +30,7 @@
                                 <tr>
                                     <th>Khu trọ</th>
                                     <th>Số phòng</th>
+                                    <th>Số người</th>
                                     <th>Diện tích</th>
                                     <th>Giá thuê</th>
                                     <th>Trạng thái</th>
@@ -44,6 +45,7 @@
                                     <tr>
                                         <td>{{ $room->property->name ?? 'N/A' }}</td>
                                         <td>{{ $room->room_number }}</td>
+                                        <td>{{ $room->occupants }}</td>
                                         <td>{{ $room->area }} m²</td>
                                         <td>{{ number_format($room->rental_price) }} VND</td>
                                         <td>
@@ -105,9 +107,10 @@
 
         {{-- Phân trang --}}
         @if (method_exists($rooms, 'links'))
-            <div class="mt-3 d-flex justify-content-center">
+            <div class="mt-3 d-flex justify-content-end">
                 {{ $rooms->links() }}
             </div>
         @endif
+
     </div><!-- end col -->
 @endsection

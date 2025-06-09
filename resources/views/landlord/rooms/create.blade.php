@@ -9,16 +9,13 @@
                 <h5 class="mb-0 text-white fw-bold">➕ Thêm phòng mới</h5>
             </div>
             <div class="card-body">
-
-                {{-- Thông báo thành công --}}
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
 
-                {{-- Hiển thị lỗi tổng quát --}}
                 @if ($errors->any())
                     <div class="alert alert-danger">
                         <ul class="mb-0">
@@ -32,6 +29,28 @@
                 <form action="{{ route('landlords.rooms.store') }}" method="POST" enctype="multipart/form-data"
                     class="needs-validation" novalidate>
                     @csrf
+
+                    {{-- <div class="mb-4 p-3 border rounded bg-light">
+                        <h6 class="fw-bold">👤 Thông tin người tạo (Chủ trọ)</h6>
+
+                        <div class="mb-2">
+                            <label class="form-label">Họ tên <span class="text-danger">*</span></label>
+                            <input type="text" name="creator_name" class="form-control" required
+                                value="{{ old('creator_name', Auth::user()?->name) }}">
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="text" name="creator_phone" class="form-control" required
+                                value="{{ old('creator_phone', Auth::user()?->phone_number) }}">
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">CCCD <span class="text-danger">*</span></label>
+                            <input type="text" name="creator_identity" class="form-control" required
+                                value="{{ old('creator_identity', Auth::user()?->identity_number) }}">
+                        </div>
+                    </div> --}}
 
                     {{-- Chọn khu trọ --}}
                     <div class="mb-3">
@@ -56,8 +75,8 @@
                     <div class="mb-3">
                         <label for="room_number" class="form-label">Số phòng <span class="text-danger">*</span></label>
                         <input type="text" name="room_number" id="room_number"
-                            class="form-control @error('room_number') is-invalid @enderror" value="{{ old('room_number') }}"
-                            required>
+                            class="form-control @error('room_number') is-invalid @enderror"
+                            value="{{ old('room_number') }}" required>
                         @error('room_number')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
@@ -93,11 +112,21 @@
                             <option disabled selected>-- Chọn trạng thái --</option>
                             @foreach (['Available', 'Rented', 'Hidden', 'Suspended', 'Confirmed'] as $status)
                                 <option value="{{ $status }}" {{ old('status') == $status ? 'selected' : '' }}>
-                                    {{ $status }}
-                                </option>
+                                    {{ $status }}</option>
                             @endforeach
                         </select>
                         @error('status')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Số người ở --}}
+                    <div class="mb-3">
+                        <label for="occupants" class="form-label">Số người ở <span class="text-danger">*</span></label>
+                        <input type="number" name="occupants" id="occupants"
+                            class="form-control @error('occupants') is-invalid @enderror" value="{{ old('occupants', 0) }}"
+                            min="0" required>
+                        @error('occupants')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
@@ -110,7 +139,8 @@
                                 <div class="col-md-6">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="facilities[]"
-                                            value="{{ $facility->facility_id }}" id="facility{{ $facility->facility_id }}"
+                                            value="{{ $facility->facility_id }}"
+                                            id="facility{{ $facility->facility_id }}"
                                             {{ is_array(old('facilities')) && in_array($facility->facility_id, old('facilities')) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="facility{{ $facility->facility_id }}">
                                             {{ $facility->name }}
@@ -130,18 +160,49 @@
                                     <div class="form-check mb-1">
                                         <input class="form-check-input" type="checkbox"
                                             name="services[{{ $service->service_id }}][enabled]" value="1"
-                                            id="service{{ $service->service_id }}">
+                                            id="service{{ $service->service_id }}"
+                                            {{ old("services.{$service->service_id}.enabled") ? 'checked' : '' }}>
                                         <label class="form-check-label" for="service{{ $service->service_id }}">
                                             {{ $service->name }} — <small
                                                 class="text-muted">{{ $service->description }}</small>
                                         </label>
                                     </div>
-                                    <div class="input-group">
+                                    <div class="input-group mb-1">
                                         <span class="input-group-text">Giá:</span>
                                         <input type="number" name="services[{{ $service->service_id }}][price]"
-                                            step="1000" class="form-control" placeholder="Miễn phí nếu để trống">
+                                            step="1000" class="form-control"
+                                            value="{{ old("services.{$service->service_id}.price") }}"
+                                            placeholder="Miễn phí nếu để trống">
                                         <span class="input-group-text">VNĐ</span>
                                     </div>
+
+                                    {{-- Cách tính riêng cho nước và wifi --}}
+                                    @if ($service->service_id == 2)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="services[2][unit]"
+                                                value="per_person"
+                                                {{ old('services.2.unit', 'per_person') == 'per_person' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo người</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="services[2][unit]"
+                                                value="per_m3" {{ old('services.2.unit') == 'per_m3' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo khối (m³)</label>
+                                        </div>
+                                    @elseif ($service->service_id == 3)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="services[3][unit]"
+                                                value="per_person"
+                                                {{ old('services.3.unit', 'per_person') == 'per_person' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo người</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="services[3][unit]"
+                                                value="per_room"
+                                                {{ old('services.3.unit') == 'per_room' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo phòng</label>
+                                        </div>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
@@ -158,7 +219,7 @@
                         @enderror
                     </div>
 
-                    {{-- Nút submit --}}
+                    {{-- Submit --}}
                     <div class="text-start">
                         <button type="submit" class="btn btn-success">💾 Lưu phòng</button>
                     </div>

@@ -17,27 +17,24 @@ Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
 Route::get('/wards/{districtCode}', [AddressController::class, 'getWards']);
 // Landlord
-    Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
-    Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
+    // Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
+    // Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
 // Landlord
-Route::prefix('landlords')->name('landlords.')->group(function () {
-    // Trang dashboard
+
+Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(function () {
     Route::get('/', function () {
         return view('landlord.dashboard');
     })->name('dashboard');
 
-    // Đăng ký làm chủ trọ (chỉ khi user chưa là landlord)
     Route::get('/register', [AuthLandlordController::class, 'showForm'])->name('register.form');
     Route::post('/register', [AuthLandlordController::class, 'submit'])->name('register.submit');
 
-    // Nhóm routes liên quan đến properties
     Route::prefix('properties')->name('properties.')->group(function () {
         Route::get('/list', [PropertyController::class, 'index'])->name('list');
         Route::get('/create', [PropertyController::class, 'create'])->name('create');
         Route::post('/store', [PropertyController::class, 'store'])->name('store');
     });
 
-    // Nhóm routes liên quan đến rooms
     Route::prefix('rooms')->name('rooms.')->group(function () {
         Route::get('/', [RoomController::class, 'index'])->name('index');
         Route::get('/create', [RoomController::class, 'create'])->name('create');
@@ -47,8 +44,15 @@ Route::prefix('landlords')->name('landlords.')->group(function () {
         Route::put('/{room}/hide', [RoomController::class, 'hide'])->name('hide');
         Route::delete('/{room}', [RoomController::class, 'destroy'])->name('destroy');
         Route::get('/{room}/show', [RoomController::class, 'show'])->name('show');
+
+        //pdf
+        Route::get('/{room}/contract-pdf', [RoomController::class, 'streamContract'])->name('contract.pdf');
+        Route::get('/{room}/contract-download', [RoomController::class, 'downloadContract'])->name('contract.download');
+        // word
+        Route::get('/{room}/contract-word', [RoomController::class, 'downloadContractWord'])->name('contract.word');
     });
 });
+    
 // end Landlord
 
 // admin
