@@ -1,9 +1,14 @@
 <?php
 
 use App\Http\Controllers\AddressController;
-use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Landlord\PropertyController;
 use App\Http\Controllers\Landlord\RoomController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Client\AuthUserController;
+use App\Http\Controllers\Client\ForgotPasswordController;
+use App\Http\Controllers\Client\ResetPasswordController;
+use App\Http\Controllers\Client\HomeController;
+use App\Http\Controllers\Landlord\HomeLandlordController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -50,4 +55,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
 });
- // end Account Management
+ //Auth user
+Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
+Route::prefix('auth')->name('auth.')->group(function () {
+   // Đăng ký
+    Route::get('/register', [AuthUserController::class, 'registerForm'])->name('register');
+    Route::post('/register', [AuthUserController::class, 'register'])->name('register.post');
+    // Đăng nhập
+    Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
+    Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
+    // Đăng xuất
+    Route::get('/logout', [AuthUserController::class, 'logout'])->name('logout');
+});
+    Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
+
+// Trang chủ trang web
+Route::get('/', [HomeController::class, 'renter'])->name('renter');
+// Route::get('/landlord', [HomeController::class, 'landlordindex'])->name('landlord');
