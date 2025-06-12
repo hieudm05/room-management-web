@@ -17,8 +17,8 @@ Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
 Route::get('/wards/{districtCode}', [AddressController::class, 'getWards']);
 // Landlord
-    // Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
-    // Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
+    Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
+    Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
 // Landlord
 
 Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(function () {
@@ -43,7 +43,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::put('/{room}', [RoomController::class, 'update'])->name('update');
         Route::put('/{room}/hide', [RoomController::class, 'hide'])->name('hide');
         Route::delete('/{room}', [RoomController::class, 'destroy'])->name('destroy');
-        Route::get('/{room}/show', [RoomController::class, 'show'])->name('show');
+        Route::get('/{room}', [RoomController::class, 'show'])->name('show');
 
         //pdf
         Route::get('/{room}/contract-pdf', [RoomController::class, 'streamContract'])->name('contract.pdf');
@@ -52,7 +52,12 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/{room}/contract-word', [RoomController::class, 'downloadContractWord'])->name('contract.word');
     });
 });
-    
+Route::prefix('rooms')->group(function () {
+    Route::post('/{room}/contracts/preview', [RoomController::class, 'previewContract'])->name('contracts.preview');
+    Route::post('/{room}/contracts/confirm', [RoomController::class, 'confirmContract'])->name('contracts.confirm');
+    Route::get('/{room}', [RoomController::class, 'show2'])->name('show2');
+});
+
 // end Landlord
 
 // admin

@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use PhpOffice\PhpWord\TemplateProcessor;
-
+use PhpOffice\PhpWord\IOFactory;
 class RoomController extends Controller
 {
     public function index(Request $request)
@@ -112,6 +112,7 @@ class RoomController extends Controller
         $room->load('property', 'facilities', 'photos', 'services');
         return view('landlord.rooms.show', compact('room'));
     }
+
 
     public function edit(Room $room)
     {
@@ -261,7 +262,7 @@ class RoomController extends Controller
 
         $dichVu = '';
         foreach ($room->services as $service) {
-            $unitLabel = match($service->service_id) {
+            $unitLabel = match ($service->service_id) {
                 1 => 'số',
                 2 => $service->pivot->unit === 'per_m3' ? 'm³' : 'người',
                 3 => $service->pivot->unit === 'per_room' ? 'phòng' : 'người',
@@ -305,4 +306,54 @@ class RoomController extends Controller
             'identity_number' => $user->identity_number,
         ];
     }
+public function confirmContract(Request $request, Room $room)
+{
+    $tempPath = $request->input('temp_path');
+
+    if (!Storage::disk('public')->exists($tempPath)) {
+        return back()->with('error', 'File tạm không tồn tại.');
+    }
+
+    // Chuyển file từ temp sang thư mục chính
+    $newPath = 'contracts/word/' . basename($tempPath);
+    Storage::disk('public')->move($tempPath, $newPath);
+
+    // Cập nhật DB
+    $room->contract_word_file = $newPath;
+    $room->save();
+
+    return redirect()->route('show2', $room)->with('success', 'Hợp đồng đã được lưu thành công!');
+}
+    public function show2(Room $room)
+    {
+        $room->load('property', 'facilities', 'photos', 'services');
+        return view('home.show2', compact('room'));
+    }
+public function previewContract(Request $request, Room $room)
+{
+    $request->validate([
+        'contract_word_file' => 'required|mimes:doc,docx|max:2048',
+    ]);
+
+    $file = $request->file('contract_word_file');
+    $tempPath = $file->storeAs('temp', uniqid() . '.' . $file->getClientOriginalExtension(), 'public');
+
+    // Đọc nội dung Word
+    $phpWord = IOFactory::load(storage_path('app/public/' . $tempPath));
+    $text = '';
+
+    foreach ($phpWord->getSections() as $section) {
+        foreach ($section->getElements() as $element) {
+            if (method_exists($element, 'getText')) {
+                $text .= $element->getText() . "\n";
+            }
+        }
+    }
+
+    return view('home.preview_contract', [
+        'room' => $room,
+        'word_content' => $text,
+        'temp_path' => $tempPath,
+    ]);
+}
 }
