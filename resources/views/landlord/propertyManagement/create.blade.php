@@ -3,134 +3,140 @@
 @section('title', 'Create Properties ')
 
 @section('content')
-<style>
-    .border-dashed {
-        border: 1px dashed red;
-        transition: border-color 0.3s ease;
-    }
+    <style>
+        .border-dashed {
+            border: 1px dashed red;
+            transition: border-color 0.3s ease;
+        }
 
-    .image-box:hover {
-        background-color: #fff3f3;
-    }
+        .image-box:hover {
+            background-color: #fff3f3;
+        }
 
-    .preview-container {
-        width: 100%;
-        max-width: 300px;
-        height: 200px;
-        margin: 0 auto;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: #ffffff;
-        border-radius: 8px;
-    }
+        .preview-container {
+            width: 100%;
+            max-width: 300px;
+            height: 200px;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 8px;
+        }
 
-    .preview-container img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-    }
-</style>
+        .preview-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+    </style>
     <div class="container card">
         <div class="card-header align-items-center d-flex justify-content-center">
-            <h3 class="card-title mb-0">Đăng ký bất động sản mới</h4>
-                {{-- <a href="{{ route('landlord.properties.list') }}" class="btn btn-secondary btn-sm">← Danh sách</a> --}}
+            <h3 class="card-title mb-0">Đăng ký bất động sản mới</h3>
+            {{-- <a href="{{ route('landlord.properties.list') }}" class="btn btn-secondary btn-sm">← Danh sách</a> --}}
         </div>
 
         <div class="card-body">
             <div class="row justify-content-center">
-                <div class="col-lg-8"> {{-- ⬅ Giới hạn chiều rộng nội dung --}}
-                    @if ($errors->any())
-                        <div class="alert alert-danger">
-                            <ul class="mb-0">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-                    {{-- FORM bắt đầu từ đây --}}
+                <div class="col-lg-8">
                     <form id="propertyForm" method="POST" action="{{ route('landlords.properties.store') }}"
                         enctype="multipart/form-data" class="needs-validation" novalidate>
                         @csrf
-                        {{-- Nhóm ảnh đại diện --}}
+
+                        {{-- Ảnh đại diện --}}
                         <div class="mb-4">
                             <h5 class="mb-3 text-info">Ảnh đại diện bất động sản</h5>
-                            <div class="row">
-                                <div class="col-md-12 mb-3 text-center">
-                                    <label for="main_image" class="d-block">
-                                        <div class="border-dashed p-4 rounded image-box"
-                                            style="cursor: pointer; background-color: #f8f9fa;">
-                                            <div class="preview-container">
-                                                <img id="imagePreview"
-                                                    src="https://via.placeholder.com/200x150?text=Chọn+ảnh"
-                                                    alt="Preview" />
-                                            </div>
-                                            <div class="text-danger fw-semibold mt-2">📷 Bấm để chọn ảnh đại diện</div>
+                            <div class="text-center">
+                                <label for="main_image" class="d-block">
+                                    <div class="border-dashed p-4 rounded image-box"
+                                        style="cursor: pointer; background-color: #f8f9fa;">
+                                        <div class="preview-container">
+                                            <img id="imagePreview"
+                                                src="{{ old('image_url') ? asset('storage/' . old('image_url')) : 'https://via.placeholder.com/200x150?text=Chọn+ảnh' }}"
+                                                alt="Preview" />
                                         </div>
-                                    </label>
-                                    <input type="file" id="main_image" name="image_url" class="d-none" accept="image/*"
-                                        required>
-                                    <div class="text-danger mt-2 d-none" id="imageError">Vui lòng chọn một ảnh.</div>
-                                </div>
+                                        <div class="text-danger fw-semibold mt-2">📷 Bấm để chọn ảnh đại diện</div>
+                                    </div>
+                                </label>
+                                <input type="file" id="main_image" name="image_url"
+                                    class="d-none @error('image_url') is-invalid @enderror" accept="image/*" required>
+                                @error('image_url')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
 
-
-                        {{-- Nhóm 1: Thông tin bất động sản --}}
+                        {{-- Thông tin bất động sản --}}
                         <div class="mb-4">
                             <h5 class="mb-3 text-primary">1. Thông tin bất động sản</h5>
-                            <div class="row">
-                                <div class="col-md-12 mb-3">
-                                    <label for="name" class="form-label">Tên bất động sản <span
-                                            class="text-danger">*</span></label>
-                                  <input type="text" name="name" class="form-control"
-    placeholder="VD: Khu trọ Nguyễn Văn A" required value="{{ old('name') }}">
-                                </div>
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Tên bất động sản <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" name="name" id="name"
+                                    class="form-control @error('name') is-invalid @enderror"
+                                    placeholder="VD: Khu trọ Nguyễn Văn A" value="{{ old('name') }}" required>
+                                @error('name')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                                <div class="col-md-12 mb-3">
-                                    <label for="description" class="form-label">Mô tả</label>
-                                    <textarea name="description" class="form-control" rows="3"
-    placeholder="Giới thiệu chung về khu trọ...">{{ old('description') }}</textarea>
-                                </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Mô tả</label>
+                                <textarea id="description" name="description" class="form-control" rows="3"
+                                    placeholder="Giới thiệu chung về khu trọ...">{{ old('description') }}</textarea>
                             </div>
                         </div>
 
-                        {{-- Nhóm 2: Địa chỉ --}}
+                        {{-- Địa chỉ chi tiết --}}
                         <div class="mb-4">
                             <h5 class="mb-3 text-success">2. Địa chỉ chi tiết</h5>
                             <div class="row">
+                                {{-- Tỉnh/Thành phố --}}
                                 <div class="col-md-4 mb-3">
                                     <label for="province" class="form-label">Tỉnh/Thành phố <span
                                             class="text-danger">*</span></label>
-                                   <select id="province" name="province" class="form-select" required>
-    <option value="">-- Chọn tỉnh --</option>
-</select>
+                                    <select id="province" name="province"
+                                        class="form-select @error('province') is-invalid @enderror" required>
+                                        <option value="">-- Chọn tỉnh --</option>
+                                    </select>
+                                    @error('province')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
+                                {{-- Quận/Huyện --}}
                                 <div class="col-md-4 mb-3">
                                     <label for="district" class="form-label">Quận/Huyện <span
                                             class="text-danger">*</span></label>
-                                   <select id="district" name="district" class="form-select" required disabled>
-    <option value="">-- Chọn huyện --</option>
-</select>
+                                    <select id="district" name="district"
+                                        class="form-select @error('district') is-invalid @enderror" required disabled>
+                                        <option value="">-- Chọn huyện --</option>
+                                    </select>
+                                    @error('district')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
+                                {{-- Phường/Xã --}}
                                 <div class="col-md-4 mb-3">
                                     <label for="ward" class="form-label">Phường/Xã <span
                                             class="text-danger">*</span></label>
-                                    <select id="ward" name="ward" class="form-select" required disabled>
-    <option value="">-- Chọn xã --</option>
-</select>
+                                    <select id="ward" name="ward"
+                                        class="form-select @error('ward') is-invalid @enderror" required disabled>
+                                        <option value="">-- Chọn xã --</option>
+                                    </select>
+                                    @error('ward')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <div class="col-md-12 mb-3">
                                     <label for="detailed_address" class="form-label">Địa chỉ cụ thể <span
                                             class="text-danger">*</span></label>
-                                   <input type="text" id="detailed_address" name="detailed_address" class="form-control"
-    placeholder="Số nhà, đường..." required value="{{ old('detailed_address') }}">
-
+                                    <input type="text" id="detailed_address" name="detailed_address" class="form-control"
+                                        placeholder="Số nhà, đường..." value="{{ old('detailed_address') }}" required>
                                 </div>
 
                                 <div class="col-md-12 mb-3">
@@ -139,51 +145,32 @@
                                 </div>
                             </div>
 
-                            <!-- Hidden toạ độ -->
                             <input type="hidden" id="latitude" name="latitude">
                             <input type="hidden" id="longitude" name="longitude">
                         </div>
 
-                        {{-- Nhóm 3: Giấy tờ pháp lý --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-warning">3. Giấy tờ pháp lý</h5>
-                            <div class="alert alert-info">
-                                Bạn có thể <strong>bổ sung các giấy tờ không quan trọng sau</strong>. Tuy nhiên, ít nhất
-                                1 giấy tờ cơ bản nên được tải lên ngay.
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Sổ đỏ (nếu có)</label>
-                                <input type="file" name="document_files[so_do]" class="form-control"
-                                    accept=".pdf,.jpg,.jpeg,.png">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Giấy phép xây dựng (nếu có)</label>
-                                <input type="file" name="document_files[giay_phep_xay_dung]" class="form-control"
-                                    accept=".pdf,.jpg,.jpeg,.png">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Giấy chứng nhận PCCC (nếu có)</label>
-                                <input type="file" name="document_files[pccc]" class="form-control"
-                                    accept=".pdf,.jpg,.jpeg,.png">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Giấy phép kinh doanh (nếu có)</label>
-                                <input type="file" name="document_files[giay_phep_kinh_doanh]" class="form-control"
-                                    accept=".pdf,.jpg,.jpeg,.png">
-                            </div>
+                        {{-- Giấy tờ pháp lý --}}
+                        <div class="mb-3">
+                            <label for="giay_phep_kinh_doanh" class="form-label">Giấy phép kinh doanh (nếu có)</label>
+                            <input type="file" id="giay_phep_kinh_doanh" name="document_files[giay_phep_kinh_doanh]"
+                                class="form-control @error('document_files.giay_phep_kinh_doanh') is-invalid @enderror"
+                                accept=".pdf,.jpg,.jpeg,.png">
+                            @error('document_files.giay_phep_kinh_doanh')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
                         </div>
 
+                        {{-- Nút gửi --}}
                         <div class="text-end">
                             <button type="submit" class="btn btn-success">📤 Gửi đăng ký</button>
                         </div>
                     </form>
-                    {{-- FORM kết thúc tại đây --}}
 
                 </div>
             </div>
         </div>
     </div>
+
     <!-- Thư viện -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -214,53 +201,55 @@
                 }
             }
         });
-         document.getElementById('main_image').addEventListener('change', function (e) {
-        const [file] = this.files;
-        if (file) {
-            const preview = document.getElementById('imagePreview');
-            preview.src = URL.createObjectURL(file);
-        }
-    });
-
-        // Phục hồi dữ liệu
-    document.addEventListener('DOMContentLoaded', async function () {
-        const provinceSelect = document.getElementById('province');
-        const districtSelect = document.getElementById('district');
-        const wardSelect = document.getElementById('ward');
-
-        const oldProvince = '{{ old('province') }}';
-        const oldDistrict = '{{ old('district') }}';
-        const oldWard = '{{ old('ward') }}';
-
-        // Load tỉnh
-        const provinces = await fetch("https://provinces.open-api.vn/api/p/").then(res => res.json());
-        provinces.forEach(province => {
-            const option = new Option(province.name, province.code);
-            if (province.code == oldProvince) option.selected = true;
-            provinceSelect.add(option);
+        document.getElementById('main_image').addEventListener('change', function(e) {
+            const [file] = this.files;
+            if (file) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = URL.createObjectURL(file);
+            }
         });
 
-        if (oldProvince) {
-            provinceSelect.disabled = false;
-            const districts = await fetch(`https://provinces.open-api.vn/api/p/${oldProvince}?depth=2`).then(res => res.json());
-            districts.districts.forEach(d => {
-                const option = new Option(d.name, d.code);
-                if (d.code == oldDistrict) option.selected = true;
-                districtSelect.add(option);
-            });
-            districtSelect.disabled = false;
-        }
+        // Phục hồi dữ liệu
+        document.addEventListener('DOMContentLoaded', async function() {
+            const provinceSelect = document.getElementById('province');
+            const districtSelect = document.getElementById('district');
+            const wardSelect = document.getElementById('ward');
 
-        if (oldDistrict) {
-            const wards = await fetch(`https://provinces.open-api.vn/api/d/${oldDistrict}?depth=2`).then(res => res.json());
-            wards.wards.forEach(w => {
-                const option = new Option(w.name, w.code);
-                if (w.code == oldWard) option.selected = true;
-                wardSelect.add(option);
+            const oldProvince = '{{ old('province') }}';
+            const oldDistrict = '{{ old('district') }}';
+            const oldWard = '{{ old('ward') }}';
+
+            // Load tỉnh
+            const provinces = await fetch("https://provinces.open-api.vn/api/p/").then(res => res.json());
+            provinces.forEach(province => {
+                const option = new Option(province.name, province.code);
+                if (province.code == oldProvince) option.selected = true;
+                provinceSelect.add(option);
             });
-            wardSelect.disabled = false;
-        }
-    });
+
+            if (oldProvince) {
+                provinceSelect.disabled = false;
+                const districts = await fetch(`https://provinces.open-api.vn/api/p/${oldProvince}?depth=2`)
+                    .then(res => res.json());
+                districts.districts.forEach(d => {
+                    const option = new Option(d.name, d.code);
+                    if (d.code == oldDistrict) option.selected = true;
+                    districtSelect.add(option);
+                });
+                districtSelect.disabled = false;
+            }
+
+            if (oldDistrict) {
+                const wards = await fetch(`https://provinces.open-api.vn/api/d/${oldDistrict}?depth=2`).then(
+                    res => res.json());
+                wards.wards.forEach(w => {
+                    const option = new Option(w.name, w.code);
+                    if (w.code == oldWard) option.selected = true;
+                    wardSelect.add(option);
+                });
+                wardSelect.disabled = false;
+            }
+        });
 
 
 

@@ -28,7 +28,7 @@ class Property  extends Model
      return $this->belongsTo(User::class, 'landlord_id');
     }
     public function legalDocuments() {
-        return $this->hasMany(LegalDocument::class, 'id');
+        return $this->hasMany(LegalDocument::class, 'property_id');
     }
 
 // public function rooms() {

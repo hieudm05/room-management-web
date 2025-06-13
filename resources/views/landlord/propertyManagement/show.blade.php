@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-4">
     <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header  text-white">
             <h4 class="mb-0">Thông tin chi tiết bất động sản</h4>
         </div>
         <div class="card-body">
@@ -24,7 +24,6 @@
             @if ($property->image_url)
                 <div class="mb-3 text-center">
                    <img src="{{ Storage::url($property->image_url) }}" alt="Ảnh bất động sản">
-
                 </div>
             @endif
 
@@ -49,11 +48,11 @@
                             <td>{{ $doc->document_type }}</td>
                             <td>
                                 @if ($doc->status == 'approved')
-                                    <span class="badge badge-success">Đã duyệt</span>
-                                @elseif ($doc->status == 'pending')
-                                    <span class="badge badge-warning">Chờ duyệt</span>
+                                    <span class="badge bg-success">Đã duyệt</span>
+                                @elseif ($doc->status == 'Pending')
+                                    <span class="badge bg-warning">Chờ duyệt</span>
                                 @else
-                                    <span class="badge badge-danger">Từ chối</span>
+                                    <span class="badge bg-danger">Từ chối</span>
                                 @endif
                             </td>
                             <td>

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
        Schema::create('legal_documents', function (Blueprint $table) {
-            $table->bigIncrements('document_id'); // ID chính
+            $table->bigIncrements('id'); // ID chính
 
             $table->unsignedBigInteger('user_id');      // Chủ trọ
             $table->unsignedBigInteger('property_id');  // Bất động sản liên quan
@@ -28,7 +28,7 @@ return new class extends Migration
 
             // Khóa ngoại
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('property_id')->references('id')->on('properties')->onDelete('cascade');
+            $table->foreign('property_id')->references('property_id')->on('properties')->onDelete('cascade');
             $table->foreign('verified_by')->references('id')->on('users')->nullOnDelete();
         });
 
