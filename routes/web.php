@@ -17,8 +17,8 @@ Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
 Route::get('/wards/{districtCode}', [AddressController::class, 'getWards']);
 // Landlord
-    Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
-    Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
+Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
+Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
 // Landlord
 
 Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(function () {
@@ -29,7 +29,6 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::get('/register', [AuthLandlordController::class, 'showForm'])->name('register.form');
     Route::post('/register', [AuthLandlordController::class, 'submit'])->name('register.submit');
 
-   // Phòng trọ
     Route::prefix('properties')->name('properties.')->group(function () {
         Route::get('/list', [PropertyController::class, 'index'])->name('list');
         Route::get('/create', [PropertyController::class, 'create'])->name('create');
@@ -38,7 +37,6 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/{property_id}/upload-document', [PropertyController::class, 'showUploadDocumentForm'])->name('uploadDocument');
         Route::post('/{property_id}/upload-document', [PropertyController::class, 'uploadDocument'])->name('uploadDocument.post');
     });
-  //end phòng trọ
 
     Route::prefix('rooms')->name('rooms.')->group(function () {
         Route::get('/', [RoomController::class, 'index'])->name('index');
@@ -55,6 +53,12 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/{room}/contract-download', [RoomController::class, 'downloadContract'])->name('contract.download');
         // word
         Route::get('/{room}/contract-word', [RoomController::class, 'downloadContractWord'])->name('contract.word');
+
+        //Contract
+        Route::get('/{room}/contract-form', [RoomController::class, 'formShowContract'])->name('contract.info');
+        Route::post('/{room}/contract-confirm-rentalAgreement', [RoomController::class, 'confirmStatusrentalAgreement'])->name('contract.confirmLG');
+        // xác nhận thêm ng dùng vào phòng 
+        Route::post('/room-users/{id}/suscess', [RoomController::class, 'ConfirmAllUser'])->name('room_users.suscess');
     });
 });
 Route::prefix('rooms')->group(function () {
@@ -95,6 +99,12 @@ Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('
 
 // Trang chủ trang web
 Route::get('/', [HomeController::class, 'renter'])->name('renter');
+Route::get('/status-agreement', [HomeController::class, 'StausAgreement'])->name('status.agreement');
+Route::prefix('room-users')->name('room-users.')->group(function () {
+    Route::post('/create-user', [HomeController::class, 'create'])->name('create');
+    Route::post('/store-user', [HomeController::class, 'store'])->name('store');
+});
+
 // Route::get('/landlord', [HomeController::class, 'landlordindex'])->name('landlord');
 
 
@@ -111,3 +121,4 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('admin.profile.edit');
     Route::post('/profile/update', [AdminProfileController::class, 'update'])->name('admin.profile.update');
 });
+

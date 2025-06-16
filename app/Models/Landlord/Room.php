@@ -2,13 +2,13 @@
 
 namespace App\Models\Landlord;
 
+use App\Models\RoomUser;
 use Illuminate\Database\Eloquent\Model;
 
 class Room extends Model
 {
     protected $primaryKey = 'room_id';
-    protected $fillable =
-    [
+    protected $fillable = [
         'property_id',
         'room_number',
         'area',
@@ -20,8 +20,10 @@ class Room extends Model
         'contract_word_file',
         'wifi_price_per_person',
         'water_price_per_person',
-        'created_by'
+        'created_by',
+        'id_rental_agreements'
     ];
+
 
     // Accessor tính tổng tiền
     public function getTotalWifiAttribute()
@@ -71,4 +73,17 @@ class Room extends Model
         return $this->belongsToMany(Service::class, 'room_services', 'room_id', 'service_id')
             ->withPivot('is_free', 'price', 'unit'); // thêm unit
     }
+    public function rentalAgreement()
+    {
+        return $this->hasOne(\App\Models\RentalAgreement::class);
+    }
+    // Trong Room.php
+    public function currentAgreement()
+    {
+        return $this->belongsTo(RentalAgreement::class, 'id_rental_agreements');
+    }
+   public function roomUsers(){
+        return $this->hasMany(RoomUser::class, 'room_id','room_id');
+    }
+
 }
