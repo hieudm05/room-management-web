@@ -1,6 +1,5 @@
 <?php
 use App\Http\Middleware\IsAdmin;
-use App\Http\Middleware\isLandlord;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Application;
@@ -19,7 +18,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => Authenticate::class,
             'is_admin' => IsAdmin::class,
-            "is_landlord" => isLandlord::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

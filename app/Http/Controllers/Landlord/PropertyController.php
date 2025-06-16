@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Landlord;
 
 use App\Http\Controllers\Controller;
 use App\Models\Landlord\Property;
+use App\Models\Landlord\PropertyImage;
 use App\Models\LegalDocument;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Mews\Purifier\Facades\Purifier;
 
 class PropertyController extends Controller
 {
@@ -20,7 +23,7 @@ class PropertyController extends Controller
     public function index()
     {
         // Lấy người dùng đang đăng nhập
-        $user = auth()->user(); // Chủ trọ
+        $user = Auth::user(); // Chủ trọ
 
 
         // Lấy danh sách property của landlord đó, sắp xếp mới nhất
@@ -46,16 +49,26 @@ class PropertyController extends Controller
 
     public function store(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login')->withErrors(['auth' => 'Vui lòng đăng nhập để thực hiện thao tác này.']);
+        }
+
         // Validate input
         $validatedData = $request->validate([
             'name' => 'required|string|max:100',
             'province' => 'required|string',
             'district' => 'required|string',
             'ward' => 'required|string',
-            'detailed_address' => 'nullable|string|max:255',
-            'image_url' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'detailed_address' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'rules' => 'required|string', // Yêu cầu rules không rỗng
+            'image_urls.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'images_property.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
+
+        // Làm sạch nội dung HTML của rules
+        $validatedData['rules'] = Purifier::clean($validatedData['rules']);
 
         // Lấy tên địa phương từ API
         $provinceName = Http::get("https://provinces.open-api.vn/api/p/{$request->province}")['name'] ?? '';
@@ -72,22 +85,43 @@ class PropertyController extends Controller
         $lat = $geo[0]['lat'] ?? 21.028511;
         $lon = $geo[0]['lon'] ?? 105.804817;
 
-        // Xử lý ảnh đại diện
-        $image = $request->file('image_url');
-        $imageFilename = 'property_' . time() . '.' . $image->getClientOriginalExtension();
-        $imagePath = $image->storeAs("public/property_images/{$user->id}", $imageFilename);
+        // dd($request->file('image_urls'));
+
+        // Handle main image
+        $imageFiles = $request->file('image_urls');
+
+        if (!$imageFiles || count($imageFiles) === 0) {
+            return back()->withErrors(['image_urls' => 'Vui lòng tải lên ít nhất một ảnh.'])->withInput();
+        }
+
+        $mainImage = $imageFiles[0]; // ✅ ảnh đầu tiên
+        $imageFilename = 'property_' . time() . '_' . Str::random(6) . '.' . $mainImage->getClientOriginalExtension();
+        $imagePath = $mainImage->storeAs("public/property_images/{$user->id}", $imageFilename);
         $imageUrl = Storage::url($imagePath);
 
-        // Lưu bất động sản
-        Property::create([
+
+        // Create property
+        $property = Property::create([
             'landlord_id' => $user->id,
             'name' => $validatedData['name'],
             'address' => $fullAddress,
             'latitude' => $lat,
             'longitude' => $lon,
-            'description' => $request->input('description', ''),
+            'description' => $validatedData['description'],
+            'rules' => $validatedData['rules'],
             'image_url' => $imageUrl,
         ]);
+        // Handle multiple property images
+        foreach (array_slice($imageFiles, 1) as $extraImage) {
+            $extraFilename = 'property_extra_' . time() . '_' . Str::random(6) . '.' . $extraImage->getClientOriginalExtension();
+            $extraPath = $extraImage->storeAs("public/property_images/{$user->id}", $extraFilename);
+
+            PropertyImage::create([
+                'property_id' => $property->property_id,
+                'image_path' => Storage::url($extraPath),
+            ]);
+        }
+
         return redirect()->route('landlords.properties.list')->with('success', 'Thêm bất động sản thành công!');
     }
     /**
@@ -126,7 +160,7 @@ class PropertyController extends Controller
             'document_files.giay_phep_kinh_doanh' => 'required|file|mimes:jpeg,png,jpg,pdf|max:5120',
         ]);
         $property = Property::findOrFail($property_id);
-        $user = auth()->user();
+        $user = Auth::user();
         $docType = 'Giấy phép kinh doanh';
         $docKey = 'giay_phep_kinh_doanh';
         $file = $request->file("document_files.$docKey");

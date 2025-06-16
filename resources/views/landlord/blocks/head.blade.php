@@ -7,6 +7,10 @@
 
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('assets/admin/images/favicon.ico') }}">
+        <!-- quill css -->
+    <link href="{{asset('assets/admin/libs/quill/quill.core.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{asset('assets/admin/libs/quill/quill.bubble.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{asset('assets/admin/libs/quill/quill.snow.css')}}" rel="stylesheet" type="text/css" />
 
     <!-- jsvectormap css -->
     <link href="{{ asset('assets/admin/libs/jsvectormap/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
@@ -28,4 +32,12 @@
 
     <!-- Custom Css-->
     <link href="{{ asset('assets/admin/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
+
+
+    <meta charset="utf-8" />
+    <title>Editors | Velzon - Admin & Dashboard Template</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
+    <meta content="Themesbrand" name="author" />
+
 </head>

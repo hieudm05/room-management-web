@@ -10,13 +10,12 @@ class LegalDocument extends Model
     //
     protected $table = 'legal_documents';
 
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'document_id';
 
     public $timestamps = false; // Vì bạn dùng uploaded_at và reviewed_at thay cho created_at/updated_at
 
     protected $fillable = [
         'user_id',
-        'property_id',
         'document_type',
         'file_path',
         'status',

@@ -91,6 +91,14 @@
                                                 @csrf @method('DELETE')
                                                 <button class="btn btn-sm btn-outline-danger">🗑️</button>
                                             </form>
+                                            {{-- @if ($room->status !== "Available") --}}
+                                            <form action="{{ route('landlords.rooms.contract.info', $room) }}" method="get">
+                                                <input type="hidden" value="{{$room->id_rental_agreements}}" name="rental_agreement_id" >
+                                                <input type="hidden" value="{{$room->room_id}}" name="room_id" >
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">Show RG</button>
+                                            </form>
+                                                
+                                      
                                         </td>
                                     </tr>
                                 @empty
