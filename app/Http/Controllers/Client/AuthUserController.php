@@ -58,33 +58,32 @@ class AuthUserController extends Controller
 
 public function Login(Request $request)
 {
-    // Validate dữ liệu đầu vào
+    // ✅ Validate dữ liệu đầu vào
     $request->validate([
-        'name' => 'required|string|max:255',
+        'email' => 'required|email',
         'password' => 'required|string',
     ]);
 
-    // Tìm user theo tên đăng nhập
-    $user = User::where('name', $request->name)->first();
+    // ✅ Tìm user theo email
+    $user = User::where('email', $request->email)->first();
 
     if (!$user) {
-        return back()->withErrors(['name' => 'Tên đăng nhập không tồn tại'])->withInput();
+        return back()->withErrors(['email' => 'Email không tồn tại'])->withInput();
     }
 
     if (!Hash::check($request->password, $user->password)) {
         return back()->withErrors(['password' => 'Mật khẩu không đúng'])->withInput();
     }
 
-    // Đăng nhập người dùng
+    // ✅ Đăng nhập người dùng
     Auth::login($user, $request->filled('remember'));
     $request->session()->regenerate();
 
-    // ✅ Phân hướng theo role
+    // ✅ Phân hướng theo vai trò
     if ($user->role === 'Landlord') {
         return redirect()->route('landlords.dashboard')->with('success', 'Đăng nhập thành công với vai trò Landlord');
     }
 
-    // Mặc định: Renter (và các vai trò khác như Admin, Staff, Manager đều coi là Renter)
     return redirect()->route('renter')->with('success', 'Đăng nhập thành công với vai trò Renter');
 }
 public function logout(Request $request)

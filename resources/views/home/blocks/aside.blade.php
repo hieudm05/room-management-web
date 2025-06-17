@@ -13,7 +13,13 @@
 										
 									</ul>
 								</li>
-								
+								 <li class="nav-item">
+    <a href="{{ route('status.agreement') }}" class="nav-link alio_green">
+    <i class="fas fa-sign-in-alt me-1"></i>
+    <span class="dn-lg">Status Agreement</span>
+</a>
+</li>
+
 								<li><a href="#">Listings<span class="submenu-indicator"></span></a>
 									<ul class="nav-dropdown nav-submenu">
 										<li><a href="#">Listing Grid<span class="submenu-indicator"></span></a>

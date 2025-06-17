@@ -187,7 +187,7 @@ class RoomController extends Controller
 
     public function update(Request $request, Room $room)
     {
-        $validated = $request->validate([
+        $request->validate([
             'area' => 'required|numeric|min:1',
             'rental_price' => 'required|numeric|min:0',
             'status' => 'required|in:Available,Rented,Hidden,Suspended,Confirmed',
@@ -198,20 +198,6 @@ class RoomController extends Controller
             'occupants' => 'required|integer|min:0',
             'deposit_price' => 'nullable|numeric|min:0',
         ]);
-
-        // Đếm chỉnh sửa giá
-        if ($validated['rental_price'] != $room->rental_price) {
-            $room->price_edit_count = ($room->price_edit_count ?? 0) + 1;
-        }
-
-        // Đếm chỉnh sửa cọc
-        if ($validated['deposit_price'] != $room->deposit_price) {
-            $room->deposit_edit_count = ($room->deposit_edit_count ?? 0) + 1;
-        }
-
-        $room->update($validated);
-
-
 
         $room->update($request->only(['area', 'rental_price', 'status', 'occupants', 'deposit_price']));
         $room->facilities()->sync($request->facilities ?? []);
