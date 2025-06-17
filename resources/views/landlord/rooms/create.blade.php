@@ -30,34 +30,12 @@
                     class="needs-validation" novalidate>
                     @csrf
 
-                    {{-- <div class="mb-4 p-3 border rounded bg-light">
-                        <h6 class="fw-bold">👤 Thông tin người tạo (Chủ trọ)</h6>
-
-                        <div class="mb-2">
-                            <label class="form-label">Họ tên <span class="text-danger">*</span></label>
-                            <input type="text" name="creator_name" class="form-control" required
-                                value="{{ old('creator_name', Auth::user()?->name) }}">
-                        </div>
-
-                        <div class="mb-2">
-                            <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
-                            <input type="text" name="creator_phone" class="form-control" required
-                                value="{{ old('creator_phone', Auth::user()?->phone_number) }}">
-                        </div>
-
-                        <div class="mb-2">
-                            <label class="form-label">CCCD <span class="text-danger">*</span></label>
-                            <input type="text" name="creator_identity" class="form-control" required
-                                value="{{ old('creator_identity', Auth::user()?->identity_number) }}">
-                        </div>
-                    </div> --}}
-
                     {{-- Chọn khu trọ --}}
                     <div class="mb-3">
                         <label for="property_id" class="form-label fw-bold">Chọn khu trọ <span
                                 class="text-danger">*</span></label>
                         <select name="property_id" id="property_id"
-                            class="form-select @error('property_id') is-invalid @enderror" required>
+                            class="form-select select2 @error('property_id') is-invalid @enderror" required>
                             <option disabled selected>-- Chọn khu trọ --</option>
                             @foreach ($properties as $property)
                                 <option value="{{ $property->property_id }}"
@@ -66,6 +44,7 @@
                                 </option>
                             @endforeach
                         </select>
+
                         @error('property_id')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
@@ -75,8 +54,8 @@
                     <div class="mb-3">
                         <label for="room_number" class="form-label">Số phòng <span class="text-danger">*</span></label>
                         <input type="text" name="room_number" id="room_number"
-                            class="form-control @error('room_number') is-invalid @enderror"
-                            value="{{ old('room_number') }}" required>
+                            class="form-control @error('room_number') is-invalid @enderror" value="{{ old('room_number') }}"
+                            required>
                         @error('room_number')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
@@ -103,6 +82,19 @@
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
+
+                    {{-- Giá cọc --}}
+                    <div class="mb-3">
+                        <label for="deposit_price" class="form-label">Giá tiền cọc (VNĐ) <span
+                                class="text-danger">*</span></label>
+                        <input type="number" name="deposit_price" id="deposit_price"
+                            class="form-control @error('deposit_price') is-invalid @enderror"
+                            value="{{ old('deposit_price') }}" min="0">
+                        @error('deposit_price')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
 
                     {{-- Trạng thái --}}
                     <div class="mb-3">
@@ -139,8 +131,7 @@
                                 <div class="col-md-6">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="facilities[]"
-                                            value="{{ $facility->facility_id }}"
-                                            id="facility{{ $facility->facility_id }}"
+                                            value="{{ $facility->facility_id }}" id="facility{{ $facility->facility_id }}"
                                             {{ is_array(old('facilities')) && in_array($facility->facility_id, old('facilities')) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="facility{{ $facility->facility_id }}">
                                             {{ $facility->name }}
@@ -202,6 +193,19 @@
                                                 {{ old('services.3.unit') == 'per_room' ? 'checked' : '' }}>
                                             <label class="form-check-label">Tính theo phòng</label>
                                         </div>
+                                    @elseif ($service->service_id == 7)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="services[7][unit]"
+                                                value="per_person"
+                                                {{ old('services.7.unit', 'per_person') == 'per_person' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo người</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="services[7][unit]"
+                                                value="per_room"
+                                                {{ old('services.7.unit') == 'per_room' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo phòng</label>
+                                        </div>
                                     @endif
                                 </div>
                             @endforeach
@@ -219,6 +223,10 @@
                         @enderror
                     </div>
 
+                    {{-- Nơi hiển thị ảnh được chọn --}}
+                    <div id="preview-images" class="row mt-3"></div>
+
+
                     {{-- Submit --}}
                     <div class="text-start">
                         <button type="submit" class="btn btn-success">💾 Lưu phòng</button>
@@ -227,4 +235,54 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.getElementById('photos').addEventListener('change', function(event) {
+                const previewContainer = document.getElementById('preview-images');
+                previewContainer.innerHTML = ''; // Xoá preview cũ nếu chọn lại
+
+                const files = event.target.files;
+                if (files) {
+                    Array.from(files).forEach(file => {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const col = document.createElement('div');
+                                col.classList.add('col-md-3', 'mb-3'); // Mỗi ảnh chiếm 1/4 hàng (Bootstrap)
+
+                                const img = document.createElement('img');
+                                img.src = e.target.result; // Đường dẫn ảnh
+                                img.classList.add('img-thumbnail'); // Bootstrap làm ảnh gọn gàng
+                                img.style.maxHeight = '150px';
+                                img.alt = 'Ảnh phòng';
+
+                                col.appendChild(img); // Gắn ảnh vào div
+                                previewContainer.appendChild(col); // Thêm vào vùng preview
+                            };
+                            reader.readAsDataURL(file); // Đọc nội dung ảnh thành base64 để hiển thị
+                        }
+                    });
+                }
+            });
+        </script>
+    @endpush
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(() => {
+                    $('#property_id').select2({
+                        placeholder: "-- Chọn khu trọ --",
+                        allowClear: true,
+                        width: '100%',
+                        dropdownParent: $('#property_id').parent()
+                    });
+                }, 200); // delay nhỏ để DOM ổn định
+            });
+        </script>
+    @endpush
+
+
+
 @endsection

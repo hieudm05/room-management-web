@@ -15,6 +15,7 @@ class Room extends Model
         'rental_price',
         'status',
         'occupants',
+        'deposit_price',
         'contract_file',
         'contract_pdf_file',
         'contract_word_file',

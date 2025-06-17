@@ -7,10 +7,10 @@
 
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('assets/admin/images/favicon.ico') }}">
-        <!-- quill css -->
-    <link href="{{asset('assets/admin/libs/quill/quill.core.css')}}" rel="stylesheet" type="text/css" />
-    <link href="{{asset('assets/admin/libs/quill/quill.bubble.css')}}" rel="stylesheet" type="text/css" />
-    <link href="{{asset('assets/admin/libs/quill/quill.snow.css')}}" rel="stylesheet" type="text/css" />
+    <!-- quill css -->
+    <link href="{{ asset('assets/admin/libs/quill/quill.core.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/admin/libs/quill/quill.bubble.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/admin/libs/quill/quill.snow.css') }}" rel="stylesheet" type="text/css" />
 
     <!-- jsvectormap css -->
     <link href="{{ asset('assets/admin/libs/jsvectormap/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
@@ -32,6 +32,10 @@
 
     <!-- Custom Css-->
     <link href="{{ asset('assets/admin/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
+
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 
 
     <meta charset="utf-8" />
