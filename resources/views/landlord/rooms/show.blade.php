@@ -37,8 +37,21 @@
                 {{-- Giá thuê --}}
                 <div class="mb-3">
                     <label class="form-label fw-bold">Giá thuê (VNĐ)</label>
-                    <input type="text" class="form-control" value="{{ number_format($room->rental_price) }}" disabled>
+                    <input type="text" class="form-control"
+                        value="{{ number_format($room->rental_price) }} VNĐ (Đã sửa {{ $room->price_edit_count ?? 0 }} lần)"
+                        disabled>
                 </div>
+
+
+                {{-- Tiền cọc --}}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Tiền cọc</label>
+                    <input type="text" class="form-control"
+                        value="{{ number_format($room->deposit_price) }} VNĐ (Đã sửa {{ $room->deposit_edit_count ?? 0 }} lần)"
+                        disabled>
+                </div>
+
+
 
                 {{-- Trạng thái --}}
                 <div class="mb-3">

@@ -118,8 +118,20 @@
     </div>
 
     <!-- JAVASCRIPT -->
-    @include('landlord.blocks.js')
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    @include('landlord.blocks.js') {{-- JS nội bộ như app.js, plugins --}}
+    <script src="{{ asset('assets/admin/js/app.js') }}"></script>
+
     @yield('scripts')
+    @stack('scripts') {{-- JS từ các view --}}
+
+
 
 </body>
 <!-- Mirrored from themesbrand.com/velzon/html/material/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 12 May 2025 03:48:01 GMT -->
