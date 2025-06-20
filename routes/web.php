@@ -12,6 +12,7 @@ use App\Http\Controllers\Landlord\RoomController;
 use App\Http\Controllers\TenantProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\Landlord\Staff\StaffRoomController;
 
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
@@ -59,6 +60,12 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::post('/{room}/contract-confirm-rentalAgreement', [RoomController::class, 'confirmStatusrentalAgreement'])->name('contract.confirmLG');
         // xác nhận thêm ng dùng vào phòng 
         Route::post('/room-users/{id}/suscess', [RoomController::class, 'ConfirmAllUser'])->name('room_users.suscess');
+    });
+
+    // Room of staff
+    Route::prefix('staff')->name('staff.')->group(function () {
+        // Rooms của staff
+        Route::get('/', [StaffRoomController::class, 'index'])->name('index');
     });
 });
 Route::prefix('rooms')->group(function () {
