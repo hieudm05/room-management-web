@@ -141,16 +141,9 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <a href="{{ route('landlords.rooms.edit', $room) }}"
-                                            class="btn btn-sm btn-outline-primary">✏️</a>
-                                        <a href="{{ route('landlords.rooms.show', $room) }}"
+                                        <a href="{{ route('landlords.staff.show', $room) }}"
                                             class="btn btn-sm btn-outline-warning">👁️</a>
-                                        <form action="{{ route('landlords.rooms.destroy', $room) }}" method="POST"
-                                            class="d-inline"
-                                            onsubmit="return confirm('Bạn có chắc chắn muốn xoá phòng này?');">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger">🗑️</button>
-                                        </form>
+                                       
                                     </td>
                                 </tr>
                             @empty
