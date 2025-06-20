@@ -12,6 +12,11 @@ use App\Http\Controllers\Landlord\RoomController;
 use App\Http\Controllers\TenantProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\Landlord\Staff\ContractController;
+use App\Http\Controllers\Landlord\Staff\DocumentController;
+use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
+use App\Http\Controllers\Landlord\Staff\PaymentController;
+use App\Http\Controllers\Landlord\Staff\ServiceController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomController;
 
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
@@ -66,6 +71,32 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::prefix('staff')->name('staff.')->group(function () {
         // Rooms của staff
         Route::get('/', [StaffRoomController::class, 'index'])->name('index');
+        Route::get('/{room}/show', [StaffRoomController::class, 'show'])->name('show');
+        // Chi tiết con trong phòng (giao diện chi tiết có các nút điều hướng)
+        Route::prefix('contract')->name('contract.')->group(function () {
+            Route::get('/{room}', [ContractController::class, 'index']);
+            // Ninh viết trong này
+
+            // 
+        });
+
+        Route::prefix('services')->name('services.')->group(function () {
+            Route::get('/{room}', [ServiceController::class, 'index']);
+        });
+
+        Route::prefix('electric-water')->name('electric_water.')->group(function () {
+            Route::get('/{room}', [ElectricWaterController::class, 'index']);
+        });
+
+        Route::prefix('documents')->name('documents.')->group(function () {
+            Route::get('/{room}', [DocumentController::class, 'index']);
+        });
+
+        Route::prefix('payment')->name('payment.')->group(function () {
+            Route::get('/{room}', [PaymentController::class, 'index']);
+        });
+
+
     });
 });
 Route::prefix('rooms')->group(function () {

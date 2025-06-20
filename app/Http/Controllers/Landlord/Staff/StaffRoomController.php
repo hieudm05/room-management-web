@@ -81,6 +81,11 @@ class StaffRoomController extends Controller
 
         return view('landlord.Staff.rooms.list', compact('rooms', 'allProperties'));
     }
+    public function show(Room $room)
+    {
+        // dd($room);
+        return view('landlord.Staff.rooms.show', compact("room"));
+    }
 
 
 
