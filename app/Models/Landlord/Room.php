@@ -3,6 +3,9 @@
 namespace App\Models\Landlord;
 
 use App\Models\RoomUser;
+
+use App\Models\RoomUtility;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Room extends Model
@@ -86,5 +89,11 @@ class Room extends Model
    public function roomUsers(){
         return $this->hasMany(RoomUser::class, 'room_id','room_id');
     }
+
+    public function utilities()
+{
+    return $this->hasMany(RoomUtility::class, 'room_id', 'room_id');
+}
+
 
 }

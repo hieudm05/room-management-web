@@ -12,7 +12,11 @@ return new class extends Migration
             $table->bigIncrements('rental_id'); // 👈 phải có dòng này
             $table->unsignedBigInteger('room_id');
             $table->unsignedBigInteger('renter_id');
-            $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');
+
+            $table->enum('status', ['Pending', 'Active', 'Signed', 'Terminated', 'Expired'])->default('Pending');
+
+
+
             $table->date('start_date');
             $table->date('end_date');
             $table->string('contract_file')->nullable();
