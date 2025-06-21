@@ -26,6 +26,29 @@
                     @csrf
                     @method('PUT')
 
+                    <div class="mb-4 p-3 border rounded bg-light">
+                        <h6 class="fw-bold">👤 Thông tin người tạo (Chủ trọ)</h6>
+
+                        <div class="mb-2">
+                            <label class="form-label">Họ tên <span class="text-danger">*</span></label>
+                            <input type="text" name="creator_name" class="form-control" required
+                                value="{{ old('creator_name', Auth::user()?->name) }}">
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="text" name="creator_phone" class="form-control" required
+                                value="{{ old('creator_phone', Auth::user()?->phone_number) }}">
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">CCCD <span class="text-danger">*</span></label>
+                            <input type="text" name="creator_identity" class="form-control" required
+                                value="{{ old('creator_identity', Auth::user()?->identity_number) }}">
+                        </div>
+                    </div>
+
+
                     {{-- Hiển thị tên khu trọ --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Khu trọ</label>
@@ -52,8 +75,10 @@
 
                     {{-- Giá thuê --}}
                     <div class="mb-3">
-                        <label for="rental_price" class="form-label">Giá thuê (VNĐ) <span
-                                class="text-danger">*</span></label>
+                        <label for="rental_price" class="form-label">
+                            Giá thuê (VNĐ) <span class="text-danger">*</span>
+                            <small class="text-muted">(Đã sửa {{ $room->price_edit_count }} lần)</small>
+                        </label>
                         <input type="number" name="rental_price" id="rental_price"
                             class="form-control @error('rental_price') is-invalid @enderror"
                             value="{{ old('rental_price', $room->rental_price) }}" required>
@@ -61,6 +86,21 @@
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
+
+                    {{-- Giá cọc --}}
+                    <div class="mb-3">
+                        <label for="deposit_price" class="form-label">
+                            Giá tiền cọc (VNĐ) <span class="text-danger">*</span>
+                            <small class="text-muted">(Đã sửa {{ $room->deposit_edit_count }} lần)</small>
+                        </label>
+                        <input type="number" name="deposit_price" id="deposit_price"
+                            class="form-control @error('deposit_price') is-invalid @enderror"
+                            value="{{ old('deposit_price', $room->deposit_price ?? 0) }}" min="0" required>
+                        @error('deposit_price')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
 
                     {{-- Trạng thái --}}
                     <div class="mb-3">
@@ -98,13 +138,6 @@
                         </div>
                     </div>
 
-                    {{-- Thêm ảnh mới --}}
-                    <div class="mb-3">
-                        <label for="photos" class="form-label">Ảnh mới (có thể chọn nhiều)</label>
-                        <input type="file" name="photos[]" id="photos" multiple accept="image/*" class="form-control">
-                        <div class="form-text">Chỉ thêm ảnh mới, ảnh cũ sẽ được giữ nguyên.</div>
-                    </div>
-
                     {{-- Dịch vụ --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Dịch vụ</label>
@@ -123,17 +156,84 @@
                                                 class="text-muted">{{ $service->description }}</small>
                                         </label>
                                     </div>
-                                    <div class="input-group">
+
+                                    {{-- Giá dịch vụ --}}
+                                    <div class="input-group mb-1">
                                         <span class="input-group-text">Giá:</span>
                                         <input type="number" name="services[{{ $service->service_id }}][price]"
                                             step="1000" class="form-control" value="{{ $existing['price'] ?? '' }}"
                                             placeholder="Miễn phí nếu để trống">
                                         <span class="input-group-text">VNĐ</span>
                                     </div>
+
+                                    {{-- Kiểu tính dịch vụ riêng cho nước và wifi --}}
+                                    @if ($service->service_id == 2)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="services[2][unit]"
+                                                value="per_person"
+                                                {{ ($existing['unit'] ?? 'per_person') == 'per_person' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo người</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="services[2][unit]"
+                                                value="per_m3"
+                                                {{ ($existing['unit'] ?? '') == 'per_m3' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo khối (m³)</label>
+                                        </div>
+                                    @elseif ($service->service_id == 3)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="services[3][unit]"
+                                                value="per_person"
+                                                {{ ($existing['unit'] ?? 'per_person') == 'per_person' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo người</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="services[3][unit]"
+                                                value="per_room"
+                                                {{ ($existing['unit'] ?? '') == 'per_room' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo phòng</label>
+                                        </div>
+                                    @elseif ($service->service_id == 7)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="services[7][unit]"
+                                                value="per_person"
+                                                {{ ($existing['unit'] ?? 'per_person') == 'per_person' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo người</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="services[7][unit]"
+                                                value="per_room"
+                                                {{ ($existing['unit'] ?? '') == 'per_room' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo phòng</label>
+                                        </div>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
                     </div>
+
+                    {{-- Số người ở --}}
+                    <div class="mb-3">
+                        <label for="occupants" class="form-label">Số người ở <span class="text-danger">*</span></label>
+                        <input type="number" name="occupants" id="occupants"
+                            class="form-control @error('occupants') is-invalid @enderror"
+                            value="{{ old('occupants', $room->occupants ?? 0) }}" min="0" required>
+                        @error('occupants')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Thêm ảnh mới --}}
+                    <div class="mb-3">
+                        <label for="photos" class="form-label">Ảnh mới (có thể chọn nhiều)</label>
+                        <input type="file" name="photos[]" id="photos" multiple accept="image/*"
+                            class="form-control">
+                        <div class="form-text">Chỉ thêm ảnh mới, ảnh cũ sẽ được giữ nguyên.</div>
+                    </div>
+
+                    {{-- Preview ảnh chọn mới --}}
+                    <div id="preview-images" class="row mt-3"></div>
+
 
                     {{-- Ảnh hiện tại --}}
                     @if ($room->photos->count())
@@ -166,4 +266,40 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.getElementById('photos').addEventListener('change', function(event) {
+                const previewContainer = document.getElementById('preview-images');
+                previewContainer.innerHTML = ''; // Xoá ảnh cũ nếu có
+
+                const files = event.target.files;
+
+                if (files) {
+                    Array.from(files).forEach(file => {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+
+                            reader.onload = function(e) {
+                                const col = document.createElement('div');
+                                col.classList.add('col-md-3', 'mb-3');
+
+                                const img = document.createElement('img');
+                                img.src = e.target.result;
+                                img.classList.add('img-thumbnail');
+                                img.style.maxHeight = '150px';
+                                img.alt = 'Ảnh phòng';
+
+                                col.appendChild(img);
+                                previewContainer.appendChild(col);
+                            };
+
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
+            });
+        </script>
+    @endpush
+
 @endsection

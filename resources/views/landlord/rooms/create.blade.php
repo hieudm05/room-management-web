@@ -9,16 +9,13 @@
                 <h5 class="mb-0 text-white fw-bold">➕ Thêm phòng mới</h5>
             </div>
             <div class="card-body">
-
-                {{-- Thông báo thành công --}}
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
 
-                {{-- Hiển thị lỗi tổng quát --}}
                 @if ($errors->any())
                     <div class="alert alert-danger">
                         <ul class="mb-0">
@@ -38,7 +35,7 @@
                         <label for="property_id" class="form-label fw-bold">Chọn khu trọ <span
                                 class="text-danger">*</span></label>
                         <select name="property_id" id="property_id"
-                            class="form-select @error('property_id') is-invalid @enderror" required>
+                            class="form-select select2 @error('property_id') is-invalid @enderror" required>
                             <option disabled selected>-- Chọn khu trọ --</option>
                             @foreach ($properties as $property)
                                 <option value="{{ $property->property_id }}"
@@ -47,6 +44,7 @@
                                 </option>
                             @endforeach
                         </select>
+
                         @error('property_id')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
@@ -85,6 +83,19 @@
                         @enderror
                     </div>
 
+                    {{-- Giá cọc --}}
+                    <div class="mb-3">
+                        <label for="deposit_price" class="form-label">Giá tiền cọc (VNĐ) <span
+                                class="text-danger">*</span></label>
+                        <input type="number" name="deposit_price" id="deposit_price"
+                            class="form-control @error('deposit_price') is-invalid @enderror"
+                            value="{{ old('deposit_price') }}" min="0">
+                        @error('deposit_price')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+
                     {{-- Trạng thái --}}
                     <div class="mb-3">
                         <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
@@ -93,11 +104,21 @@
                             <option disabled selected>-- Chọn trạng thái --</option>
                             @foreach (['Available', 'Rented', 'Hidden', 'Suspended', 'Confirmed'] as $status)
                                 <option value="{{ $status }}" {{ old('status') == $status ? 'selected' : '' }}>
-                                    {{ $status }}
-                                </option>
+                                    {{ $status }}</option>
                             @endforeach
                         </select>
                         @error('status')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Số người ở --}}
+                    <div class="mb-3">
+                        <label for="occupants" class="form-label">Số người ở <span class="text-danger">*</span></label>
+                        <input type="number" name="occupants" id="occupants"
+                            class="form-control @error('occupants') is-invalid @enderror" value="{{ old('occupants', 0) }}"
+                            min="0" required>
+                        @error('occupants')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
@@ -130,18 +151,62 @@
                                     <div class="form-check mb-1">
                                         <input class="form-check-input" type="checkbox"
                                             name="services[{{ $service->service_id }}][enabled]" value="1"
-                                            id="service{{ $service->service_id }}">
+                                            id="service{{ $service->service_id }}"
+                                            {{ old("services.{$service->service_id}.enabled") ? 'checked' : '' }}>
                                         <label class="form-check-label" for="service{{ $service->service_id }}">
                                             {{ $service->name }} — <small
                                                 class="text-muted">{{ $service->description }}</small>
                                         </label>
                                     </div>
-                                    <div class="input-group">
+                                    <div class="input-group mb-1">
                                         <span class="input-group-text">Giá:</span>
                                         <input type="number" name="services[{{ $service->service_id }}][price]"
-                                            step="1000" class="form-control" placeholder="Miễn phí nếu để trống">
+                                            step="1000" class="form-control"
+                                            value="{{ old("services.{$service->service_id}.price") }}"
+                                            placeholder="Miễn phí nếu để trống">
                                         <span class="input-group-text">VNĐ</span>
                                     </div>
+
+                                    {{-- Cách tính riêng cho nước và wifi --}}
+                                    @if ($service->service_id == 2)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="services[2][unit]"
+                                                value="per_person"
+                                                {{ old('services.2.unit', 'per_person') == 'per_person' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo người</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="services[2][unit]"
+                                                value="per_m3" {{ old('services.2.unit') == 'per_m3' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo khối (m³)</label>
+                                        </div>
+                                    @elseif ($service->service_id == 3)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="services[3][unit]"
+                                                value="per_person"
+                                                {{ old('services.3.unit', 'per_person') == 'per_person' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo người</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="services[3][unit]"
+                                                value="per_room"
+                                                {{ old('services.3.unit') == 'per_room' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo phòng</label>
+                                        </div>
+                                    @elseif ($service->service_id == 7)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="services[7][unit]"
+                                                value="per_person"
+                                                {{ old('services.7.unit', 'per_person') == 'per_person' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo người</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="services[7][unit]"
+                                                value="per_room"
+                                                {{ old('services.7.unit') == 'per_room' ? 'checked' : '' }}>
+                                            <label class="form-check-label">Tính theo phòng</label>
+                                        </div>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
@@ -158,7 +223,11 @@
                         @enderror
                     </div>
 
-                    {{-- Nút submit --}}
+                    {{-- Nơi hiển thị ảnh được chọn --}}
+                    <div id="preview-images" class="row mt-3"></div>
+
+
+                    {{-- Submit --}}
                     <div class="text-start">
                         <button type="submit" class="btn btn-success">💾 Lưu phòng</button>
                     </div>
@@ -166,4 +235,54 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.getElementById('photos').addEventListener('change', function(event) {
+                const previewContainer = document.getElementById('preview-images');
+                previewContainer.innerHTML = ''; // Xoá preview cũ nếu chọn lại
+
+                const files = event.target.files;
+                if (files) {
+                    Array.from(files).forEach(file => {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const col = document.createElement('div');
+                                col.classList.add('col-md-3', 'mb-3'); // Mỗi ảnh chiếm 1/4 hàng (Bootstrap)
+
+                                const img = document.createElement('img');
+                                img.src = e.target.result; // Đường dẫn ảnh
+                                img.classList.add('img-thumbnail'); // Bootstrap làm ảnh gọn gàng
+                                img.style.maxHeight = '150px';
+                                img.alt = 'Ảnh phòng';
+
+                                col.appendChild(img); // Gắn ảnh vào div
+                                previewContainer.appendChild(col); // Thêm vào vùng preview
+                            };
+                            reader.readAsDataURL(file); // Đọc nội dung ảnh thành base64 để hiển thị
+                        }
+                    });
+                }
+            });
+        </script>
+    @endpush
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(() => {
+                    $('#property_id').select2({
+                        placeholder: "-- Chọn khu trọ --",
+                        allowClear: true,
+                        width: '100%',
+                        dropdownParent: $('#property_id').parent()
+                    });
+                }, 200); // delay nhỏ để DOM ổn định
+            });
+        </script>
+    @endpush
+
+
+
 @endsection

@@ -64,12 +64,12 @@
                                         @csrf
 
                                         <div class="mb-3">
-                                            <label for="name" class="form-label">Username</label>
+                                            <label for="email" class="form-label">Email</label>
                                             <input type="text"
-                                                class="form-control @error('name') is-invalid @enderror" id="name"
-                                                name="name" placeholder="Enter username"
-                                                value="{{ old('name') }}">
-                                            @error('name')
+                                                class="form-control @error('email') is-invalid @enderror" id="email"
+                                                name="email" placeholder="Enter username"
+                                                value="{{ old('email') }}">
+                                            @error('email')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>

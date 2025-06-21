@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Landlord;
 
 use App\Http\Controllers\Controller;
-use App\Models\Landlord\Property ;
+use App\Models\Landlord\Property;
+use App\Models\Landlord\PropertyImage;
 use App\Models\LegalDocument;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Mews\Purifier\Facades\Purifier;
 
 class PropertyController extends Controller
 {
@@ -17,13 +22,18 @@ class PropertyController extends Controller
      */
     public function index()
     {
-            $landlordIds = User::where('role', 'Landlord')->pluck('id');
+        // Lấy người dùng đang đăng nhập
+        $user = Auth::user(); // Chủ trọ
 
-    // Lấy danh sách property thuộc về các landlord
-    $listProperties = Property::whereIn('landlord_id', $landlordIds)->paginate(5);;
-        return view("landlord.propertyManagement.list",compact("listProperties"));
+
+        // Lấy danh sách property của landlord đó, sắp xếp mới nhất
+        $listProperties = Property::where('landlord_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(5);
+
+        return view("landlord.propertyManagement.list", compact("listProperties"));
     }
-  // Lấy danh sách ID của người dùng có role là 'Landlord'
+    // Lấy danh sách ID của người dùng có role là 'Landlord'
 
     /**
      * Show the form for creating a new resource.
@@ -36,95 +46,143 @@ class PropertyController extends Controller
     /**
      * Store a newly created resource in storage.
      */
- 
-public function store(Request $request)
-{   
-    // $user = auth()->user(); // Chủ trọ đang đăng nhập
-    $user = auth()->user(); // Chủ trọ đang đăng nhập
-    $request->validate([
-        'name' => 'required|string|max:100',
-        'province' => 'required|string',
-        'district' => 'required|string',
-        'ward' => 'required|string',
-        'detailed_address' => 'required|string|max:255',
-    ]);
-    // Lấy tên địa lý
-    $provinceData = Http::get("https://provinces.open-api.vn/api/p/{$request->province}")->json();
-    $districtData = Http::get("https://provinces.open-api.vn/api/d/{$request->district}")->json();
-    $wardData     = Http::get("https://provinces.open-api.vn/api/x/{$request->ward}")->json();
 
-    $provinceName = $provinceData['name'] ?? '';
-    $districtName = $districtData['name'] ?? '';
-    $wardName     = $wardData['name'] ?? '';
-
-    // Ghép địa chỉ đầy đủ
-    $fullAddress = "{$request->detailed_address}, {$wardName}, {$districtName}, {$provinceName}, Việt Nam";
-
-    // Gọi API lấy tọa độ
-    $geo = Http::get("https://nominatim.openstreetmap.org/search", [
-        'format' => 'json',
-        'q' => $fullAddress
-    ])->json();
-
-    $lat = $geo[0]['lat'] ?? null;
-    $lon = $geo[0]['lon'] ?? null;
-
-    // Nếu không có tọa độ thì cho toạ độ mặc định (VD: Hà Nội)
-    if (!$lat || !$lon) {
-        $lat = 21.028511;
-        $lon = 105.804817;
-    }
-
-    // Lưu vào DB
-    Property::create([
-        'landlord_id' => 2,
-        'name' => $request->name,
-        'address' => $fullAddress,
-        'latitude' => $lat,
-        'longitude' => $lon,
-        'description' => $request->input('description', ''),
-    ]);
-     // 2. Lưu các giấy tờ hợp lệ vào bảng legal_documents
-    $documentTypes = [
-        'so_do' => 'Sổ đỏ',
-        'giay_phep_xay_dung' => 'Giấy phép xây dựng',
-        'pccc' => 'Giấy chứng nhận PCCC',
-        'giay_phep_kinh_doanh' => 'Giấy phép kinh doanh',
-    ];
-
-    if ($request->hasFile('document_files')) {
-        foreach ($documentTypes as $key => $docType) {
-            if ($request->file("document_files.$key")) {
-                $file = $request->file("document_files.$key");
-                $filename = Str::slug($docType) . '_' . time() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs("public/legal_documents/2", $filename);
-
-                LegalDocument::create([
-                    'user_id' => 2,
-                    'document_type' => $docType,
-                    'file_path' => $path,
-                    'status' => 'Pending',
-                    'uploaded_at' => now(),
-                ]);
-            }
+    public function store(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login')->withErrors(['auth' => 'Vui lòng đăng nhập để thực hiện thao tác này.']);
         }
+
+        // Validate input
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:100',
+            'province' => 'required|string',
+            'district' => 'required|string',
+            'ward' => 'required|string',
+            'detailed_address' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'rules' => 'required|string', // Yêu cầu rules không rỗng
+            'image_urls.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'images_property.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        // Làm sạch nội dung HTML của rules
+        $validatedData['rules'] = Purifier::clean($validatedData['rules']);
+
+        // Lấy tên địa phương từ API
+        $provinceName = Http::get("https://provinces.open-api.vn/api/p/{$request->province}")['name'] ?? '';
+        $districtName = Http::get("https://provinces.open-api.vn/api/d/{$request->district}")['name'] ?? '';
+        $wardName = Http::get("https://provinces.open-api.vn/api/x/{$request->ward}")['name'] ?? '';
+
+        $fullAddress = "{$request->detailed_address} {$wardName}, {$districtName}, {$provinceName}, Việt Nam";
+
+        // Lấy tọa độ
+        $geo = Http::get("https://nominatim.openstreetmap.org/search", [
+            'format' => 'json',
+            'q' => $fullAddress
+        ])->json();
+        $lat = $geo[0]['lat'] ?? 21.028511;
+        $lon = $geo[0]['lon'] ?? 105.804817;
+
+        // dd($request->file('image_urls'));
+
+        // Handle main image
+        $imageFiles = $request->file('image_urls');
+
+        if (!$imageFiles || count($imageFiles) === 0) {
+            return back()->withErrors(['image_urls' => 'Vui lòng tải lên ít nhất một ảnh.'])->withInput();
+        }
+
+        $mainImage = $imageFiles[0]; // ✅ ảnh đầu tiên
+        $imageFilename = 'property_' . time() . '_' . Str::random(6) . '.' . $mainImage->getClientOriginalExtension();
+        $imagePath = $mainImage->storeAs("public/property_images/{$user->id}", $imageFilename);
+        $imageUrl = Storage::url($imagePath);
+
+
+        // Create property
+        $property = Property::create([
+            'landlord_id' => $user->id,
+            'name' => $validatedData['name'],
+            'address' => $fullAddress,
+            'latitude' => $lat,
+            'longitude' => $lon,
+            'description' => $validatedData['description'],
+            'rules' => $validatedData['rules'],
+            'image_url' => $imageUrl,
+        ]);
+        // Handle multiple property images
+        foreach (array_slice($imageFiles, 1) as $extraImage) {
+            $extraFilename = 'property_extra_' . time() . '_' . Str::random(6) . '.' . $extraImage->getClientOriginalExtension();
+            $extraPath = $extraImage->storeAs("public/property_images/{$user->id}", $extraFilename);
+
+            PropertyImage::create([
+                'property_id' => $property->property_id,
+                'image_path' => Storage::url($extraPath),
+            ]);
+        }
+
+        return redirect()->route('landlords.properties.list')->with('success', 'Thêm bất động sản thành công!');
     }
-
-    return redirect()->route('landlords.properties.list')->with('success', 'Thêm bất động sản thành công');
-}
-
     /**
      * Display the specified resource.
      */
-    public function show(Property  $Property )
+    public function show(Property $Property, $property_id)
     {
-        //
+        // Lấy thông tin chi tiết bất động sản và chủ trọ
+        $property = DB::table('properties')
+            ->join('users', 'properties.landlord_id', '=', 'users.id')
+            ->where('properties.property_id', $property_id)
+            ->select(
+                'properties.*',
+                'users.name as landlord_name',
+                'users.id as landlord_id'
+            )
+            ->first();
+        // Lấy danh sách giấy tờ pháp lý liên quan đến property_id
+        $legalDocuments = DB::table('legal_documents')
+            ->where('user_id', $property->landlord_id)
+            ->where('property_id', $property_id)
+            ->select('document_type', 'status', 'file_path')
+            ->get();
+        // Gửi dữ liệu đến view nếu không dùng dd()
+        return view('landlord.propertyManagement.show', compact('property', 'legalDocuments'));
+    }
+    public function showUploadDocumentForm($property_id)
+    {
+        $property = Property::findOrFail($property_id);
+        return view('landlord.propertyManagement.upload_document', compact('property'));
     }
 
+    public function uploadDocument(Request $request, $property_id)
+    {
+        $request->validate([
+            'document_files.giay_phep_kinh_doanh' => 'required|file|mimes:jpeg,png,jpg,pdf|max:5120',
+        ]);
+        $property = Property::findOrFail($property_id);
+        $user = Auth::user();
+        $docType = 'Giấy phép kinh doanh';
+        $docKey = 'giay_phep_kinh_doanh';
+        $file = $request->file("document_files.$docKey");
+        $filename = Str::slug($docType) . '_' . time() . '.' . $file->getClientOriginalExtension();
+        // $path = $file->storeAs("/public/legal_documents", $filename);
+        $path = $file->storeAs('legal_documents', $filename, 'public');
+
+
+        LegalDocument::create([
+            'user_id' => $user->id,
+            'property_id' => $property->property_id,
+            'document_type' => $docType,
+            'file_path' => $path,
+            'status' => 'Pending',
+            'uploaded_at' => now(),
+        ]);
+        return redirect()->route('landlords.properties.list')->with('success', 'Bổ sung giấy tờ thành công!');
+    }
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Property  $Property )
+    public function edit(Property $Property)
     {
         //
     }
@@ -132,7 +190,7 @@ public function store(Request $request)
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Property  $Property )
+    public function update(Request $request, Property $Property)
     {
         //
     }
@@ -140,7 +198,7 @@ public function store(Request $request)
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Property  $Property )
+    public function destroy(Property $Property)
     {
         //
     }
