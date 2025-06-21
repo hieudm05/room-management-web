@@ -63,7 +63,11 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         //Contract
         Route::get('/{room}/contract-form', [RoomController::class, 'formShowContract'])->name('contract.info');
         Route::post('/{room}/contract-confirm-rentalAgreement', [RoomController::class, 'confirmStatusrentalAgreement'])->name('contract.confirmLG');
+
         // xác nhận thêm ng dùng vào phòng
+
+        // xác nhận thêm ng dùng vào phòng 
+
         Route::post('/room-users/{id}/suscess', [RoomController::class, 'ConfirmAllUser'])->name('room_users.suscess');
     });
 
@@ -77,7 +81,11 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
             Route::get('/{room}', [ContractController::class, 'index']);
             // Ninh viết trong này
 
+
             //
+
+            // 
+
         });
 
         Route::prefix('services')->name('services.')->group(function () {
@@ -86,7 +94,9 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
 
         Route::prefix('electric-water')->name('electric_water.')->group(function () {
             Route::get('/{room}', [ElectricWaterController::class, 'index']);
+
             Route::post('/room-utility/{room}', [ElectricWaterController::class, 'store'])->name('store');
+
         });
 
         Route::prefix('documents')->name('documents.')->group(function () {

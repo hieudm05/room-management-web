@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\Landlord\Staff;
 
+
 use App\Models\RoomUtility;
 use Illuminate\Http\Request;
 use App\Models\Landlord\Room;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+
 class ElectricWaterController extends Controller
 {
     //
+
     public function index(Room $room){
         $room->load('property', 'facilities', 'photos', 'services');
         return \view('landlord.Staff.rooms.electricWater.ElectriWater', compact('room'));
@@ -70,5 +76,9 @@ class ElectricWaterController extends Controller
 
         return redirect()->back()->with('success', 'Utility data saved successfully.');
     }
+}
+
+
+   
 }
 
