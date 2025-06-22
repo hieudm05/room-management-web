@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Models\Landlord\Staff\Rooms;
-
 use App\Models\Landlord\Room;
 use Illuminate\Database\Eloquent\Model;
 
@@ -23,12 +22,12 @@ class RoomUtility extends Model
         'water_occupants',
         'water_m3',
         'water',
-        'images'
+        // 'images'
     ];
 
-    protected $casts = [
-        'images' => 'array',
-    ];
+    // protected $casts = [
+    //     'images' => 'array',
+    // ];
 
     // Quan hệ photos
     public function photos()

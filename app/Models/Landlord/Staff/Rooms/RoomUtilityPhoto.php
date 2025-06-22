@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class RoomUtilityPhoto extends Model
 {
     protected $table = 'room_utility_photos';
+    protected $primaryKey = 'id';
     protected $fillable = ['room_utility_id', 'image_path'];
 
     public function utility()

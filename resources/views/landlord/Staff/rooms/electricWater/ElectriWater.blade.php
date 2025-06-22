@@ -13,7 +13,7 @@
         <h3 class="mb-4">📄 Tính tiền điện nước</h3>
 
         @php
-            $occupants = $room->occupants ?? 0;
+            $occupants = $room->people_renter ?? 0;
 
             // Tìm dịch vụ Điện (service_id = 1)
             $electricService = $room->services->firstWhere('service_id', 1);
