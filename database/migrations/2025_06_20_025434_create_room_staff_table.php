@@ -15,6 +15,7 @@ return new class extends Migration {
 
             $table->unique(['room_id', 'staff_id']); //
 
+
             $table->foreign('room_id')->references('room_id')->on('rooms')->onDelete('cascade');
             $table->foreign('staff_id')->references('id')->on('users')->onDelete('cascade');
         });

@@ -93,6 +93,9 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
 
         Route::prefix('electric-water')->name('electric_water.')->group(function () {
             Route::get('/{room}', [ElectricWaterController::class, 'index']);
+
+            Route::post('/room-utility/{room}', [ElectricWaterController::class, 'store'])->name('store');
+
         });
 
         Route::prefix('documents')->name('documents.')->group(function () {
