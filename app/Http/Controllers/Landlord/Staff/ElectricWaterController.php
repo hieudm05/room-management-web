@@ -9,9 +9,6 @@ use App\Models\Landlord\Room;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
 
 class ElectricWaterController extends Controller
 {
@@ -79,6 +76,5 @@ class ElectricWaterController extends Controller
 }
 
 
-   
-}
+
 

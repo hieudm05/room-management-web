@@ -7,6 +7,7 @@ use App\Http\Controllers\Client\AuthUserController;
 use App\Http\Controllers\Client\ForgotPasswordController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\ResetPasswordController;
+use App\Http\Controllers\Landlord\ApprovalController;
 use App\Http\Controllers\Landlord\PropertyController;
 use App\Http\Controllers\Landlord\RoomController;
 use App\Http\Controllers\TenantProfileController;
@@ -34,6 +35,12 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
 
     Route::get('/register', [AuthLandlordController::class, 'showForm'])->name('register.form');
     Route::post('/register', [AuthLandlordController::class, 'submit'])->name('register.submit');
+
+    // Duyệt hợp đôngg
+    Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
+    Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
+    Route::delete('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
+
 
     Route::prefix('properties')->name('properties.')->group(function () {
         Route::get('/list', [PropertyController::class, 'index'])->name('list');
@@ -63,11 +70,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         //Contract
         Route::get('/{room}/contract-form', [RoomController::class, 'formShowContract'])->name('contract.info');
         Route::post('/{room}/contract-confirm-rentalAgreement', [RoomController::class, 'confirmStatusrentalAgreement'])->name('contract.confirmLG');
-
         // xác nhận thêm ng dùng vào phòng
-
-        // xác nhận thêm ng dùng vào phòng 
-
         Route::post('/room-users/{id}/suscess', [RoomController::class, 'ConfirmAllUser'])->name('room_users.suscess');
     });
 
@@ -80,12 +83,8 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::prefix('contract')->name('contract.')->group(function () {
             Route::get('/{room}', [ContractController::class, 'index']);
             // Ninh viết trong này
-
-
+            Route::post('/{room}/upload', [ContractController::class, 'uploadAgreementFile'])->name('upload');
             //
-
-            // 
-
         });
 
         Route::prefix('services')->name('services.')->group(function () {

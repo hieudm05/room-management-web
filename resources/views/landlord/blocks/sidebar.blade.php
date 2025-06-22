@@ -1,4 +1,8 @@
-<?php $user = Auth::user(); ?>
+<?php
+
+use Illuminate\Support\Facades\Auth;
+
+ $user = Auth::user(); ?>
 <div class="container-fluid">
     <div id="two-column-menu">
     </div>
@@ -28,6 +32,11 @@
                         <li class="nav-item">
                             <a href="{{ route('landlords.rooms.index') }}" class="nav-link">
                                 Rooms Management
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.approvals.index') }}" class="nav-link">
+                                Approval
                             </a>
                         </li>
                     @endif
