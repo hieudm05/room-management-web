@@ -6,8 +6,10 @@ use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Room;
 use App\Models\Landlord\Staff\Rooms\RoomUtility;
 use App\Models\RoomUser;
+use App\Models\User;
 use Illuminate\Http\Request;
-use PhpOffice\PhpWord\IOFactory;
+// use PhpOffice\PhpWord\IOFactory;
+use Smalot\PdfParser\Parser;
 
 class PaymentController extends Controller
 {
@@ -22,44 +24,39 @@ class PaymentController extends Controller
         // Đọc file Word
         $text = '';
         try {
-            $phpWord = IOFactory::load($fullPath);
-            foreach ($phpWord->getSections() as $section) {
-                foreach ($section->getElements() as $element) {
-                    if (method_exists($element, 'getText')) {
-                        $text .= $element->getText() . "\n";
-                    }
-                }
-            }
+            $parser = new Parser();
+            $pdf = $parser->parseFile($fullPath);
+            $text = $pdf->getText();
         } catch (\Exception $e) {
             $text = 'Không thể đọc file Word: ' . $e->getMessage();
         }
+        // dd($text);
 
         // Lấy số lượng người ở
         preg_match('/Số lượng người ở\s*:?\s*(\d+)/i', $text, $occupantsMatch);
         $occupants = isset($occupantsMatch[1]) ? (int) $occupantsMatch[1] : 1;
         // Lấy các dịch vụ (trừ điện, nước)
         $services = [];
-        $services = [];
-        if (preg_match('/Dịch vụ:(.*)Thông tin người thuê:/sU', $text, $serviceBlock)) {
-            // Tách từng dịch vụ bằng dấu gạch ngang
-            preg_match_all('/-\s*([^:]+):\s*([\d,.]+)\s*VNĐ\/?([^\s-]*)/u', $serviceBlock[1], $matches, PREG_SET_ORDER);
-            foreach ($matches as $m) {
-                $name = trim($m[1]);
-                $price = (int) str_replace([',', '.'], '', $m[2]);
-                $unit = isset($m[3]) ? trim($m[3]) : '';
-                // Loại bỏ điện, nước
-                if (!preg_match('/Điện|Nước/i', $name)) {
-                    $services[] = [
-                        'name' => $name,
-                        'price' => $price,
-                        'unit' => $unit,
-                    ];
+        if (preg_match('/3\.\s*Dịch vụ:(.*)4\./sU', $text, $serviceBlock)) {
+            $lines = preg_split('/\r\n|\r|\n/', trim($serviceBlock[1]));
+            foreach ($lines as $line) {
+                if (preg_match('/-\s*([^:]+):\s*([\d,.]+)\s*VNĐ\/?([^\s]*)/u', $line, $m)) {
+                    $name = trim($m[1]);
+                    $price = (int) str_replace([',', '.'], '', $m[2]);
+                    $unit = isset($m[3]) ? trim($m[3]) : '';
+                    if (!preg_match('/Điện|Nước/i', $name)) {
+                        $services[] = [
+                            'name' => $name,
+                            'price' => $price,
+                            'unit' => $unit,
+                        ];
+                    }
                 }
             }
         }
         $contractPath = 'storage/landlord/rooms/contracts/' . $room->contract_file;
         $fullPath = storage_path('app/public/' . $contractPath);
-        $tenant = RoomUser::where('room_id', $room->room_id)->first();
+        $tenant = User::find($rentalAgreement->renter_id);
 
         // Lấy tháng/năm từ request hoặc mặc định là tháng hiện tại
         $month = $request->input('month', now()->format('Y-m'));
@@ -88,7 +85,7 @@ class PaymentController extends Controller
             $electric_total = $bills->electricity ?? 0;
             $water_m3 = $bills->water_m3 ?? 0;
             $water = $bills->water ?? 0;
-            $water_total = $water_m3 * $water;
+            $water_total = $bills->water ?? 0;
             $rent_price = $room->rental_price ?? 0;
         }
         $service_total = 0;
@@ -107,7 +104,6 @@ class PaymentController extends Controller
         $electric_kwh = $bills->electric_kwh ?? 0;
         $electric_total = $bills->electricity ?? 0;
         $water_m3 = $bills->water_m3 ?? 0;
-        $water = $bills->water ?? 0;
         // Đơn giá tiền điện
         $electricService = $room->services->firstWhere('service_id', 1);
         $eletricPrice = $electricService->pivot->price ?? 0;
@@ -115,7 +111,7 @@ class PaymentController extends Controller
         // Đơn giá tiền nước
         $waterService = $room->services->firstWhere('service_id', 2);
         $waterPrice = $waterService->pivot->price ?? 0;
-        $water_total = $bills->water;
+        $water_total = $bills->water ?? 0;
         // Tổng hóa đơn
         $rent_price = $room->rental_price ?? 0;
         $internet = 0; // Nếu có trường internet thì lấy, không thì để 0
@@ -136,7 +132,6 @@ class PaymentController extends Controller
             'water_unit' => $bills->water_unit ?? null,
             'water_occupants' => $bills->water_occupants ?? null,
             'water_m3' => $water_m3,
-            'water' => $water,
             'water_total' => $water_total,
             'internet' => $internet,
             'occupants' => $occupants,

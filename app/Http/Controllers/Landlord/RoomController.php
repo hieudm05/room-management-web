@@ -333,6 +333,8 @@ class RoomController extends Controller
         $templateProcessor->setValue('CCCD_NGUOI_THUE', $tenant->cccd ?? '......................................');
         $templateProcessor->setValue('EMAIL_NGUOI_THUE', $tenant->email ?? '......................................');
         $templateProcessor->setValue('SO_LUONG_NGUOI_O', $tenant->people_renter ?? '......................................');
+        $templateProcessor->setValue('NGAY_BAT_DAU', '........../........../............');
+        $templateProcessor->setValue('NGAY_KET_THUC', '........../........../............');
         $templateProcessor->setValue('SO_LUONG_NGUOI_TOI_DA', $room->occupants ?? '......................................');
         $templateProcessor->setValue('TIEN_NGHI', implode(', ', $room->facilities->pluck('name')->toArray()));
         $rules = strip_tags($room->property->rules ?? 'Không có nội quy được thiết lập.');
