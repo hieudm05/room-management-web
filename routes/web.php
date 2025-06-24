@@ -104,6 +104,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
 
         Route::prefix('payment')->name('payment.')->group(function () {
             Route::get('/{room}', [PaymentController::class, 'index']);
+            Route::get('api/payment/{room}', [PaymentController::class, 'getBillByMonth'])->name('payment.api');
         });
 
 

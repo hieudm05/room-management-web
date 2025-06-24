@@ -2,26 +2,24 @@
 
 namespace App\Http\Controllers\Landlord\Staff;
 
-
-use App\Models\RoomUtility;
 use Illuminate\Http\Request;
 use App\Models\Landlord\Room;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-
+use App\Models\Landlord\Staff\Rooms\RoomUtility;
 
 class ElectricWaterController extends Controller
 {
     //
 
-    public function index(Room $room){
+    public function index(Room $room)
+    {
         $room->load('property', 'facilities', 'photos', 'services');
         return \view('landlord.Staff.rooms.electricWater.ElectriWater', compact('room'));
     }
-     public function store(Request $request, Room $room)
+    public function store(Request $request, Room $room)
     {
         $data = $request->validate([
-            // (giữ nguyên như cũ)
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'electric_start' => 'nullable|integer',
@@ -32,20 +30,10 @@ class ElectricWaterController extends Controller
             'water_occupants' => 'nullable|integer',
             'water_m3' => 'nullable|numeric',
             'water' => 'required|string',
-            'images.*' => 'image|mimes:jpg,jpeg,png|max:2048',
+            'images.*' => 'image|mimes:jpg,jpeg,png,gif,webp,bmp,svg|max:2048',
         ]);
-
-        // Format money (remove separators and "VND")
-       $data['electricity'] = (int)str_replace([' VNĐ', '.', ','], '', $data['electricity']);
-        $data['water'] = (int)str_replace([' VNĐ', '.', ','], '', $data['water']);
-
-        $imagePaths = [];
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('utilities', 'public');
-                $imagePaths[] = $path;
-            }
-        }
+        $data['electricity'] = (int) str_replace([' VNĐ', '.', ','], '', $data['electricity']);
+        $data['water'] = (int) str_replace([' VNĐ', '.', ','], '', $data['water']);
 
         $utility = RoomUtility::create([
             'room_id' => $room->room_id,
@@ -61,15 +49,15 @@ class ElectricWaterController extends Controller
             'water' => $data['water'],
         ]);
 
+        // Lưu ảnh vào bảng room_utility_photos
         if ($request->hasFile('images')) {
-    foreach ($request->file('images') as $image) {
-        $path = $image->store('utilities', 'public');
-
-        $utility->photos()->create([
-            'image_path' => $path
-        ]);
-    }
-}
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('utilities', 'public');
+                $utility->photos()->create([
+                    'image_path' => $path
+                ]);
+            }
+        }
 
         return redirect()->back()->with('success', 'Utility data saved successfully.');
     }

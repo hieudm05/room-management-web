@@ -2,9 +2,9 @@
 
 namespace App\Models\Landlord;
 
+use App\Models\Landlord\Staff\Rooms\RoomUtility;
 use App\Models\RoomUser;
 
-use App\Models\RoomUtility;
 
 use Illuminate\Database\Eloquent\Model;
 

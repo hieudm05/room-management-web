@@ -64,7 +64,7 @@ class PropertyController extends Controller
             'description' => 'nullable|string',
             'rules' => 'required|string', // Yêu cầu rules không rỗng
             'image_urls.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'images_property.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'images_property.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5024',
         ]);
 
         // Làm sạch nội dung HTML của rules

@@ -41,15 +41,16 @@ use Illuminate\Support\Facades\Auth;
                         </li>
                     @endif
                     {{-- Quản lí --}}
-                    <li class="nav-item">
-                        <a href="{{ route('landlords.staff.index') }}" class="nav-link">
-                            Rooms Management for Staff
-                        </a>
-                    </li>
+                    @if ($user->role === 'Staff')
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.staff.index') }}" class="nav-link">
+                                Properties Management for Staff
+                            </a>
+                        </li>
+                    @endif
                     {{-- end Quản lí --}}
                 </ul>
             </div>
         </li>
-
     </ul>
 </div>
