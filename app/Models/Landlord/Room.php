@@ -86,14 +86,18 @@ class Room extends Model
     {
         return $this->belongsTo(RentalAgreement::class, 'id_rental_agreements');
     }
-   public function roomUsers(){
-        return $this->hasMany(RoomUser::class, 'room_id','room_id');
+    public function roomUsers()
+    {
+        return $this->hasMany(RoomUser::class, 'room_id', 'room_id');
     }
 
     public function utilities()
-{
-    return $this->hasMany(RoomUtility::class, 'room_id', 'room_id');
-}
+    {
+        return $this->hasMany(RoomUtility::class, 'room_id', 'room_id');
+    }
+    public function bankAccount() {
+        return $this->belongsTo(BankAccount::class, 'property_bank_account_id');
+    }
 
 
 }

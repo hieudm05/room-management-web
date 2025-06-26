@@ -13,6 +13,10 @@ use App\Http\Controllers\Landlord\RoomController;
 use App\Http\Controllers\TenantProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\Landlord\BankAccountController;
+use App\Http\Controllers\Landlord\LandlordBankAccountController;
+use App\Http\Controllers\Landlord\PropertyBankAccountController;
+use App\Http\Controllers\Landlord\PropertyRoomBankAccountController;
 use App\Http\Controllers\Landlord\Staff\ContractController;
 use App\Http\Controllers\Landlord\Staff\DocumentController;
 use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
@@ -49,6 +53,20 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/show/{property_id}', [PropertyController::class, 'show'])->name('show');
         Route::get('/{property_id}/upload-document', [PropertyController::class, 'showUploadDocumentForm'])->name('uploadDocument');
         Route::post('/{property_id}/upload-document', [PropertyController::class, 'uploadDocument'])->name('uploadDocument.post');
+        Route::get('/{property_id}/shows', [PropertyController::class, 'showDetalShow'])->name('shows');
+
+        Route::put('/{property_id}/bank-account', [PropertyBankAccountController::class, 'update'])->name('bank_accounts.update');
+        Route::put('/{property_id}/bank-account/unassign', [PropertyBankAccountController::class, 'unassign'])->name('bank_accounts.unassign');
+    });
+    // Route gán tài khoản cho nhiều tòa
+    Route::get('/bank-accounts/assign', [LandlordBankAccountController::class, 'assignToProperties'])->name('bank_accounts.assign');
+    Route::post('/bank-accounts/assign', [LandlordBankAccountController::class, 'assignToPropertiesStore'])->name('bank_accounts.assign.store');
+
+    Route::prefix('bank-accounts')->name('bank_accounts.')->group(function () {
+        Route::get('/', [LandlordBankAccountController::class, 'index'])->name('index');
+        Route::post('/store', [LandlordBankAccountController::class, 'store'])->name('store');
+        Route::put('/{id}', [LandlordBankAccountController::class, 'update'])->name('update');
+        Route::delete('/{id}', [LandlordBankAccountController::class, 'destroy'])->name('destroy');
     });
 
     Route::prefix('rooms')->name('rooms.')->group(function () {

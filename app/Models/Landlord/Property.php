@@ -38,6 +38,11 @@ class Property extends Model
     {
         return $this->hasMany(Room::class, 'property_id', 'property_id');
     }
+   
+  public function bankAccount()
+{
+    return $this->belongsTo(BankAccount::class, 'bank_account_id', 'id');
+}
 
 
 }
