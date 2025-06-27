@@ -45,6 +45,7 @@ public function toggleFavorite(Property $property)
         $user->favorites()->attach($property->property_id);
         return redirect()->route('home.favorites')->with('success', 'Đã thêm vào danh sách yêu thích!');
     }
+    
 }
 PUblic function StausAgreement()
 {
