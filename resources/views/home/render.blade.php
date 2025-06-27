@@ -40,14 +40,20 @@
                                 <span class="_list_blickes _netork">Network info</span> {{-- Nếu có dữ liệu cụ thể thì thay thế --}}
                                 <span class="_list_blickes types">{{ $room->property->type ?? 'Type Unknown' }}</span>
                             </div>
-                            <div class="_card_flex_last">
-                                <div class="prt_saveed_12lk">
-                                    <label class="toggler toggler-danger">
-                                        <input type="checkbox">
-                                        <i class="ti-heart"></i>
-                                    </label>
-                                </div>
-                            </div>
+                          @auth
+    <div class="prt_saveed_12lk">
+        <form action="{{ route('home.favorites.toggle', $room->property->property_id) }}" method="POST">
+            @csrf
+            @php
+                $isFavorited = Auth::user()->favorites->contains('property_id', $room->property->property_id);
+            @endphp
+            <button type="submit" class="btn btn-sm {{ $isFavorited ? 'btn-danger' : 'btn-outline-danger' }}">
+                ❤️ {{ $isFavorited ? 'Bỏ yêu thích' : 'Yêu thích' }}
+            </button>
+        </form>
+    </div>
+@endauth
+
                         </div>
                         <div class="_card_list_flex">
                             <div class="_card_flex_01">
