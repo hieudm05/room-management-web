@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Client;
-
+use App\Models\Landlord\Property;
 use App\Http\Controllers\Controller;
 use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Room;
@@ -12,7 +12,7 @@ use App\Models\RoomUser;
 use Illuminate\Http\Request;
 use App\Models\User;
 use PhpOffice\PhpWord\IOFactory;
-
+use Illuminate\Support\Facades\DB;
 class HomeController extends Controller
 {
 public function renter()
@@ -21,6 +21,31 @@ public function renter()
     $rooms = Room::latest()->paginate(6); // thêm paginate
 
     return view('home.render', compact('rooms'));
+}
+public function favorites()
+{
+    $favorites = Auth::user()-> favorites()->get();
+    return view('home.favourite', compact('favorites'));
+}
+
+public function toggleFavorite(Property $property)
+{
+    $user = Auth::user();
+
+    // ✅ So sánh rõ bảng: favorites.property_id
+    $isFavorited = DB::table('favorites')
+        ->where('user_id', $user->id)
+        ->where('property_id', $property->property_id)
+        ->exists();
+
+    if ($isFavorited) {
+        $user->favorites()->detach($property->property_id);
+        return redirect()->route('home.favorites')->with('success', 'Đã xóa khỏi danh sách yêu thích.');
+    } else {
+        $user->favorites()->attach($property->property_id);
+        return redirect()->route('home.favorites')->with('success', 'Đã thêm vào danh sách yêu thích!');
+    }
+    
 }
 PUblic function StausAgreement()
 {

@@ -83,6 +83,10 @@ public function Login(Request $request)
     if ($user->role === 'Landlord') {
         return redirect()->route('landlords.dashboard')->with('success', 'Đăng nhập thành công với vai trò Landlord');
     }
+   
+    if ($user->role === 'Staff') {
+        return redirect()->route('landlords.dashboard')->with('success', 'Đăng nhập thành công với vai trò Staff');
+    }
 
     return redirect()->route('renter')->with('success', 'Đăng nhập thành công với vai trò Renter');
 }

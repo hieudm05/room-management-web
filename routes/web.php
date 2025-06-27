@@ -157,7 +157,7 @@ Route::prefix('auth')->name('auth.')->group(function () {
     Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
     Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
     // Đăng xuất
-    Route::get('/logout', [AuthUserController::class, 'logout'])->name('logout');
+    Route::post('/logout', [AuthUserController::class, 'logout'])->name('logout');
 });
 Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
@@ -181,7 +181,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile/edit', [TenantProfileController::class, 'edit'])->name('tenant.profile.edit');
     Route::put('/profile/update', [TenantProfileController::class, 'update'])->name('tenant.profile.update');
     Route::put('/profile/avatar', [TenantProfileController::class, 'updateAvatar'])->name('profile.update.avatar');
+     Route::get('/favorites', [HomeController::class, 'favorites'])->name('home.favorites');
+    Route::post('/favorites/{property}', [HomeController::class, 'toggleFavorite'])->name('home.favorites.toggle');
 });
+
 
 
 Route::middleware(['auth'])->prefix('admin')->group(function () {

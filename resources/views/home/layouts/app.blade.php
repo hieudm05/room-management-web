@@ -40,8 +40,10 @@
 					
 					<div class="row justify-content-center">
 						<div class="col-xl-12 col-lg-12 col-md-12">
+
 							<h1 class="big-header-capt mb-0 text-light">Tìm kiếm phòng trọ </h1>
 							<p class="text-center mb-4 text-light">Phòng trọ phù hợp theo sở thích của rieeng của bạn </p>
+					
 						</div>
 					</div>
 					
