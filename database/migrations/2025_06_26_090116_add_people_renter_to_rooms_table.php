@@ -12,9 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('rooms', function (Blueprint $table) {
-            $table->unsignedInteger('people_renter')->default(0)->after('id_rental_agreements'); // hoặc after('status') nếu chưa có id_rental_agreements
+            if (!Schema::hasColumn('rooms', 'people_renter')) {
+                $table->unsignedInteger('people_renter')->default(0)->after('id_rental_agreements');
+            }
         });
     }
+
 
     /**
      * Reverse the migrations.
@@ -22,7 +25,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('rooms', function (Blueprint $table) {
-            //
+            if (Schema::hasColumn('rooms', 'people_renter')) {
+                $table->dropColumn('people_renter');
+            }
         });
     }
 };

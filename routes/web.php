@@ -8,11 +8,14 @@ use App\Http\Controllers\Client\ForgotPasswordController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\ResetPasswordController;
 use App\Http\Controllers\Landlord\ApprovalController;
+use App\Http\Controllers\Landlord\ApprovalUserController;
 use App\Http\Controllers\Landlord\PropertyController;
 use App\Http\Controllers\Landlord\RoomController;
+use App\Http\Controllers\Renter\AddUserRequestController;
 use App\Http\Controllers\TenantProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\Client\MyRoomController;
 use App\Http\Controllers\Landlord\BankAccountController;
 use App\Http\Controllers\Landlord\LandlordBankAccountController;
 use App\Http\Controllers\Landlord\PropertyBankAccountController;
@@ -23,6 +26,7 @@ use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
 use App\Http\Controllers\Landlord\Staff\PaymentController;
 use App\Http\Controllers\Landlord\Staff\ServiceController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomController;
+use App\Http\Controllers\RoomBillController;
 
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
@@ -44,6 +48,10 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
     Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::delete('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
+    // Duyệt yêu cầu thêm người vào phòng
+    Route::get('/approvals/users', [ApprovalUserController::class, 'index'])->name('approvals.users.index');
+    Route::post('/approvals/users/{id}/approve', [ApprovalUserController::class, 'approveUser'])->name('approvals.users.approve');
+    Route::delete('/approvals/users/{id}/reject', [ApprovalUserController::class, 'reject'])->name('approvals.users.reject');
 
 
     Route::prefix('properties')->name('properties.')->group(function () {
@@ -130,8 +138,6 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
             Route::get('api/payment/{room}', [PaymentController::class, 'getBillByMonth'])->name('payment.api');
             Route::post('/{room}/send-bill', action: [PaymentController::class, 'sendBillmmm'])->name('payment.send_bills'); 
         });
-
-
     });
 });
 Route::prefix('rooms')->group(function () {
@@ -189,6 +195,11 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/profile/avatar', [TenantProfileController::class, 'updateAvatar'])->name('profile.update.avatar');
     Route::get('/favorites', [HomeController::class, 'favorites'])->name('home.favorites');
     Route::post('/favorites/{property}', [HomeController::class, 'toggleFavorite'])->name('home.favorites.toggle');
+    Route::post('/my-room/confirm-payment/{bill}', [MyRoomController::class, 'confirmPayment'])->name('home.my-room.confirm-payment');
+    Route::get('/my-room', [MyRoomController::class, 'index'])->name('my-room');
+    Route::post('/bills/{bill}/mark-pending', [RoomBillController::class, 'markPending'])->name('bills.markPending');
+
+
 });
 
 
@@ -198,3 +209,8 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::post('/profile/update', [AdminProfileController::class, 'update'])->name('admin.profile.update');
 });
 
+Route::middleware('auth')->group(function () {
+    // User thêm user
+    Route::get('/add-user', [AddUserRequestController::class, 'create'])->name('renter.addUserRequest.create');
+    Route::post('/add-user', [AddUserRequestController::class, 'store'])->name('renter.storeuser');
+});

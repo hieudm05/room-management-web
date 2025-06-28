@@ -17,4 +17,9 @@ class RoomBill extends Model
     {
         return $this->hasMany(RoomBillService::class);
     }
+    public function getIsPaidAttribute(): bool
+{
+    return $this->status === 'paid';
+}
+
 }

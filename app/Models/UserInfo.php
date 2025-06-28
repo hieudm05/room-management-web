@@ -8,5 +8,16 @@ class UserInfo extends Model
 {
     protected $table = 'user_infos';
     protected $primaryKey = 'id';
-    protected $fillable = ['user_id', 'cccd', 'phone','room_id'];
+    protected $fillable = ['user_id', 'cccd', 'phone', 'email', 'room_id', 'full_name'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Quan hệ đến phòng
+    public function room()
+    {
+        return $this->belongsTo(\App\Models\Landlord\Room::class, 'room_id');
+    }
 }

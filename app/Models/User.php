@@ -94,6 +94,10 @@ class User extends Authenticatable
     return $this->belongsToMany(Property::class, 'favorites', 'user_id', 'property_id')
                 ->withTimestamps();
 }
+public function info()
+{
+    return $this->hasOne(UserInfo::class, 'user_id'); // giả sử có cột user_id trong bảng user_info
+}
 
 
 

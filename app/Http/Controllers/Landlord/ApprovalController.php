@@ -73,19 +73,22 @@ class ApprovalController extends Controller
         }
         // 4. Lấy thông tin khách thuê
         $fullName = $cccd = $phone = $tenantEmail = null;
-        if (preg_match('/BÊN THUÊ PHÒNG TR Ọ.*?\(gọi tắt là Bên B\):(.*?)Căn cứ pháp lý/s', $text, $benBBlock)) {
-            $benBText = $benBBlock[1];
 
-            preg_match('/- Ông\/Bà:\s*(.+)/u', $benBText, $nameMatch);
-            preg_match('/- CMND\/CCCD số:\s*([0-9]+)/u', $benBText, $cccdMatch);
-            preg_match('/- SĐT:\s*([0-9]+)/u', $benBText, $phoneMatch);
-            preg_match('/- Email:\s*([^\s]+)/iu', $benBText, $emailMatch);
+        // Trích toàn bộ khối từ "BÊN THUÊ PHÒNG TRỌ" đến "Nội dung hợp đồng"
+        if (preg_match('/BÊN THUÊ PHÒNG TRỌ \(Bên B\):(.+?)Nội dung hợp đồng/su', $text, $match)) {
+            $infoBlock = $match[1];
+
+            preg_match('/Họ tên:\s*(.+)/u', $infoBlock, $nameMatch);
+            preg_match('/SĐT:\s*([0-9]+)/u', $infoBlock, $phoneMatch);
+            preg_match('/CCCD:\s*([0-9]+)/u', $infoBlock, $cccdMatch);
+            preg_match('/Email:\s*([^\s]+)/iu', $infoBlock, $emailMatch);
 
             $fullName = trim($nameMatch[1] ?? '');
-            $cccd = $cccdMatch[1] ?? '';
             $phone = $phoneMatch[1] ?? '';
+            $cccd = $cccdMatch[1] ?? '';
             $tenantEmail = $emailMatch[1] ?? '';
         }
+
 
 
         // 5. Kiểm tra user tồn tại
@@ -142,5 +145,66 @@ class ApprovalController extends Controller
         $approval->delete();
 
         return redirect()->back()->with('warning', 'Hợp đồng đã bị từ chối và xóa bỏ.');
+    }
+
+    public function approveUser($id)
+    {
+        $approval = Approval::findOrFail($id);
+
+        if ($approval->type !== 'add_user') {
+            return back()->withErrors('❌ Loại yêu cầu không hợp lệ.');
+        }
+
+        // 🔍 Tách họ tên và email từ note: "Tên: Nguyễn Văn A | Email: abc@example.com"
+        preg_match('/Tên:\s*(.*?)\s*\|\s*Email:\s*(.*)/', $approval->note, $matches);
+        $fullNameFromNote = trim($matches[1] ?? '');
+        $email = trim($matches[2] ?? '');
+
+        if (empty($fullNameFromNote) || empty($email)) {
+            return back()->withErrors('❌ Không thể tách thông tin người dùng từ yêu cầu.');
+        }
+
+        // 🔍 Tìm user_info chưa có user_id
+        $userInfo = UserInfo::where('room_id', $approval->room_id)
+            ->where('email', $email)
+            ->whereNull('user_id')
+            ->latest()
+            ->first();
+
+        if (!$userInfo) {
+            return back()->withErrors('❌ Không tìm thấy thông tin người cần thêm.');
+        }
+        dd($userInfo);
+
+        // 🔐 Tạo tài khoản user
+        try {
+            $password = Str::random(8);
+
+            $user = User::create([
+                'name'     => $userInfo->full_name ?: $fullNameFromNote ,
+                'email'    => $userInfo->email,
+                'password' => Hash::make($password),
+                'role'     => 'Renter', // hoặc dùng constant nếu có
+            ]);
+
+            // 🔄 Gán user_id vào user_info
+            $userInfo->update(['user_id' => $user->id]);
+
+            // 📧 Gửi mail thông báo
+            Mail::raw(
+                "🎉 Chào {$userInfo->full_name},\n\nTài khoản của bạn đã được tạo thành công!\n\n📧 Email: {$user->email}\n🔑 Mật khẩu: {$password}\n\nVui lòng đăng nhập và đổi mật khẩu ngay khi có thể.\n\nTrân trọng.",
+                function ($message) use ($user) {
+                    $message->to($user->email)
+                        ->subject('Thông tin tài khoản thuê phòng');
+                }
+            );
+
+            // 🧹 Xóa yêu cầu sau khi xử lý xong
+            $approval->delete();
+
+            return back()->with('success', '✅ Đã duyệt và tạo tài khoản thành công. Thông tin đã được gửi qua email.');
+        } catch (\Exception $e) {
+            return back()->withErrors('❌ Có lỗi xảy ra: ' . $e->getMessage());
+        }
     }
 }
