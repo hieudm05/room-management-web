@@ -15,6 +15,7 @@ use App\Http\Controllers\Renter\AddUserRequestController;
 use App\Http\Controllers\TenantProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\Client\MyRoomController;
 use App\Http\Controllers\Landlord\BankAccountController;
 use App\Http\Controllers\Landlord\LandlordBankAccountController;
 use App\Http\Controllers\Landlord\PropertyBankAccountController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
 use App\Http\Controllers\Landlord\Staff\PaymentController;
 use App\Http\Controllers\Landlord\Staff\ServiceController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomController;
+use App\Http\Controllers\RoomBillController;
 
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
@@ -189,6 +191,11 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/profile/avatar', [TenantProfileController::class, 'updateAvatar'])->name('profile.update.avatar');
      Route::get('/favorites', [HomeController::class, 'favorites'])->name('home.favorites');
     Route::post('/favorites/{property}', [HomeController::class, 'toggleFavorite'])->name('home.favorites.toggle');
+    Route::post('/my-room/confirm-payment/{bill}', [MyRoomController::class, 'confirmPayment'])->name('home.my-room.confirm-payment');
+    Route::get('/my-room', [MyRoomController::class, 'index'])->name('my-room');
+    Route::post('/bills/{bill}/mark-pending', [RoomBillController::class, 'markPending'])->name('bills.markPending');
+
+
 });
 
 

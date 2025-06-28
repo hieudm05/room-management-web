@@ -65,13 +65,14 @@
         <!-- Nếu đã đăng nhập -->
         <li class="dropdown ms-2">
             <a href="#" class="text-white d-flex align-items-center" data-bs-toggle="dropdown">
-                <img src="{{ Auth::user()->avatar ?? asset('images/default-avatar.png') }}" 
+                <img src="{{ Auth::user()->avatar ?? asset('images/default-avatar.png') }}"
                      class="rounded-circle" width="32" height="32" alt="avatar">
                 <span class="ms-2">{{ Auth::user()->name }}</span>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="{{ route('tenant.profile.edit') }}">👤 Thông tin cá nhân</a></li>
                  <li><a class="dropdown-item" href="{{ route('home.favorites') }}">❤️ Trọ đã yêu thích</a></li>
+                 <li><a class="dropdown-item" href="{{ route('my-room') }}">🏠 Phòng của tôi</a></li>
                 <li><a class="dropdown-item" href="{{ route('auth.logout') }}"
                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                    🚪  Đăng xuất</a></li>
@@ -80,9 +81,9 @@
                 @csrf
             </form>
         </li>
-                 
-        
-   
+
+
+
     @else
         <!-- Nếu chưa đăng nhập: hiện 2 nút như cũ -->
         <li>
