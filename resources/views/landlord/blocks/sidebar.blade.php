@@ -4,7 +4,6 @@
 use Illuminate\Support\Facades\Auth;
 
 $user = Auth::user(); ?>
-
 <div class="container-fluid">
     <div id="two-column-menu"></div>
     <ul class="navbar-nav" id="navbar-nav">

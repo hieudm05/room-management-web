@@ -9,20 +9,26 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::table('rooms', function (Blueprint $table) {
-             $table->unsignedBigInteger('id_rental_agreements')->nullable()->after('status');
-        });
-    }
+public function up(): void
+{
+    Schema::table('rooms', function (Blueprint $table) {
+        if (!Schema::hasColumn('rooms', 'id_rental_agreements')) {
+            $table->unsignedBigInteger('id_rental_agreements')->nullable()->after('status');
+        }
+    });
+}
+
 
     /**
      * Reverse the migrations.
      */
-    public function down(): void
-    {
-        Schema::table('rooms', function (Blueprint $table) {
-            //
-        });
-    }
+public function down(): void
+{
+    Schema::table('rooms', function (Blueprint $table) {
+        if (Schema::hasColumn('rooms', 'id_rental_agreements')) {
+            $table->dropColumn('id_rental_agreements');
+        }
+    });
+}
+
 };
