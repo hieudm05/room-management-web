@@ -122,6 +122,9 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
 
         Route::prefix('payment')->name('payment.')->group(function () {
             Route::get('/{room}', [PaymentController::class, 'index']);
+            Route::post('/{room}/store', [PaymentController::class, 'store'])->name('store');
+            Route::get('/{room}/export-excel', [PaymentController::class, 'exportExcel'])->name('export');
+
             Route::get('api/payment/{room}', [PaymentController::class, 'getBillByMonth'])->name('payment.api');
         });
 
