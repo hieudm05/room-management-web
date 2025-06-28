@@ -187,5 +187,11 @@
                 </div>
             @endif
         </form>
+        <form action="{{ route('landlords.staff.payment.payment.send_bills', $room->room_id) }}" method="POST"
+            class="d-inline p-2">
+            @csrf
+            <input type="hidden" name="month" value="{{ $data['month'] }}">
+            <button type="submit" class="btn btn-warning btn-sm">Gửi hóa đơn cho khách</button>
+        </form>
     </div>
 @endsection

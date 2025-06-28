@@ -17,6 +17,11 @@ use App\Models\Landlord\Staff\Rooms\RoomBill;
 use App\Models\Landlord\Staff\Rooms\RoomUtility;
 use App\Models\Landlord\Staff\Rooms\RoomBillService;
 
+use App\Mail\SendRoomBillMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
 
 class PaymentController extends Controller
 {
@@ -43,29 +48,29 @@ class PaymentController extends Controller
         preg_match('/Số lượng người ở\s*:?\s*(\d+)/i', $text, $occupantsMatch);
         $occupants = isset($occupantsMatch[1]) ? (int) $occupantsMatch[1] : 1;
         // Lấy các dịch vụ (trừ điện, nước)
-       $services = [];
-if (preg_match('/3\.\s*Dịch vụ:(.*)4\./sU', $text, $serviceBlock)) {
-    $lines = preg_split('/\r\n|\r|\n/', trim($serviceBlock[1]));
-    foreach ($lines as $line) {
-        if (preg_match('/-\s*([^:]+):\s*([\d,.]+)\s*VNĐ\/?([^\s]*)/u', $line, $m)) {
-            $name = trim($m[1]);
-            $price = (int) str_replace([',', '.'], '', $m[2]);
-            $unit = isset($m[3]) ? trim($m[3]) : '';
-            if (!preg_match('/Điện|Nước/i', $name)) {
-                // Gán service_id nếu có
-                $matchedService = $room->services->firstWhere('name', $name);
-                $service_id = $matchedService->pivot->service_id ?? null;
+        $services = [];
+        if (preg_match('/3\.\s*Dịch vụ:(.*)4\./sU', $text, $serviceBlock)) {
+            $lines = preg_split('/\r\n|\r|\n/', trim($serviceBlock[1]));
+            foreach ($lines as $line) {
+                if (preg_match('/-\s*([^:]+):\s*([\d,.]+)\s*VNĐ\/?([^\s]*)/u', $line, $m)) {
+                    $name = trim($m[1]);
+                    $price = (int) str_replace([',', '.'], '', $m[2]);
+                    $unit = isset($m[3]) ? trim($m[3]) : '';
+                    if (!preg_match('/Điện|Nước/i', $name)) {
+                        // Gán service_id nếu có
+                        $matchedService = $room->services->firstWhere('name', $name);
+                        $service_id = $matchedService->pivot->service_id ?? null;
 
-                $services[] = [
-                    'service_id' => $service_id,
-                    'name' => $name,
-                    'price' => $price,
-                    'unit' => $unit,
-                ];
+                        $services[] = [
+                            'service_id' => $service_id,
+                            'name' => $name,
+                            'price' => $price,
+                            'unit' => $unit,
+                        ];
+                    }
+                }
             }
         }
-    }
-}
         $contractPath = 'storage/landlord/rooms/contracts/' . $room->contract_file;
         $fullPath = storage_path('app/public/' . $contractPath);
         $tenant = User::find($rentalAgreement->renter_id);
@@ -184,121 +189,241 @@ if (preg_match('/3\.\s*Dịch vụ:(.*)4\./sU', $text, $serviceBlock)) {
         $data = $validated['data'];
         // dd($data);
         DB::beginTransaction();
-    try {
-        // Lưu hóa đơn phòng
-        $bill = RoomBill::create([
-            'room_id'             => $room->room_id,
-            'month'               => $data['month'] . '-01',
-            'tenant_name'         => $data['tenant_name'],
-            'area'                => $data['area'],
-            'rent_price'          => $data['rent_price'],
-            'electric_start'      => $data['electric_start'],
-            'electric_end'        => $data['electric_end'],
-            'electric_kwh'        => $data['electric_kwh'] ?? 0,
-            'electric_unit_price' => $data['electric_price'] ?? 0,
-            'electric_total'      => $data['electric_total'],
-            'water_price'         => $data['water_price'],
-            'water_unit'          => $data['water_unit'],
-            'water_occupants'     => $data['water_occupants'],
-            'water_m3'            => $data['water_m3'],
-            'water_total'         => $data['water_total'],
-            'total'               => $data['total'],
-            'status'              => 'unpaid',
-        ]);
+        try {
+            // Lưu hóa đơn phòng
+            $bill = RoomBill::create([
+                'room_id' => $room->room_id,
+                'month' => $data['month'] . '-01',
+                'tenant_name' => $data['tenant_name'],
+                'area' => $data['area'],
+                'rent_price' => $data['rent_price'],
+                'electric_start' => $data['electric_start'],
+                'electric_end' => $data['electric_end'],
+                'electric_kwh' => $data['electric_kwh'] ?? 0,
+                'electric_unit_price' => $data['electric_price'] ?? 0,
+                'electric_total' => $data['electric_total'],
+                'water_price' => $data['water_price'],
+                'water_unit' => $data['water_unit'],
+                'water_occupants' => $data['water_occupants'],
+                'water_m3' => $data['water_m3'],
+                'water_total' => $data['water_total'],
+                'total' => $data['total'],
+                'status' => 'unpaid',
+            ]);
 
-        // Lưu các dịch vụ phụ
-        if (!empty($data['services'])) {
-            foreach ($data['services'] as $sv) {
-                RoomBillService::create([
-                    'room_bill_id' => $bill->id,
-                    'service_id'   => $sv['service_id'],
-                    'price'       => $sv['price'],
-                    'qty'         => $sv['qty'],
-                    'total'       => $sv['total'],
-                ]);
+            // Lưu các dịch vụ phụ
+            if (!empty($data['services'])) {
+                foreach ($data['services'] as $sv) {
+                    RoomBillService::create([
+                        'room_bill_id' => $bill->id,
+                        'service_id' => $sv['service_id'],
+                        'price' => $sv['price'],
+                        'qty' => $sv['qty'],
+                        'total' => $sv['total'],
+                    ]);
+                }
             }
-        }        DB::commit();
-        return redirect()->back()->with('success', 'Lưu hóa đơn thành công!');
-    } catch (\Exception $e) {
-       DB::rollBack();
-    \Log::error('Lỗi lưu hóa đơn: ' . $e->getMessage());
-    return redirect()->back()->with('error', 'Lỗi lưu hóa đơn: ' . $e->getMessage());
+            DB::commit();
+            return redirect()->back()->with('success', 'Lưu hóa đơn thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Lỗi lưu hóa đơn: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Lỗi lưu hóa đơn: ' . $e->getMessage());
+        }
     }
-    }
-public function exportExcel(Room $room, Request $request)
-{
-    $month = $request->input('month', now()->format('Y-m'));
-    $monthParts = explode('-', $month);
-    $monthNum = $monthParts[1] ?? now()->format('m');
-    $yearNum = $monthParts[0] ?? now()->format('Y');
+    public function exportExcel(Room $room, Request $request)
+    {
+        $month = $request->input('month', now()->format('Y-m'));
+        $monthParts = explode('-', $month);
+        $monthNum = $monthParts[1] ?? now()->format('m');
+        $yearNum = $monthParts[0] ?? now()->format('Y');
 
-    $rentalAgreement = RentalAgreement::find($room->id_rental_agreements);
-    $tenant = User::find($rentalAgreement->renter_id);
+        $rentalAgreement = RentalAgreement::find($room->id_rental_agreements);
+        $tenant = User::find($rentalAgreement->renter_id);
 
-    // Lấy hóa đơn đã lưu (nếu có)
-    $bill = RoomBill::where('room_id', $room->room_id)
-        ->whereMonth('month', $monthNum)
-        ->whereYear('month', $yearNum)
-        ->first();
+        // Lấy hóa đơn đã lưu (nếu có)
+        $bill = RoomBill::where('room_id', $room->room_id)
+            ->whereMonth('month', $monthNum)
+            ->whereYear('month', $yearNum)
+            ->first();
+        if (!$bill) {
+            return redirect()->back()->with('error', 'Chưa có hóa đơn để xuất file.');
+        }
 
-    if (!$bill) {
-        return redirect()->back()->with('error', 'Chưa có hóa đơn để xuất file.');
-    }
+        // Dữ liệu tiện ích
+        $electric_kwh = $bill->electric_kwh ?? 0;
+        $electric_total = $bill->electric_total ?? 0;
+        $water_m3 = $bill->water_m3 ?? 0;
+        $water_total = $bill->water_total ?? 0;
 
-    // Dữ liệu tiện ích
-    $electric_kwh = $bill->electric_kwh ?? 0;
-    $electric_total = $bill->electric_total ?? 0;
-    $water_m3 = $bill->water_m3 ?? 0;
-    $water_total = $bill->water_total ?? 0;
+        $electricPrice = $bill->electric_unit_price ?? 0;
+        $waterPrice = $bill->water_price ?? 0;
+        $rent_price = $bill->rent_price ?? 0;
+        $occupants = $bill->water_occupants ?? 1;
 
-    $electricPrice = $bill->electric_unit_price ?? 0;
-    $waterPrice = $bill->water_price ?? 0;
-    $rent_price = $bill->rent_price ?? 0;
-    $occupants = $bill->water_occupants ?? 1;
+        // Lấy dịch vụ phụ từ bảng room_bill_service
+        $services = [];
+        $service_total = 0;
+        $billServices = RoomBillService::where('room_bill_id', $bill->id)->get();
 
-    // Lấy dịch vụ phụ từ bảng room_bill_service
-    $services = [];
-    $service_total = 0;
-    $billServices = RoomBillService::where('room_bill_id', $bill->id)->get();
+        foreach ($billServices as $sv) {
+            $service = \App\Models\Landlord\Service::find($sv->service_id);
+            $services[] = [
+                'name' => $service->name ?? 'Không rõ',
+                'price' => $sv->price,
+                'qty' => $sv->qty,
+                'total' => $sv->total,
+            ];
+            $service_total += $sv->total;
+        }
 
-    foreach ($billServices as $sv) {
-        $service = \App\Models\Landlord\Service::find($sv->service_id);
-        $services[] = [
-            'name' => $service->name ?? 'Không rõ',
-            'price' => $sv->price,
-            'qty' => $sv->qty,
-            'total' => $sv->total,
+        $total = $rent_price + $electric_total + $water_total + $service_total;
+
+        $data = [
+            'room_name' => $room->room_number ?? $room->room_name ?? 'P101',
+            'tenant_name' => $tenant->name ?? 'Chưa có',
+            'area' => $room->area ?? 0,
+            'rent_price' => $rent_price,
+            'month' => $month,
+            'electric_start' => $bill->electric_start ?? null,
+            'electric_end' => $bill->electric_end ?? null,
+            'electric_kwh' => $electric_kwh,
+            'electric_price' => $electricPrice,
+            'water_price' => $waterPrice,
+            'electric_total' => $electric_total,
+            'water_unit' => $bill->water_unit ?? null,
+            'water_occupants' => $bill->water_occupants ?? null,
+            'water_m3' => $water_m3,
+            'water_total' => $water_total,
+            'internet' => 0,
+            'occupants' => $occupants,
+            'services' => $services,
+            'service_total' => $service_total,
+            'total' => $total,
         ];
-        $service_total += $sv->total;
+
+        return Excel::download(new RoomBillExport($room, $data), 'hoadon_' . $month . '.xlsx');
     }
+    public function sendBillmmm(Room $room, Request $request)
+    {
+        $month = $request->input('month', now()->format('Y-m'));
+        $monthParts = explode('-', $month);
+        $monthNum = $monthParts[1] ?? now()->format('m');
+        $yearNum = $monthParts[0] ?? now()->format('Y');
 
-    $total = $rent_price + $electric_total + $water_total + $service_total;
+        $rentalAgreement = RentalAgreement::find($room->id_rental_agreements);
+        $tenant = User::find($rentalAgreement->renter_id);
 
-    $data = [
-        'room_name' => $room->room_number ?? $room->room_name ?? 'P101',
-        'tenant_name' => $tenant->name ?? 'Chưa có',
-        'area' => $room->area ?? 0,
-        'rent_price' => $rent_price,
-        'month' => $month,
-        'electric_start' => $bill->electric_start ?? null,
-        'electric_end' => $bill->electric_end ?? null,
-        'electric_kwh' => $electric_kwh,
-        'electric_price' => $electricPrice,
-        'water_price' => $waterPrice,
-        'electric_total' => $electric_total,
-        'water_unit' => $bill->water_unit ?? null,
-        'water_occupants' => $bill->water_occupants ?? null,
-        'water_m3' => $water_m3,
-        'water_total' => $water_total,
-        'internet' => 0,
-        'occupants' => $occupants,
-        'services' => $services,
-        'service_total' => $service_total,
-        'total' => $total,
-    ];
+        // Lấy hóa đơn đã lưu (nếu có)
+        $bill = RoomBill::where('room_id', $room->room_id)
+            ->whereMonth('month', $monthNum)
+            ->whereYear('month', $yearNum)
+            ->first();
+        if (!$bill) {
+            return redirect()->back()->with('error', 'Chưa có hóa đơn để gửi.');
+        }
 
-    return Excel::download(new RoomBillExport($room, $data), 'hoadon_' . $month . '.xlsx');
+        // Lấy dịch vụ phụ từ bảng room_bill_service
+        $services = [];
+        $service_total = 0;
+        $billServices = RoomBillService::where('room_bill_id', $bill->id)->get();
+        foreach ($billServices as $sv) {
+            $service = \App\Models\Landlord\Service::find($sv->service_id);
+            $services[] = [
+                'name' => $service->name ?? 'Không rõ',
+                'price' => $sv->price,
+                'qty' => $sv->qty,
+                'total' => $sv->total,
+            ];
+            $service_total += $sv->total;
+        }
+
+        // Dữ liệu tiện ích
+        $electric_kwh = $bill->electric_kwh ?? 0;
+        $electric_total = $bill->electric_total ?? 0;
+        $water_m3 = $bill->water_m3 ?? 0;
+        $water_total = $bill->water_total ?? 0;
+        $electricPrice = $bill->electric_unit_price ?? 0;
+        $waterPrice = $bill->water_price ?? 0;
+        $rent_price = $bill->rent_price ?? 0;
+        $occupants = $bill->water_occupants ?? 1;
+
+        $total = $rent_price + $electric_total + $water_total + $service_total;
+
+        // Chuẩn bị dữ liệu $data cho Excel và email
+        $data = [
+            'room_name' => $room->room_number ?? $room->room_name ?? 'P101',
+            'tenant_name' => $tenant->name ?? 'Chưa có',
+            'area' => $room->area ?? 0,
+            'rent_price' => $rent_price,
+            'month' => $month,
+            'electric_start' => $bill->electric_start ?? null,
+            'electric_end' => $bill->electric_end ?? null,
+            'electric_kwh' => $electric_kwh,
+            'electric_price' => $electricPrice,
+            'water_price' => $waterPrice,
+            'electric_total' => $electric_total,
+            'water_unit' => $bill->water_unit ?? null,
+            'water_occupants' => $bill->water_occupants ?? null,
+            'water_m3' => $water_m3,
+            'water_total' => $water_total,
+            'internet' => 0,
+            'occupants' => $occupants,
+            'services' => $services,
+            'service_total' => $service_total,
+            'total' => $total,
+        ];
+
+        // Thông tin tài khoản ngân hàng (bạn tự cấp)
+        $bankAccount = [
+            'bank_id' => 'TPB', // Mã ngân hàng Napas, ví dụ TPB cho TPBank
+            'bank_name' => 'TP Bank',
+            'account_no' => 16022056868,
+            'account_name' => 'DOAN MINH HIEU',
+        ];
+
+        $amount = intval($bill->total);
+        $description = 'Tien phong ' . ($room->room_number ?? $room->room_name) . ' thang ' . $month;
+
+        // Gọi API VietQR
+        $apiUrl = "https://img.vietqr.io/image/{$bankAccount['bank_id']}-{$bankAccount['account_no']}-print.png?amount={$amount}&addInfo=" . urlencode($description) . "&accountName=" . urlencode($bankAccount['account_name']);
+        // dd($apiUrl);
+        // Lấy ảnh QR về (dạng binary)
+        $qrBinary = file_get_contents($apiUrl);
+        // Kiểm tra nội dung trả về
+        if (strpos($qrBinary, 'PNG') === false) {
+            // Có thể là lỗi, thử log ra hoặc dd()
+            file_put_contents(storage_path('app/public/qr_debug.txt'), $qrBinary);
+            dd('API trả về lỗi:', $qrBinary);
+        }
+        // Lưu file QR vào storage
+        $qrFileName = 'qr_' . $room->room_id . '_' . $month . '.png';
+        Storage::disk('public')->put($qrFileName, $qrBinary);
+        $qrPath = storage_path('app/public/' . $qrFileName);
+
+        // Thêm thông tin QR vào $bankAccount
+        $bankAccount['qr_image'] = $qrFileName;
+        $bankAccount['transfer_content'] = $description;
+
+        // Tạo file Excel tạm (RoomBillExport nhận thêm $bankAccount nếu muốn chèn vào file)
+        $fileName = 'hoadon_' . $month . '.xlsx';
+        $filePath = 'exports/' . $fileName;
+        \Maatwebsite\Excel\Facades\Excel::store(new \App\Exports\RoomBillExport($room, $data, $bankAccount), $filePath, 'public');
+
+        // Gửi mail kèm file Excel
+        Mail::to($tenant->email)->send(
+        // Mail::to("hieudm05@gmail.com")->send(
+            (new \App\Mail\SendRoomBillMail($data, $bankAccount))
+                ->attach($qrPath)
+                ->attach(storage_path('app/public/' . $filePath))
+        );
+
+        // Xóa file sau khi gửi (nếu muốn)
+        Storage::disk('public')->delete($filePath);
+        Storage::disk('public')->delete($qrFileName);
+
+        return back()->with('success', 'Đã gửi hóa đơn cho khách hàng!');
+
+    }
 }
 
-
-}

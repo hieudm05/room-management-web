@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Mews\Purifier\Facades\Purifier;
+use App\Models\Landlord\Room;
+use App\Models\Landlord\Staff\Rooms\RoomBill;
+use App\Models\Landlord\Staff\Rooms\RoomBillService;
+use App\Models\Landlord\RentalAgreement;
+use App\Exports\PropertyBillsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PropertyController extends Controller
 {
@@ -179,13 +185,112 @@ class PropertyController extends Controller
         ]);
         return redirect()->route('landlords.properties.list')->with('success', 'Bổ sung giấy tờ thành công!');
     }
-    public function showDetalShow( $property_id){
+    public function showDetalShow( $property_id, Request $request){
         $user = Auth::user(); // Chủ trọ
         $property = Property::findOrFail($property_id);
         $bankAccounts = $user->bankAccounts()->get(); 
 
-        return view('landlord.propertyManagement.shows', compact( 'property_id', 'property', 'bankAccounts'));
+        $month = $request->input('month', now()->format('Y-m'));
+    $monthParts = explode('-', $month);
+    $monthNum = $monthParts[1] ?? now()->format('m');
+    $yearNum = $monthParts[0] ?? now()->format('Y');
+
+    $bills = [];
+    if ($request->has('month')) {
+        $rooms = \App\Models\Landlord\Room::where('property_id', $property_id)->get();
+        foreach ($rooms as $room) {
+            $bill = \App\Models\Landlord\Staff\Rooms\RoomBill::where('room_id', $room->room_id)
+                ->whereMonth('month', $monthNum)
+                ->whereYear('month', $yearNum)
+                ->first();
+
+            if ($bill) {
+                $rentalAgreement = \App\Models\Landlord\RentalAgreement::find($room->id_rental_agreements);
+                $tenant = $rentalAgreement ? \App\Models\User::find($rentalAgreement->renter_id) : null;
+
+                // Dịch vụ phụ
+                $services = [];
+                $service_total = 0;
+                $billServices = \App\Models\Landlord\Staff\Rooms\RoomBillService::where('room_bill_id', $bill->id)->get();
+                foreach ($billServices as $sv) {
+                    $service = \App\Models\Landlord\Service::find($sv->service_id);
+                    $services[] = [
+                        'name' => $service->name ?? 'Không rõ',
+                        'price' => $sv->price,
+                        'qty' => $sv->qty,
+                        'total' => $sv->total,
+                    ];
+                    $service_total += $sv->total;
+                }
+
+                $total = ($bill->rent_price ?? 0) + ($bill->electric_total ?? 0) + ($bill->water_total ?? 0) + $service_total;
+
+                $bills[] = [
+                    'room' => $room,
+                    'bill' => $bill,
+                    'tenant' => $tenant,
+                    'services' => $services,
+                    'service_total' => $service_total,
+                    'total' => $total,
+                ];
+            }
+        }
     }
+
+        return view('landlord.propertyManagement.shows', compact( 'property_id', 'property', 'bankAccounts','bills'));
+    }
+    public function exportBillsByMonth(Request $request, $property_id)
+    {
+        $month = $request->input('month', now()->format('Y-m'));
+        $monthParts = explode('-', $month);
+        $monthNum = $monthParts[1] ?? now()->format('m');
+        $yearNum = $monthParts[0] ?? now()->format('Y');
+
+        // Lấy tất cả phòng thuộc tòa nhà
+        $rooms = Room::where('property_id', $property_id)->get();
+
+        $bills = [];
+        foreach ($rooms as $room) {
+            $bill = RoomBill::where('room_id', $room->room_id)
+                ->whereMonth('month', $monthNum)
+                ->whereYear('month', $yearNum)
+                ->first();
+
+            if ($bill) {
+                $rentalAgreement = RentalAgreement::find($room->id_rental_agreements);
+                $tenant = $rentalAgreement ? User::find($rentalAgreement->renter_id) : null;
+
+                // Lấy dịch vụ phụ
+                $services = [];
+                $service_total = 0;
+                $billServices = RoomBillService::where('room_bill_id', $bill->id)->get();
+                foreach ($billServices as $sv) {
+                    $service = \App\Models\Landlord\Service::find($sv->service_id);
+                    $services[] = [
+                        'name' => $service->name ?? 'Không rõ',
+                        'price' => $sv->price,
+                        'qty' => $sv->qty,
+                        'total' => $sv->total,
+                    ];
+                    $service_total += $sv->total;
+                }
+
+                $total = ($bill->rent_price ?? 0) + ($bill->electric_total ?? 0) + ($bill->water_total ?? 0) + $service_total;
+
+                $bills[] = [
+                    'room' => $room,
+                    'bill' => $bill,
+                    'tenant' => $tenant,
+                    'services' => $services,
+                    'service_total' => $service_total,
+                    'total' => $total,
+                ];
+            }
+        }
+
+        return Excel::download(new PropertyBillsExport($bills, $month), 'tong_hop_hoa_don_'.$month.'.xlsx');
+    }
+
     /**
      * Show the form for editing the specified resource.
      */

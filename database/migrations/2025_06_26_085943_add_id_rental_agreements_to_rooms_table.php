@@ -22,6 +22,7 @@ public function up(): void
     /**
      * Reverse the migrations.
      */
+
 public function down(): void
 {
     Schema::table('rooms', function (Blueprint $table) {
