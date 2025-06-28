@@ -3,6 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Models\Landlord\BankAccount;
+
+
+use App\Models\Landlord\Property;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -76,5 +81,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(RentalAgreement::class, 'id');
     }
+     public function bankAccounts() {
+        return $this->hasMany(BankAccount::class, 'user_id');
+    }
+    public function properties()
+    {
+        return $this->hasMany(Property::class, 'landlord_id');
+    }
+
+    public function favorites()
+{
+    return $this->belongsToMany(Property::class, 'favorites', 'user_id', 'property_id')
+                ->withTimestamps();
+}
+
+
 
 }
