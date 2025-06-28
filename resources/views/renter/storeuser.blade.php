@@ -28,7 +28,7 @@
 
     <div class="d-grid">
         <button type="submit" class="btn btn-success">
-            ✅ Gửi yêu cầu thêm
+            ✅ Gửi yêu cầu thêm người
         </button>
     </div>
 </form>
