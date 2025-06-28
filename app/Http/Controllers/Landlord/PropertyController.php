@@ -29,7 +29,7 @@ class PropertyController extends Controller
         // Lấy danh sách property của landlord đó, sắp xếp mới nhất
         $listProperties = Property::where('landlord_id', $user->id)
             ->orderBy('created_at', 'desc')
-            ->paginate(5);
+            ->paginate(8);
 
         return view("landlord.propertyManagement.list", compact("listProperties"));
     }
@@ -178,6 +178,13 @@ class PropertyController extends Controller
             'uploaded_at' => now(),
         ]);
         return redirect()->route('landlords.properties.list')->with('success', 'Bổ sung giấy tờ thành công!');
+    }
+    public function showDetalShow( $property_id){
+        $user = Auth::user(); // Chủ trọ
+        $property = Property::findOrFail($property_id);
+        $bankAccounts = $user->bankAccounts()->get(); 
+
+        return view('landlord.propertyManagement.shows', compact( 'property_id', 'property', 'bankAccounts'));
     }
     /**
      * Show the form for editing the specified resource.
