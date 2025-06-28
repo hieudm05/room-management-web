@@ -2,10 +2,12 @@
 
 namespace App\Models\Landlord;
 
+use App\Models\Landlord\Facility;
 use App\Models\Landlord\Staff\Rooms\RoomUtility;
+use App\Models\User;
+
+use App\Models\RentalAgreement;
 use App\Models\RoomUser;
-
-
 use Illuminate\Database\Eloquent\Model;
 
 class Room extends Model
@@ -95,9 +97,15 @@ class Room extends Model
     {
         return $this->hasMany(RoomUtility::class, 'room_id', 'room_id');
     }
-    public function bankAccount() {
+    public function bankAccount()
+    {
         return $this->belongsTo(BankAccount::class, 'property_bank_account_id');
     }
 
-
+    public function staffs()
+    {
+        return $this->belongsToMany(User::class, 'room_staff', 'room_id', 'staff_id')
+            ->where('role', 'Staff')
+            ->withPivot('status');
+    }
 }
