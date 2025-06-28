@@ -57,6 +57,9 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
 
         Route::put('/{property_id}/bank-account', [PropertyBankAccountController::class, 'update'])->name('bank_accounts.update');
         Route::put('/{property_id}/bank-account/unassign', [PropertyBankAccountController::class, 'unassign'])->name('bank_accounts.unassign');
+
+        Route::get('/{property}/bills/export', [PropertyController::class, 'exportBillsByMonth'])
+    ->name('bills.export');
     });
     // Route gán tài khoản cho nhiều tòa
     Route::get('/bank-accounts/assign', [LandlordBankAccountController::class, 'assignToProperties'])->name('bank_accounts.assign');
@@ -113,7 +116,6 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
             Route::get('/{room}', [ElectricWaterController::class, 'index']);
 
             Route::post('/room-utility/{room}', [ElectricWaterController::class, 'store'])->name('store');
-
         });
 
         Route::prefix('documents')->name('documents.')->group(function () {
@@ -126,6 +128,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
             Route::get('/{room}/export-excel', [PaymentController::class, 'exportExcel'])->name('export');
 
             Route::get('api/payment/{room}', [PaymentController::class, 'getBillByMonth'])->name('payment.api');
+            Route::post('/{room}/send-bill', action: [PaymentController::class, 'sendBillmmm'])->name('payment.send_bills'); 
         });
 
 
@@ -184,7 +187,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile/edit', [TenantProfileController::class, 'edit'])->name('tenant.profile.edit');
     Route::put('/profile/update', [TenantProfileController::class, 'update'])->name('tenant.profile.update');
     Route::put('/profile/avatar', [TenantProfileController::class, 'updateAvatar'])->name('profile.update.avatar');
-     Route::get('/favorites', [HomeController::class, 'favorites'])->name('home.favorites');
+    Route::get('/favorites', [HomeController::class, 'favorites'])->name('home.favorites');
     Route::post('/favorites/{property}', [HomeController::class, 'toggleFavorite'])->name('home.favorites.toggle');
 });
 
