@@ -45,14 +45,14 @@ public function toggleFavorite(Property $property)
         $user->favorites()->attach($property->property_id);
         return redirect()->route('home.favorites')->with('success', 'Đã thêm vào danh sách yêu thích!');
     }
-    
+
 }
 PUblic function StausAgreement()
 {
      $user = Auth::user();
     $renter_id = $user->id;
     $rentalAgreement = RentalAgreement::find($renter_id);
-  
+
     if (!$rentalAgreement) {
         return view('home.statusAgreement', [
             'rentalAgreement' => null,
@@ -106,13 +106,13 @@ PUblic function StausAgreement()
         'room' => $rentalAgreement->room ?? null
     ]);
     // Lấy danh sách phòng trọ mới nhất có phân trang
-     
+
 
     return view('home.statusAgreement');
 }
  public function create(Request $request)
     {
-      
+
        $roomId = $request->input('room_id');
        $retalId = $request->input('rental_id');
        $rooms = Room::where('room_id', $roomId)->first();
@@ -121,7 +121,7 @@ PUblic function StausAgreement()
 public function store(Request $request)
     {
 
-       
+
        $validated = $request->validate([
         'room_id' => 'required|exists:rooms,room_id',
         'name' => 'required|string|max:255',
@@ -142,5 +142,15 @@ public function store(Request $request)
 
     return redirect()->back()->with('success', 'Đăng ký thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất có thể.');
     }
+    public function myRoom()
+{
+    $user = Auth::user();
+
+    // Ví dụ: lấy danh sách các phòng mà user đang thuê
+    $rooms = $user->rentedRooms()->with('property', 'photos')->paginate(6);
+
+    return view('home.my-room', compact('rooms'));
+}
+
 
 }
