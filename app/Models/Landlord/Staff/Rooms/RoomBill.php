@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models\Landlord\Staff\Rooms;
+
+use Illuminate\Database\Eloquent\Model;
+
+class RoomBill extends Model
+{
+    protected $fillable = [
+        'room_id', 'month', 'tenant_name', 'area', 'rent_price',
+        'electric_start', 'electric_end', 'electric_kwh', 'electric_unit_price',
+        'electric_total', 'water_price', 'water_unit', 'water_occupants',
+        'water_m3', 'water_total', 'total', 'status'
+    ];
+
+     public function services()
+    {
+        return $this->hasMany(RoomBillService::class);
+    }
+}
