@@ -3,8 +3,8 @@
 
 use Illuminate\Support\Facades\Auth;
 
-$user = Auth::user();
-?>
+$user = Auth::user(); ?>
+
 <div class="container-fluid">
     <div id="two-column-menu"></div>
     <ul class="navbar-nav" id="navbar-nav">
@@ -23,29 +23,35 @@ $user = Auth::user();
             <div class="collapse menu-dropdown" id="sidebarRoom">
                 <ul class="nav nav-sm flex-column">
                     @if ($user->role === 'Landlord')
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.properties.list') }}" class="nav-link">
-                                Properties Management
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.rooms.index') }}" class="nav-link">
-                                Rooms Management
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.approvals.index') }}" class="nav-link">
-                                Approval
-                            </a>
-                        </li>
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.properties.list') }}" class="nav-link">
+                            Properties Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.rooms.index') }}" class="nav-link">
+                            Rooms Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.approvals.index') }}" class="nav-link">
+                            Approval
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.approvals.users.index') }}" class="nav-link">
+                            Approval User
+                        </a>
+                    </li>
+
                     @endif
 
                     @if ($user->role === 'Staff')
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.staff.index') }}" class="nav-link">
-                                Properties Management for Staff
-                            </a>
-                        </li>
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.staff.index') }}" class="nav-link">
+                            Properties Management for Staff
+                        </a>
+                    </li>
                     @endif
                 </ul>
             </div>
