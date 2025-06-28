@@ -29,7 +29,7 @@ class RoomController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Room::with(['facilities', 'property', 'photos', 'services'])
+        $query = Room::with(['facilities', 'property', 'photos', 'services', 'staffs'])
             ->withCount('facilities')
             ->orderBy('created_at', 'desc');
 
@@ -380,14 +380,30 @@ class RoomController extends Controller
 
     public function destroy(Room $room)
     {
-        if ($room->rentalAgreements()->exists()) {
-            return back()->withErrors(['delete' => 'Không thể xóa phòng có hợp đồng thuê.']);
+        // Lấy toàn bộ hợp đồng liên kết với phòng
+        $rentalAgreements = $room->rentalAgreements;
+
+        // Kiểm tra nếu tồn tại bất kỳ hợp đồng nào có renter_id != null (tức là đã có người thuê thật)
+        $hasRealRental = $rentalAgreements->contains(function ($agreement) {
+            return !is_null($agreement->renter_id);
+        });
+
+        if ($hasRealRental) {
+            return back()->withErrors(['delete' => 'Không thể xóa phòng đã có khách thuê xác nhận hợp đồng.']);
         }
+
+        // Nếu không có hợp đồng thực, xóa hợp đồng mẫu (nếu muốn)
+        $room->rentalAgreements()->delete();
+
+        // Tiếp tục xóa phòng
         $room->facilities()->detach();
         $room->delete();
+
         return redirect()->route('landlords.rooms.index', ['property_id' => $room->property_id])
             ->with('success', 'Phòng đã được xóa thành công!');
     }
+
+
 
     private function getCurrentUserAsLandlord()
     {

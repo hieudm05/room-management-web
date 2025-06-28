@@ -27,6 +27,8 @@ use App\Http\Controllers\Landlord\Staff\PaymentController;
 use App\Http\Controllers\Landlord\Staff\ServiceController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomController;
 use App\Http\Controllers\RoomBillController;
+use App\Http\Controllers\Landlord\RoomStaffController;
+
 
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
@@ -101,6 +103,10 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::post('/{room}/contract-confirm-rentalAgreement', [RoomController::class, 'confirmStatusrentalAgreement'])->name('contract.confirmLG');
         // xác nhận thêm ng dùng vào phòng
         Route::post('/room-users/{id}/suscess', [RoomController::class, 'ConfirmAllUser'])->name('room_users.suscess');
+
+        // 👤 Phân quyền nhân viên quản lý phòng
+        Route::get('/{room}/staffs', [RoomStaffController::class, 'edit'])->name('staffs.edit');
+        Route::post('/{room}/staffs', [RoomStaffController::class, 'update'])->name('staffs.update');
     });
 
     // Room of staff
@@ -208,6 +214,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('admin.profile.edit');
     Route::post('/profile/update', [AdminProfileController::class, 'update'])->name('admin.profile.update');
 });
+
 
 Route::middleware('auth')->group(function () {
     // User thêm user
