@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder
             ServiceSeeder::class,
             AttachAllServicesToRoomsSeeder::class,
             RentalAgreementSeeder::class,
+            BankAccountsTableSeeder::class,
+
         ]);
         // Tạo dữ liệu PropertySeeder
     //      $this->call([
