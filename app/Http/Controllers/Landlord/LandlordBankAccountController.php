@@ -15,7 +15,8 @@ class LandlordBankAccountController extends Controller
     public function index()
     {
         $bankAccounts = auth()->user()->bankAccounts()->get();
-        return view('landlord.Bank.index', compact('bankAccounts'));
+        $staffs = auth()->user()->staffs()->with('bankAccounts')->get();
+        return view('landlord.Bank.index', compact('bankAccounts', 'staffs'));
     }
 
     /**
@@ -44,19 +45,28 @@ class LandlordBankAccountController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'bank_name' => 'required|string|max:255',
-            'bank_account_name' => 'required|string|max:255',
-            'bank_account_number' => 'required|string|max:50',
+            'status' => 'required|in:active,inactive',
         ]);
 
-        $bank = auth()->user()->bankAccounts()->findOrFail($id);
-        $bank->update($request->only(
-            'bank_name',
-            'bank_account_name',
-            'bank_account_number'
-        ));
+        $user = auth()->user();
 
-        return back()->with('success', 'Cập nhật thành công.');
+        // Tìm tài khoản ngân hàng theo id
+        $bank = \App\Models\Landlord\BankAccount::findOrFail($id);
+
+        // Kiểm tra quyền: là chủ trọ của tài khoản, hoặc là staff thuộc landlord, hoặc là chính staff đó
+       // Chủ trọ được sửa tài khoản của mình hoặc của nhân viên (staff) thuộc quyền quản lý của mình
+    $isLandlord = $user->id == $bank->user_id;
+    $isStaffOfLandlord = $user->staffs()->where('id', $bank->user_id)->exists();
+
+
+        if (!($isLandlord || $isStaffOfLandlord)) {
+            abort(403, 'Bạn không có quyền cập nhật tài khoản này');
+        }
+
+        $bank->status = $request->input('status');
+        $bank->save();
+
+        return back()->with('success', 'Cập nhật trạng thái thành công!');
     }
 
     /**
@@ -72,7 +82,27 @@ class LandlordBankAccountController extends Controller
     public function assignToProperties()
     {
         $user = auth()->user();
-        $bankAccounts = $user->bankAccounts()->get();
+
+        // Lấy tài khoản của landlord
+        $landlordBankAccounts = $user->bankAccounts()->get();
+
+        // Lấy tài khoản của staff
+        $staffs = $user->staffs()->with('bankAccounts')->get();
+        $staffBankAccounts = collect();
+        foreach ($staffs as $staff) {
+            foreach ($staff->bankAccounts as $bank) {
+                // Gắn thêm tên staff để hiển thị
+                $bank->owner_name = $staff->name . ' (Quản lý)';
+                $staffBankAccounts->push($bank);
+            }
+        }
+
+        // Gộp lại
+        $bankAccounts = $landlordBankAccounts->map(function ($b) {
+            $b->owner_name = 'Chủ trọ';
+            return $b;
+        })->concat($staffBankAccounts);
+
         $properties = $user->properties()->get();
 
         return view('Landlord.Bank.assign', compact('bankAccounts', 'properties'));
@@ -111,5 +141,31 @@ class LandlordBankAccountController extends Controller
         }
 
         return back()->with('success', 'Cập nhật gán tài khoản thành công!');
+    }
+
+    // Lưu tài khoản ngân hàng cho staff
+    public function storeForStaff(Request $request)
+    {
+        $request->validate([
+            'staff_id' => 'required|exists:users,id',
+            'bank_name' => 'required|string|max:255',
+            'bank_code' => 'required|string|max:10',
+            'bank_account_name' => 'required|string|max:255',
+            'bank_account_number' => 'required|string|max:50',
+        ]);
+        $user = auth()->user(); // chủ trọ
+        $staff = $user->staffs()
+            ->where('id', $request->staff_id)
+            ->where('role', 'Staff') // nếu có
+            ->firstOrFail();
+
+        $staff->bankAccounts()->create($request->only(
+            'bank_name',
+            'bank_code',
+            'bank_account_name',
+            'bank_account_number'
+        ));
+
+        return back()->with('success', 'Thêm tài khoản ngân hàng cho quản lý thành công.');
     }
 }
