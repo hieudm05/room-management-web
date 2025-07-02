@@ -12,19 +12,24 @@ use App\Models\RoomBill;
 
 class RoomBillController extends Controller
 {
-    public function markPending($id)
-    {
-        $bill = RoomsRoomBill::findOrFail($id);
+    public function markPending(Request $request, $id)
+{
+    $bill = RoomsRoomBill::findOrFail($id);
 
-        // Nếu bill đã thanh toán thì không cho cập nhật
-        if ($bill->status === 'paid') {
-            return back()->with('error', 'Hóa đơn đã thanh toán.');
-        }
+    $request->validate([
+        'payment_time' => 'required|date',
+        'receipt_image' => 'required|image|max:2048',
+    ]);
 
-        $bill->status = 'pending';
-        $bill->save();
+    $path = $request->file('receipt_image')->store('receipts', 'public');
 
-        return back()->with('success', 'Cập nhật trạng thái hóa đơn thành công!');
-    }
+    $bill->status = 'pending';
+    $bill->payment_time = $request->payment_time;
+    $bill->receipt_image = $path;
+    $bill->save();
+
+    return back()->with('success', 'Thông tin thanh toán đã được gửi để xác nhận.');
+}
+
 }
 

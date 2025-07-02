@@ -60,29 +60,74 @@
 
        <!-- Modal QR -->
 <div class="modal fade" id="qrModal{{ $bill->id }}" tabindex="-1" aria-labelledby="qrModalLabel{{ $bill->id }}" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content text-center">
-            <div class="modal-header">
-                <h5 class="modal-title" id="qrModalLabel{{ $bill->id }}">🧾 QR Thanh Toán</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header text-white">
+                <h5 class="modal-title d-flex align-items-center" id="qrModalLabel{{ $bill->id }}">
+                    🧾 Thanh Toán Hóa Đơn Tháng {{ $bill->month }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
-            <div class="modal-body">
-                <p><strong>Tên tài khoản:</strong> NGUYEN TRONG MINH</p>
-                <p><strong>Số tài khoản:</strong> 17777711112005</p>
-                <p><strong>Ngân hàng:</strong> MB Bank</p>
-                <p><strong>Số tiền:</strong> {{ number_format($bill->total) }} đ</p>
-                <img src="https://img.vietqr.io/image/970422-17777711112005-compact2.png?amount={{ $bill->total }}&addInfo=Thanh+toan+hoa+don+{{ $bill->month }}&accountName=NGUYEN+TRONG+MINH" alt="QR Code" class="img-fluid rounded shadow">
-                <p class="mt-2 text-muted"><small>Quét mã để thanh toán tự động</small></p>
 
-                <!-- Nút Tôi đã thanh toán -->
-                <form action="{{ route('bills.markPending', $bill->id) }}" method="POST">
+            <div class="modal-body">
+                <div class="row align-items-center">
+                    <!-- Bên trái: Thông tin ngân hàng -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <h6><strong>Tên tài khoản:</strong></h6>
+                            <p>{{ $bill->bankAccount->bank_account_name ?? '---' }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6><strong>Số tài khoản:</strong></h6>
+                            <p>{{ $bill->bankAccount->bank_account_number ?? '---' }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6><strong>Ngân hàng:</strong></h6>
+                            <p>{{ $bill->bankAccount->bank_name ?? '---' }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6><strong>Số tiền:</strong></h6>
+                            <p class="text-danger fs-5 fw-bold">{{ number_format($bill->total) }} đ</p>
+                        </div>
+                    </div>
+
+                    <!-- Bên phải: Mã QR -->
+                    <div class="col-md-6 text-center">
+                        @if ($bill->bankAccount)
+                            <img src="https://img.vietqr.io/image/{{ urlencode($bill->bankAccount->bank_name) }}-{{ $bill->bankAccount->bank_account_number }}-compact2.png?amount={{ $bill->total }}&addInfo=Thanh+toan+hoa+don+{{ $bill->month }}&accountName={{ urlencode($bill->bankAccount->bank_account_name) }}"
+                                 alt="QR Code" class="img-fluid rounded shadow border">
+                            <p class="mt-2 text-muted"><small>📷 Quét mã để thanh toán tự động</small></p>
+                        @else
+                            <p class="text-danger">⚠️ Chưa cấu hình tài khoản ngân hàng</p>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Form xác nhận thanh toán -->
+                <form action="{{ route('bills.markPending', $bill->id) }}" method="POST" enctype="multipart/form-data" class="mt-4">
                     @csrf
-                    <button type="submit" class="btn btn-primary mt-3">Tôi đã thanh toán</button>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="payment_time_{{ $bill->id }}" class="form-label">🕒 Thời gian thanh toán</label>
+                            <input type="datetime-local" id="payment_time_{{ $bill->id }}" name="payment_time" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="receipt_image_{{ $bill->id }}" class="form-label">📎 Ảnh chụp biên lai</label>
+                            <input type="file" id="receipt_image_{{ $bill->id }}" name="receipt_image" class="form-control" accept="image/*" required>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                             Tôi đã thanh toán
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
 
     @else
         <span class="text-success">✔</span>
