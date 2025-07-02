@@ -69,11 +69,13 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::put('/{property_id}/bank-account/unassign', [PropertyBankAccountController::class, 'unassign'])->name('bank_accounts.unassign');
 
         Route::get('/{property}/bills/export', [PropertyController::class, 'exportBillsByMonth'])
-    ->name('bills.export');
+            ->name('bills.export');
     });
     // Route gán tài khoản cho nhiều tòa
     Route::get('/bank-accounts/assign', [LandlordBankAccountController::class, 'assignToProperties'])->name('bank_accounts.assign');
     Route::post('/bank-accounts/assign', [LandlordBankAccountController::class, 'assignToPropertiesStore'])->name('bank_accounts.assign.store');
+    // gán tài khoản cho staff
+    Route::post('/staff/store', [LandlordBankAccountController::class, 'storeForStaff'])->name('bank_accounts.staff.store');
 
     Route::prefix('bank-accounts')->name('bank_accounts.')->group(function () {
         Route::get('/', [LandlordBankAccountController::class, 'index'])->name('index');
@@ -142,7 +144,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
             Route::get('/{room}/export-excel', [PaymentController::class, 'exportExcel'])->name('export');
 
             Route::get('api/payment/{room}', [PaymentController::class, 'getBillByMonth'])->name('payment.api');
-            Route::post('/{room}/send-bill', action: [PaymentController::class, 'sendBillmmm'])->name('payment.send_bills'); 
+            Route::post('/{room}/send-bill', action: [PaymentController::class, 'sendBillmmm'])->name('payment.send_bills');
         });
     });
 });

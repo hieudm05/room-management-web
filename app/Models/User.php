@@ -100,5 +100,8 @@ public function info()
 }
 
 
+public function staffs() {
+    return $this->hasMany(User::class, 'landlord_id')->where('role', 'Staff');
+}
 
 }
