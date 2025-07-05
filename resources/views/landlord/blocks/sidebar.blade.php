@@ -22,35 +22,34 @@ $user = Auth::user(); ?>
             <div class="collapse menu-dropdown" id="sidebarRoom">
                 <ul class="nav nav-sm flex-column">
                     @if ($user->role === 'Landlord')
-                    <li class="nav-item">
-                        <a href="{{ route('landlords.properties.list') }}" class="nav-link">
-                            Properties Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('landlords.rooms.index') }}" class="nav-link">
-                            Rooms Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('landlords.approvals.index') }}" class="nav-link">
-                            Approval
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('landlords.approvals.users.index') }}" class="nav-link">
-                            Approval User
-                        </a>
-                    </li>
-
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.properties.list') }}" class="nav-link">
+                                Properties Management
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.rooms.index') }}" class="nav-link">
+                                Rooms Management
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.approvals.index') }}" class="nav-link">
+                                Approval
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.approvals.users.index') }}" class="nav-link">
+                                Approval User
+                            </a>
+                        </li>
                     @endif
 
                     @if ($user->role === 'Staff')
-                    <li class="nav-item">
-                        <a href="{{ route('landlords.staff.index') }}" class="nav-link">
-                            Properties Management for Staff
-                        </a>
-                    </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.staff.index') }}" class="nav-link">
+                                Properties Management for Staff
+                            </a>
+                        </li>
                     @endif
                 </ul>
             </div>
@@ -69,9 +68,27 @@ $user = Auth::user(); ?>
                                 All Bank Accounts
                             </a>
                         </li>
-                         <li class="nav-item">
+                        <li class="nav-item">
                             <a href="{{ route('landlords.bank_accounts.assign') }}" class="nav-link">
                                 Assign Bank Accounts to Properties
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        @endif
+        @if ($user->role === 'Landlord')
+            <li class="nav-item">
+                <a class="nav-link menu-link" href="#sidebarStaff" data-bs-toggle="collapse" role="button"
+                    aria-expanded="false" aria-controls="sidebarStaff">
+                    <i class="mdi mdi-account-group"></i>
+                    <span data-key="t-staff">Staff Accounts</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarStaff">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.staff_accounts.index') }}" class="nav-link">
+                                All Staff Accounts
                             </a>
                         </li>
                     </ul>
