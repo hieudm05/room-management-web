@@ -4,13 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use App\Models\Landlord\BankAccount;
+use App\Models\Landlord\Room;
 
 
 use App\Models\Landlord\Property;
+use App\Models\Landlord\BankAccount;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
@@ -33,6 +34,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'identity_number',
+        'landlord_id', // Thêm trường landlord_id để liên kết với Landlord
         'is_active',
     ];
 
@@ -103,5 +106,7 @@ public function info()
 public function staffs() {
     return $this->hasMany(User::class, 'landlord_id')->where('role', 'Staff');
 }
-
+public function rooms() {
+    return $this->belongsToMany(Room::class, 'room_staff', 'staff_id', 'room_id');
+}
 }

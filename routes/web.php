@@ -1,33 +1,35 @@
 <?php
 
-use App\Http\Controllers\AddressController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Client\AuthLandlordController;
-use App\Http\Controllers\Client\AuthUserController;
-use App\Http\Controllers\Client\ForgotPasswordController;
-use App\Http\Controllers\Client\HomeController;
-use App\Http\Controllers\Client\ResetPasswordController;
-use App\Http\Controllers\Landlord\ApprovalController;
-use App\Http\Controllers\Landlord\ApprovalUserController;
-use App\Http\Controllers\Landlord\PropertyController;
-use App\Http\Controllers\Landlord\RoomController;
-use App\Http\Controllers\Renter\AddUserRequestController;
-use App\Http\Controllers\TenantProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AddressController;
+use App\Http\Controllers\RoomBillController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\Landlord\OCRController;
 use App\Http\Controllers\Client\MyRoomController;
+use App\Http\Controllers\Landlord\RoomController;
+use App\Http\Controllers\TenantProfileController;
+use App\Http\Controllers\Client\AuthUserController;
+use App\Http\Controllers\Landlord\ApprovalController;
+use App\Http\Controllers\Landlord\PropertyController;
+use App\Http\Controllers\Landlord\RoomStaffController;
+use App\Http\Controllers\Client\AuthLandlordController;
+use App\Http\Controllers\Client\ResetPasswordController;
 use App\Http\Controllers\Landlord\BankAccountController;
-use App\Http\Controllers\Landlord\LandlordBankAccountController;
-use App\Http\Controllers\Landlord\PropertyBankAccountController;
-use App\Http\Controllers\Landlord\PropertyRoomBankAccountController;
-use App\Http\Controllers\Landlord\Staff\ContractController;
-use App\Http\Controllers\Landlord\Staff\DocumentController;
-use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
+use App\Http\Controllers\Client\ForgotPasswordController;
+use App\Http\Controllers\Landlord\ApprovalUserController;
+use App\Http\Controllers\Landlord\StaffAccountController;
+use App\Http\Controllers\Renter\AddUserRequestController;
 use App\Http\Controllers\Landlord\Staff\PaymentController;
 use App\Http\Controllers\Landlord\Staff\ServiceController;
+use App\Http\Controllers\Landlord\Staff\ContractController;
+use App\Http\Controllers\Landlord\Staff\DocumentController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomController;
-use App\Http\Controllers\RoomBillController;
-use App\Http\Controllers\Landlord\RoomStaffController;
+use App\Http\Controllers\Landlord\LandlordBankAccountController;
+use App\Http\Controllers\Landlord\PropertyBankAccountController;
+use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
+use App\Http\Controllers\Landlord\PropertyRoomBankAccountController;
 
 
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
@@ -54,6 +56,16 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::get('/approvals/users', [ApprovalUserController::class, 'index'])->name('approvals.users.index');
     Route::post('/approvals/users/{id}/approve', [ApprovalUserController::class, 'approveUser'])->name('approvals.users.approve');
     Route::delete('/approvals/users/{id}/reject', [ApprovalUserController::class, 'reject'])->name('approvals.users.reject');
+    //Danh sách tài khoản của staff và thêm staff
+    Route::get('staff_accounts', [StaffAccountController::class, 'index'])->name('staff_accounts.index');
+    Route::get('staff_accounts-create', [StaffAccountController::class, 'create'])->name('staff_accounts.create');
+    Route::get('staff_accounts-create-test', [StaffAccountController::class, 'create'])->name('staff_accounts.create-test');
+    Route::post('staff-accounts/store', [StaffAccountController::class, 'store'])->name('staff_accounts.store');
+    Route::get('staff-accounts/{id}', [StaffAccountController::class, 'show'])->name('staff_accounts.show');
+    Route::post('staff/ocr/identity-number', [OCRController::class, 'recognize'])
+    ->name('ocr.identity_number');
+
+
 
 
     Route::prefix('properties')->name('properties.')->group(function () {
