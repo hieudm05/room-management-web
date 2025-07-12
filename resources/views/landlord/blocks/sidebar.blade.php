@@ -42,7 +42,11 @@ $user = Auth::user(); ?>
                             Approval User
                         </a>
                     </li>
-
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.room_edit_requests.index') }}" class="nav-link">
+                            Approve room change request
+                        </a>
+                    
                     @endif
 
                     @if ($user->role === 'Staff')

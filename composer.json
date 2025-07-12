@@ -19,7 +19,7 @@
         "phpoffice/phpspreadsheet": "^1.29",
         "phpoffice/phpword": "^1.4",
         "simplesoftwareio/simple-qrcode": "^4.2",
-        "smalot/pdfparser": "^2.12"
+        "smalot/pdfparser": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
