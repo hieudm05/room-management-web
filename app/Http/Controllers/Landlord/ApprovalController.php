@@ -79,20 +79,20 @@ class ApprovalController extends Controller
         if (preg_match('/BÊN THUÊ PHÒNG TRỌ \(gọi tắt là Bên B\):\s*(.*?)Căn cứ pháp lý/su', $text, $match)) {
             $infoBlock = $match[1];
 
-            // dd($infoBlock);
+            // dd($infoBlock); 
 
             preg_match('/- Ông\/Bà:\s*(.+)/u', $infoBlock, $nameMatch);
             preg_match('/- CMND\/CCCD số:\s*([0-9]+)/u', $infoBlock, $cccdMatch);
             preg_match('/- SĐT:\s*([0-9]+)/u', $infoBlock, $phoneMatch);
             preg_match('/- Email:\s*([^\s]+)/iu', $infoBlock, $emailMatch);
 
-
             $fullName = trim($nameMatch[1] ?? '');
             $phone = $phoneMatch[1] ?? '';
             $cccd = $cccdMatch[1] ?? '';
             $tenantEmail = $emailMatch[1] ?? '';
         }
-        //    dd($text);
+
+        // dd($text);
 
         // 5. Kiểm tra user tồn tại
         $user = User::where('email', $tenantEmail)->first();
@@ -104,7 +104,6 @@ class ApprovalController extends Controller
                 'password' => Hash::make($password),
                 'role' => 'Renter',
             ]);
-
             // Gửi mail thông báo
             Mail::raw(
                 "Chào $fullName,\n\nTài khoản của bạn đã được tạo:\nEmail: $tenantEmail\nMật khẩu: $password\n\nVui lòng đăng nhập và thay đổi mật khẩu sau lần đăng nhập đầu tiên.\n\nTrân trọng,\nHệ thống quản lý phòng trọ",
@@ -116,7 +115,6 @@ class ApprovalController extends Controller
 
         // 6. Cập nhật renter_id trong hợp đồng
         $rental->update(['renter_id' => $user->id]);
-
         // 7. Lưu thông tin vào user_infos
         UserInfo::updateOrCreate(
             ['user_id' => $user->id],
@@ -128,10 +126,8 @@ class ApprovalController extends Controller
                 "room_id" => $approval->room_id,
             ]
         );
-
         // 8. Xóa bản ghi chờ phê duyệt
         $approval->delete();
-
         return back()->with('success', 'Hợp đồng đã được duyệt và thêm vào hệ thống.');
     }
 

@@ -30,7 +30,8 @@ use App\Http\Controllers\TenantProfileController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\Client\MyRoomController;
 use App\Http\Controllers\RoomBillController;
-use Smalot\PdfParser\Parser;
+use App\Http\Controllers\Landlord\OCRController;
+use App\Http\Controllers\Landlord\StaffAccountController;
 
 // Địa chỉ
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
@@ -59,6 +60,16 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::post('/approvals/users/{id}/approve', [ApprovalUserController::class, 'approveUser'])->name('approvals.users.approve');
     Route::delete('/approvals/users/{id}/reject', [ApprovalUserController::class, 'reject'])->name('approvals.users.reject');
 
+    // Danh sách tài khoản của staff và thêm staff
+    Route::get('staff_accounts', [StaffAccountController::class, 'index'])->name('staff_accounts.index');
+    Route::get('staff_accounts-create', [StaffAccountController::class, 'create'])->name('staff_accounts.create');
+    Route::get('staff_accounts-create-test', [StaffAccountController::class, 'create'])->name('staff_accounts.create-test');
+    Route::post('staff-accounts/store', [StaffAccountController::class, 'store'])->name('staff_accounts.store');
+    Route::get('staff-accounts/{id}', [StaffAccountController::class, 'show'])->name('staff_accounts.show');
+
+    // OCR CCCD
+    Route::post('staff/ocr/identity-number', [OCRController::class, 'recognize'])->name('ocr.identity_number');
+
     // Properties
     Route::prefix('properties')->name('properties.')->group(function () {
         Route::get('/list', [PropertyController::class, 'index'])->name('list');
@@ -76,6 +87,9 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::get('/bank-accounts/assign', [LandlordBankAccountController::class, 'assignToProperties'])->name('bank_accounts.assign');
     Route::post('/bank-accounts/assign', [LandlordBankAccountController::class, 'assignToPropertiesStore'])->name('bank_accounts.assign.store');
 
+    // Gán tài khoản cho staff
+    Route::post('/staff/store', [LandlordBankAccountController::class, 'storeForStaff'])->name('bank_accounts.staff.store');
+
     Route::prefix('bank-accounts')->name('bank_accounts.')->group(function () {
         Route::get('/', [LandlordBankAccountController::class, 'index'])->name('index');
         Route::post('/store', [LandlordBankAccountController::class, 'store'])->name('store');
@@ -88,12 +102,8 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/', [RoomController::class, 'index'])->name('index');
         Route::get('/create', [RoomController::class, 'create'])->name('create');
         Route::post('/store', [RoomController::class, 'store'])->name('store');
-
-        // khóa hợp đồng
         Route::post('/{room}/lock', [RoomController::class, 'lockContract'])->name('lockContract');
-        // Biểu đồ
         Route::get('/{room}/stats', [RoomController::class, 'showStats'])->name('stats');
-
         Route::get('/{room}/edit', [RoomController::class, 'edit'])->name('edit');
         Route::put('/{room}', [RoomController::class, 'update'])->name('update');
         Route::put('/{room}/hide', [RoomController::class, 'hide'])->name('hide');
@@ -141,6 +151,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         });
     });
 
+    // Staff yêu cầu chỉnh sửa phòng
     Route::prefix('staff/rooms')->name('staff.rooms.')->group(function () {
         Route::get('/{room}/edit', [StaffRoomEditController::class, 'edit'])->name('edit');
         Route::post('/{room}/request-update', [StaffRoomEditController::class, 'submitRequest'])->name('request_update');
@@ -153,7 +164,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::post('/{id}/reject', [RoomEditRequestController::class, 'reject'])->name('reject');
     });
 
-    // ✅ THÊM VÀO ĐÂY: Route đánh dấu thông báo đã đọc cho staff
+    // Đánh dấu thông báo đã đọc
     Route::post('/staff/notifications/mark-as-read', function () {
         auth()->user()->unreadNotifications->markAsRead();
         return back();
@@ -194,6 +205,7 @@ Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('
 Route::get('/', [HomeController::class, 'renter'])->name('renter');
 Route::get('/status-agreement', [HomeController::class, 'StausAgreement'])->name('status.agreement');
 
+// Thêm người dùng vào phòng (renter)
 Route::prefix('room-users')->name('room-users.')->group(function () {
     Route::post('/create-user', [HomeController::class, 'create'])->name('create');
     Route::post('/store-user', [HomeController::class, 'store'])->name('store');
@@ -211,12 +223,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/bills/{bill}/mark-pending', [RoomBillController::class, 'markPending'])->name('bills.markPending');
 });
 
+// Admin profile
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('admin.profile.edit');
     Route::post('/profile/update', [AdminProfileController::class, 'update'])->name('admin.profile.update');
 });
 
-// Thêm người dùng vào phòng (renter)
+// Renter thêm người
 Route::middleware('auth')->group(function () {
     Route::get('/add-user', [AddUserRequestController::class, 'create'])->name('renter.addUserRequest.create');
     Route::post('/add-user', [AddUserRequestController::class, 'store'])->name('renter.storeuser');
