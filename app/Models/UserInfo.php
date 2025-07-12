@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Landlord\Room;
 
 class UserInfo extends Model
 {
@@ -18,6 +19,6 @@ class UserInfo extends Model
     // Quan hệ đến phòng
     public function room()
     {
-        return $this->belongsTo(\App\Models\Landlord\Room::class, 'room_id');
+        return $this->belongsTo(Room::class, 'room_id');
     }
 }

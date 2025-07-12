@@ -22,6 +22,33 @@ $user = Auth::user(); ?>
             <div class="collapse menu-dropdown" id="sidebarRoom">
                 <ul class="nav nav-sm flex-column">
                     @if ($user->role === 'Landlord')
+<<<<<<< HEAD
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.properties.list') }}" class="nav-link">
+                            Properties Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.rooms.index') }}" class="nav-link">
+                            Rooms Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.approvals.index') }}" class="nav-link">
+                            Approval
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.approvals.users.index') }}" class="nav-link">
+                            Approval User
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.room_edit_requests.index') }}" class="nav-link">
+                            Approve room change request
+                        </a>
+                    
+=======
                         <li class="nav-item">
                             <a href="{{ route('landlords.properties.list') }}" class="nav-link">
                                 Properties Management
@@ -42,6 +69,7 @@ $user = Auth::user(); ?>
                                 Approval User
                             </a>
                         </li>
+>>>>>>> d43ce1f04dd31810752cd03aed73eebd669990e0
                     @endif
 
                     @if ($user->role === 'Staff')

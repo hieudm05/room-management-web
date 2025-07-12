@@ -27,7 +27,8 @@ class Room extends Model
         'wifi_price_per_person',
         'water_price_per_person',
         'created_by',
-        'id_rental_agreements'
+        'id_rental_agreements',
+        'is_contract_locked'
     ];
 
 
@@ -61,8 +62,9 @@ class Room extends Model
 
     public function rentalAgreements()
     {
-        return $this->hasMany(RentalAgreement::class, 'room_id');
+        return $this->hasMany(RentalAgreement::class, 'room_id', 'room_id');
     }
+
 
     public function property()
     {
@@ -81,17 +83,19 @@ class Room extends Model
     }
     public function rentalAgreement()
     {
-        return $this->hasOne(\App\Models\RentalAgreement::class);
+        return $this->hasOne(RentalAgreement::class);
     }
-    // Trong Room.php
+
     public function currentAgreement()
     {
-        return $this->belongsTo(RentalAgreement::class, 'id_rental_agreements');
+        return $this->belongsTo(RentalAgreement::class, 'id_rental_agreements', 'rental_id')
+            ->whereIn('status', ['Active', 'Signed']);
     }
     public function roomUsers()
     {
         return $this->hasMany(RoomUser::class, 'room_id', 'room_id');
     }
+
 
     public function utilities()
     {
@@ -107,5 +111,10 @@ class Room extends Model
         return $this->belongsToMany(User::class, 'room_staff', 'room_id', 'staff_id')
             ->where('role', 'Staff')
             ->withPivot('status');
+    }
+
+    public function getRenterAttribute()
+    {
+        return $this->currentAgreement?->renter;
     }
 }
