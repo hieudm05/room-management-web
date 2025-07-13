@@ -3,7 +3,7 @@
 @section('title', 'Phân quyền nhân viên')
 
 @section('content')
-<div class="container mt-4">
+<div class="container">
     <h4>Phân quyền cho phòng: <strong>{{ $room->room_number }}</strong></h4>
 
    <form method="POST" action="{{ route('landlords.rooms.staffs.update', $room->room_id) }}">

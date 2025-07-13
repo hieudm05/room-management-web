@@ -16,6 +16,7 @@ class LegalDocument extends Model
 
     protected $fillable = [
         'user_id',
+        'property_id',
         'document_type',
         'file_path',
         'status',

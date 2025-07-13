@@ -3,6 +3,7 @@
 namespace App\Models\Landlord;
 
 use App\Models\Landlord\Facility;
+use App\Models\Landlord\Staff\Rooms\RoomBill;
 use App\Models\Landlord\Staff\Rooms\RoomUtility;
 use App\Models\User;
 
@@ -79,9 +80,18 @@ class Room extends Model
         return $this->belongsToMany(Service::class, 'room_services', 'room_id', 'service_id')
             ->withPivot('is_free', 'price', 'unit'); // thêm unit
     }
-    public function rentalAgreement()
+    // public function rentalAgreement()
+    // {
+    //     return $this->hasOne(\App\Models\RentalAgreement::class);
+    // }
+        public function rentalAgreement()
     {
-        return $this->hasOne(\App\Models\RentalAgreement::class);
+        return $this->hasOne(RentalAgreement::class, 'room_id', 'room_id');
+    }
+
+    public function bills()
+    {
+        return $this->hasMany(RoomBill::class, 'room_id', 'room_id');
     }
     // Trong Room.php
     public function currentAgreement()

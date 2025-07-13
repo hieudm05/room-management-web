@@ -60,8 +60,9 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/list', [PropertyController::class, 'index'])->name('list');
         Route::get('/create', [PropertyController::class, 'create'])->name('create');
         Route::post('/store', [PropertyController::class, 'store'])->name('store');
+        Route::get('/{property_id}/edit', [PropertyController::class, 'edit'])->name('edit');
+        Route::post('/{property_id}/update', [PropertyController::class, 'update'])->name('update');
         Route::get('/show/{property_id}', [PropertyController::class, 'show'])->name('show');
-        Route::get('/{property_id}/upload-document', [PropertyController::class, 'showUploadDocumentForm'])->name('uploadDocument');
         Route::post('/{property_id}/upload-document', [PropertyController::class, 'uploadDocument'])->name('uploadDocument.post');
         Route::get('/{property_id}/shows', [PropertyController::class, 'showDetalShow'])->name('shows');
 
@@ -139,12 +140,16 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         });
 
         Route::prefix('payment')->name('payment.')->group(function () {
-            Route::get('/{room}', [PaymentController::class, 'index']);
-            Route::post('/{room}/store', [PaymentController::class, 'store'])->name('store');
-            Route::get('/{room}/export-excel', [PaymentController::class, 'exportExcel'])->name('export');
+            // Route::get('/{room}', [PaymentController::class, 'index']);
+            // Route::post('/{room}/store', [PaymentController::class, 'store'])->name('store');
+            // Route::get('/{room}/export-excel', [PaymentController::class, 'exportExcel'])->name('export');
 
-            Route::get('api/payment/{room}', [PaymentController::class, 'getBillByMonth'])->name('payment.api');
-            Route::post('/{room}/send-bill', action: [PaymentController::class, 'sendBillmmm'])->name('payment.send_bills');
+            // Route::get('api/payment/{room}', [PaymentController::class, 'getBillByMonth'])->name('payment.api');
+            // Route::post('/{room}/send-bill', action: [PaymentController::class, 'sendBillmmm'])->name('payment.send_bills');
+
+            Route::get('/', [PaymentController::class, 'index'])->name('index');
+    Route::post('/{room}', [PaymentController::class, 'store'])->name('store');
+    Route::get('/{room}/export', [PaymentController::class, 'exportExcel'])->name('exportExcel');
         });
     });
 });

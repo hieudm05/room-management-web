@@ -1,5 +1,5 @@
 @extends('landlord.layouts.app')
-@section('title', 'Đăng ký bất động sản')
+@section('title', 'Chỉnh sửa bất động sản')
 
 @section('content')
     <style>
@@ -54,11 +54,11 @@
 
     <div class="container card my-4">
         <div class="card-header align-items-center d-flex justify-content-between">
-            <h3 class="card-title mb-0">Đăng ký bất động sản mới</h3>
+            <h3 class="card-title mb-0">Chỉnh sửa bất động sản</h3>
             <a href="{{ route('landlords.properties.list') }}" class="btn btn-secondary btn-sm">← Danh sách</a>
         </div>
         <div class="card-body">
-            <form id="propertyForm" method="POST" action="{{ route('landlords.properties.store') }}"
+            <form id="propertyForm" method="POST" action="{{ route('landlords.properties.update', $property->property_id) }}"
                 enctype="multipart/form-data" class="needs-validation" novalidate>
                 @csrf
                 <div class="row g-4">
@@ -69,12 +69,27 @@
                             <label for="main_images" class="form-label">Chọn ảnh đại diện <span
                                     class="text-danger">*</span></label>
                             <input type="file" id="main_images" name="image_urls[]" multiple accept="image/*"
-                                class="form-control @error('image_urls.*') is-invalid @enderror" required>
+                                class="form-control @error('image_urls.*') is-invalid @enderror">
                             @error('image_urls.*')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div id="mainImagesPreview" class="d-flex flex-wrap"></div>
+                        <div id="mainImagesPreview" class="d-flex flex-wrap">
+                            <!-- Ảnh chính -->
+                            @if ($property->image_url)
+                                <div class="preview-container">
+                                    <img src="{{ $property->image_url }}" alt="Ảnh chính">
+                                    <span class="remove-btn" data-type="main">Xóa</span>
+                                </div>
+                            @endif
+                            <!-- Ảnh phụ -->
+                            @foreach ($property->images as $index => $image)
+                                <div class="preview-container">
+                                    <img src="{{ $image->image_path }}" alt="Ảnh phụ">
+                                    <span class="remove-btn" data-type="extra" data-id="{{ $image->id }}">Xóa</span>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
 
                     <!-- Thông tin bất động sản -->
@@ -86,7 +101,8 @@
                                         class="text-danger">*</span></label>
                                 <input type="text" name="name" id="name"
                                     class="form-control @error('name') is-invalid @enderror"
-                                    placeholder="VD: Khu trọ Nguyễn Văn A" value="{{ old('name') }}" required>
+                                    placeholder="VD: Khu trọ Nguyễn Văn A" value="{{ old('name', $property->name) }}"
+                                    required>
                                 @error('name')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -94,7 +110,7 @@
                             <div class="col-md-6">
                                 <label for="description" class="form-label">Mô tả</label>
                                 <textarea id="description" name="description" class="form-control" rows="3"
-                                    placeholder="Giới thiệu chung về khu trọ...">{{ old('description') }}</textarea>
+                                    placeholder="Giới thiệu chung về khu trọ...">{{ old('description', $property->description) }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -107,19 +123,20 @@
                                     <div class="card-body">
                                         <label for="rules" class="form-label">Nội quy<span
                                                 class="text-danger">*</span></label>
-                                        <input type="hidden" id="rules" name="rules" value="{{ old('rules') }}"
+                                        <input type="hidden" id="rules" name="rules"
+                                            value="{{ old('rules', $property->rules) }}"
                                             class="form-control @error('rules') is-invalid @enderror" required>
-                                        <div id="quill-editor" class="snow-editor" style="height: 350px"></div>
+                                        <div id="quill-editor" class="snow-editor" style="height: 350px">
+                                            {!! old('rules', $property->rules) !!}
+                                        </div>
                                         @error('rules')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
-                                    </div><!-- end card-body -->
-                                </div><!-- end card -->
+                                    </div>
+                                </div>
                             </div>
-                            <!-- end col -->
                         </div>
                     </div>
-
 
                     <!-- Địa chỉ chi tiết -->
                     <div class="col-12">
@@ -163,7 +180,8 @@
                                         class="text-danger">*</span></label>
                                 <input type="text" id="detailed_address" name="detailed_address"
                                     class="form-control @error('detailed_address') is-invalid @enderror"
-                                    placeholder="Số nhà, đường..." value="{{ old('detailed_address') }}" required>
+                                    placeholder="Số nhà, đường..."
+                                    value="{{ old('detailed_address', $parsedAddress['detailed_address']) }}" required>
                                 @error('detailed_address')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -171,41 +189,18 @@
                             <div class="col-12">
                                 <label class="form-label">Xác định vị trí trên bản đồ</label>
                                 <div id="map" style="height: 350px; border: 1px solid #ccc;"></div>
-                                <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude') }}">
-                                <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude') }}">
+                                <input type="hidden" id="latitude" name="latitude"
+                                    value="{{ old('latitude', $property->latitude) }}">
+                                <input type="hidden" id="longitude" name="longitude"
+                                    value="{{ old('longitude', $property->longitude) }}">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Giấy tờ pháp lý -->
-                    <div class="col-12">
-                        <h5 class="mb-3 text-warning">3. Giấy tờ pháp lý</h5>
-                        <div id="documentFields">
-                            <div class="row g-3 document-row mb-3">
-                                <div class="col-md-4">
-                                    <select name="document_types[]" class="form-select" required>
-                                        <option value="">Chọn loại giấy tờ</option>
-                                        <option value="Giấy phép kinh doanh">Giấy phép kinh doanh</option>
-                                        <option value="Giấy chứng nhận PCCC">Giấy chứng nhận PCCC</option>
-                                        <option value="Khác">Khác</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <input type="file" name="document_files[]" class="form-control"
-                                        accept="image/*,application/pdf" required>
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-danger remove-document">Xóa</button>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="button" id="addDocument" class="btn btn-primary mb-3">Thêm giấy tờ</button>
-                        <div id="documentPreviews"></div>
-                    </div>
 
                     <!-- Submit Button -->
                     <div class="col-12 text-end">
-                        <button type="submit" class="btn btn-success">📤 Gửi đăng ký</button>
+                        <button type="submit" class="btn btn-success">📤 Cập nhật</button>
                     </div>
                 </div>
             </form>
@@ -237,7 +232,6 @@
         const mainImagesInput = document.getElementById('main_images');
         const mainImagesPreview = document.getElementById('mainImagesPreview');
         mainImagesInput.addEventListener('change', function(e) {
-            mainImagesPreview.innerHTML = '';
             Array.from(e.target.files).forEach((file, index) => {
                 const div = document.createElement('div');
                 div.classList.add('preview-container');
@@ -258,6 +252,13 @@
                 div.appendChild(img);
                 div.appendChild(removeBtn);
                 mainImagesPreview.appendChild(div);
+            });
+        });
+
+        // Remove existing images
+        document.querySelectorAll('#mainImagesPreview .remove-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.preview-container').remove();
             });
         });
 
@@ -291,46 +292,6 @@
             });
         }
 
-        // Add new document field
-        document.getElementById('addDocument').addEventListener('click', function() {
-            const documentFields = document.getElementById('documentFields');
-            const newRow = document.createElement('div');
-            newRow.classList.add('row', 'g-3', 'document-row', 'mb-3');
-            newRow.innerHTML = `
-                <div class="col-md-4">
-                    <select name="document_types[]" class="form-select" required>
-                        <option value="">Chọn loại giấy tờ</option>
-                        <option value="Giấy phép kinh doanh">Giấy phép kinh doanh</option>
-                        <option value="Giấy chứng nhận PCCC">Giấy chứng nhận PCCC</option>
-                        <option value="Khác">Khác</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <input type="file" name="document_files[]" class="form-control" accept="image/*,application/pdf" required>
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-danger remove-document">Xóa</button>
-                </div>
-            `;
-            documentFields.appendChild(newRow);
-
-            newRow.querySelector('input[type="file"]').addEventListener('change', updateDocumentPreviews);
-            newRow.querySelector('.remove-document').addEventListener('click', function() {
-                newRow.remove();
-                updateDocumentPreviews();
-            });
-        });
-
-        document.querySelectorAll('input[name="document_files[]"]').forEach(input => {
-            input.addEventListener('change', updateDocumentPreviews);
-        });
-
-        document.querySelectorAll('.remove-document').forEach(btn => {
-            btn.addEventListener('click', function() {
-                this.closest('.document-row').remove();
-                updateDocumentPreviews();
-            });
-        });
 
         // Quill Editor
         document.addEventListener('DOMContentLoaded', function() {
@@ -353,7 +314,7 @@
                 }
             });
 
-            const initialContent = @json(old('rules', ''));
+            const initialContent = @json(old('rules', $property->rules));
             if (initialContent) {
                 quill.root.innerHTML = initialContent;
             }
@@ -368,20 +329,14 @@
                 rulesInput.value = DOMPurify.sanitize(quill.root.innerHTML);
                 console.log('Rules value before submit:', rulesInput.value);
 
-                // ✅ LẤY TÂM BẢN ĐỒ HIỆN TẠI TRƯỚC KHI SUBMIT
-                const center = map.getCenter();
-                document.getElementById('latitude').value = center.lat;
-                document.getElementById('longitude').value = center.lng;
-
                 const documentTypes = document.querySelectorAll('select[name="document_types[]"]');
                 const documentFiles = document.querySelectorAll('input[name="document_files[]"]');
                 let valid = true;
 
                 documentTypes.forEach((select, index) => {
-                    if (!select.value || !documentFiles[index].files.length) {
+                    if (!select.value && documentFiles[index].files.length) {
                         valid = false;
                         select.classList.add('is-invalid');
-                        documentFiles[index].classList.add('is-invalid');
                     }
                 });
 
@@ -405,97 +360,145 @@
         });
 
         // Map and address
+        // Map and address
         document.addEventListener('DOMContentLoaded', async function() {
             const provinceSelect = document.getElementById('province');
             const districtSelect = document.getElementById('district');
             const wardSelect = document.getElementById('ward');
-            const oldProvince = '{{ old('province') }}';
-            const oldDistrict = '{{ old('district') }}';
-            const oldWard = '{{ old('ward') }}';
+            const detailedAddressInput = document.getElementById('detailed_address');
+            const oldProvince = '{{ old('province', $parsedAddress['province']) }}';
+            const oldDistrict = '{{ old('district', $parsedAddress['district']) }}';
+            const oldWard = '{{ old('ward', $parsedAddress['ward']) }}';
+            const oldDetailedAddress = '{{ old('detailed_address', $parsedAddress['detailed_address']) }}';
 
+            // Tải và gán dữ liệu địa phương ngay lập tức
             try {
-                const provinces = await fetch("https://provinces.open-api.vn/api/p/").then(res => {
-                    if (!res.ok) throw new Error('Lỗi tải tỉnh');
-                    return res.json();
-                });
+                const provincesResponse = await fetch("https://provinces.open-api.vn/api/p/");
+                if (!provincesResponse.ok) throw new Error('Lỗi tải tỉnh');
+                const provinces = await provincesResponse.json();
+
                 provinceSelect.innerHTML = '<option value="">-- Chọn tỉnh --</option>';
+                provinceSelect.addEventListener('change', async function() {
+                    const selectedProvinceCode = provinceSelect.value;
+                    districtSelect.innerHTML = '<option value="">-- Chọn huyện --</option>';
+                    districtSelect.disabled = true;
+                    wardSelect.innerHTML = '<option value="">-- Chọn xã --</option>';
+                    wardSelect.disabled = true;
+                    detailedAddressInput.value = ''
+                    if (!selectedProvinceCode) return;
+
+                    try {
+                        const districtsResponse = await fetch(
+                            `https://provinces.open-api.vn/api/p/${selectedProvinceCode}?depth=2`
+                        );
+                        const provinceData = await districtsResponse.json();
+
+                        provinceData.districts.forEach(district => {
+                            const option = new Option(district.name, district.code);
+                            districtSelect.add(option);
+                        });
+
+                        districtSelect.disabled = false;
+                        updateMapWithAddress(); // Cập nhật bản đồ sau khi chọn tỉnh
+                    } catch (error) {
+                        console.error('Lỗi tải huyện:', error);
+                        alert('Không thể tải danh sách huyện.');
+                    }
+                });
+
+                let selectedProvinceCode = null;
                 provinces.forEach(province => {
                     const option = new Option(province.name, province.code);
-                    if (province.code == oldProvince) option.selected = true;
+                    if (province.name === oldProvince) {
+                        option.selected = true;
+                        selectedProvinceCode = province.code;
+                    }
                     provinceSelect.add(option);
                 });
 
-                provinceSelect.addEventListener('change', async function() {
-                    const provinceCode = this.value;
+                if (selectedProvinceCode) {
+                    const districtsResponse = await fetch(
+                        `https://provinces.open-api.vn/api/p/${selectedProvinceCode}?depth=2`);
+                    if (!districtsResponse.ok) throw new Error('Lỗi tải huyện');
+                    const districts = await districtsResponse.json();
+
                     districtSelect.innerHTML = '<option value="">-- Chọn huyện --</option>';
-                    wardSelect.innerHTML = '<option value="">-- Chọn xã --</option>';
-                    districtSelect.disabled = true;
-                    wardSelect.disabled = true;
+                    districtSelect.disabled = false;
+                    //  
+                    // Xử lý sự kiện khi thay đổi huyện để load lại xã
+                    districtSelect.addEventListener('change', async function() {
+                        const selectedDistrictCode = districtSelect.value;
+                        wardSelect.innerHTML = '<option value="">-- Chọn xã --</option>';
+                        wardSelect.disabled = true;
+                        detailedAddressInput.value = ''
 
-                    if (provinceCode) {
+                        if (!selectedDistrictCode) return;
+
                         try {
-                            const districts = await fetch(
-                                    `https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`)
-                                .then(res => {
-                                    if (!res.ok) throw new Error('Lỗi tải huyện');
-                                    return res.json();
-                                });
-                            districts.districts.forEach(d => {
-                                const option = new Option(d.name, d.code);
-                                if (d.code == oldDistrict) option.selected = true;
-                                districtSelect.add(option);
-                            });
-                            districtSelect.disabled = false;
-                            updateMapWithAddress();
-                        } catch (error) {
-                            console.error(error);
-                            alert('Lỗi tải danh sách huyện.');
-                        }
-                    }
-                });
+                            const wardsResponse = await fetch(
+                                `https://provinces.open-api.vn/api/d/${selectedDistrictCode}?depth=2`
+                            );
+                            const districtData = await wardsResponse.json();
 
-                districtSelect.addEventListener('change', async function() {
-                    const districtCode = this.value;
-                    wardSelect.innerHTML = '<option value="">-- Chọn xã --</option>';
-                    wardSelect.disabled = true;
-
-                    if (districtCode) {
-                        try {
-                            const wards = await fetch(
-                                    `https://provinces.open-api.vn/api/d/${districtCode}?depth=2`)
-                                .then(res => {
-                                    if (!res.ok) throw new Error('Lỗi tải xã');
-                                    return res.json();
-                                });
-                            wards.wards.forEach(w => {
-                                const option = new Option(w.name, w.code);
-                                if (w.code == oldWard) option.selected = true;
+                            districtData.wards.forEach(ward => {
+                                const option = new Option(ward.name, ward.code);
                                 wardSelect.add(option);
                             });
+
                             wardSelect.disabled = false;
-                            updateMapWithAddress();
+                            updateMapWithAddress(); // Cập nhật bản đồ
                         } catch (error) {
-                            console.error(error);
-                            alert('Lỗi tải danh sách xã.');
+                            console.error('Lỗi tải xã:', error);
+                            alert('Không thể tải danh sách xã.');
                         }
+                    });
+
+
+                    // 
+                    let selectedDistrictCode = null;
+                    districts.districts.forEach(district => {
+                        const option = new Option(district.name, district.code);
+                        if (district.name === oldDistrict) {
+                            option.selected = true;
+                            selectedDistrictCode = district.code;
+                        }
+                        districtSelect.add(option);
+                    });
+
+                    if (selectedDistrictCode) {
+                        const wardsResponse = await fetch(
+                            `https://provinces.open-api.vn/api/d/${selectedDistrictCode}?depth=2`);
+                        if (!wardsResponse.ok) throw new Error('Lỗi tải xã');
+                        const wards = await wardsResponse.json();
+
+                        wardSelect.innerHTML = '<option value="">-- Chọn xã --</option>';
+                        wardSelect.disabled = false;
+                        wards.wards.forEach(ward => {
+                            const option = new Option(ward.name, ward.code);
+                            if (ward.name === oldWard) {
+                                option.selected = true;
+                            }
+                            wardSelect.add(option);
+                        });
                     }
-                });
-
-                wardSelect.addEventListener('change', updateMapWithAddress);
-
-                if (oldProvince) {
-                    await provinceSelect.dispatchEvent(new Event('change'));
                 }
-                if (oldDistrict) {
-                    await districtSelect.dispatchEvent(new Event('change'));
+
+                // Gán giá trị địa chỉ chi tiết
+                if (oldDetailedAddress) {
+                    detailedAddressInput.value = oldDetailedAddress;
                 }
+
             } catch (error) {
                 console.error(error);
-                alert('Lỗi tải danh sách tỉnh. Vui lòng thử lại sau.');
+                alert('Lỗi tải danh sách địa phương. Vui lòng thử lại sau.');
             }
 
-            let map = L.map('map').setView([21.028511, 105.804817], 13);
-            let marker = null;
+            let map = L.map('map').setView([{{ old('latitude', $property->latitude) }},
+                {{ old('longitude', $property->longitude) }}
+            ], 13);
+            let marker = L.marker([{{ old('latitude', $property->latitude) }},
+                {{ old('longitude', $property->longitude) }}
+            ]).addTo(map);
             const apiKey = '{{ config('services.locationiq.key') }}';
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -503,10 +506,10 @@
             }).addTo(map);
 
             function updateMapWithAddress() {
-                let detail = document.querySelector('#detailed_address').value.trim();
-                let provinceText = provinceSelect.options[provinceSelect.selectedIndex]?.text;
-                let districtText = districtSelect.options[districtSelect.selectedIndex]?.text;
-                let wardText = wardSelect.options[wardSelect.selectedIndex]?.text;
+                let detail = detailedAddressInput.value.trim();
+                let provinceText = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
+                let districtText = districtSelect.options[districtSelect.selectedIndex]?.text || '';
+                let wardText = wardSelect.options[wardSelect.selectedIndex]?.text || '';
 
                 if (!detail && (!wardText || wardText === '-- Chọn xã --')) return;
 
@@ -517,7 +520,7 @@
 
                 fetch(
                         `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${encodeURIComponent(fullAddress)}&format=json`
-                        )
+                    )
                     .then(response => response.json())
                     .then(data => {
                         if (data.length > 0) {
@@ -529,22 +532,39 @@
                             document.querySelector('#latitude').value = lat;
                             document.querySelector('#longitude').value = lon;
                         } else {
-                            document.querySelector('#latitude').value = 21.028511;
-                            document.querySelector('#longitude').value = 105.804817;
+                            document.querySelector('#latitude').value =
+                                {{ old('latitude', $property->latitude) }};
+                            document.querySelector('#longitude').value =
+                                {{ old('longitude', $property->longitude) }};
                             alert("Không tìm thấy vị trí với địa chỉ bạn nhập.");
                         }
                     })
                     .catch(() => {
-                        document.querySelector('#latitude').value = 21.028511;
-                        document.querySelector('#longitude').value = 105.804817;
+                        document.querySelector('#latitude').value =
+                            {{ old('latitude', $property->latitude) }};
+                        document.querySelector('#longitude').value =
+                            {{ old('longitude', $property->longitude) }};
                         alert("Đã xảy ra lỗi khi định vị bản đồ.");
                     });
             }
 
+            // Cập nhật bản đồ khi load trang
+            provinceSelect.addEventListener('change', function() {
+                setTimeout(updateMapWithAddress, 500);
+            });
+            districtSelect.addEventListener('change', function() {
+                setTimeout(updateMapWithAddress, 500);
+            });
+            wardSelect.addEventListener('change', function() {
+                detailedAddressInput.value = ''; // 👉 Reset địa chỉ cụ thể khi đổi xã
+                updateMapWithAddress();
+            });
+
+
             let debounceTimer;
-            document.querySelector('#detailed_address').addEventListener('input', function() {
+            detailedAddressInput.addEventListener('input', function() {
                 clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(updateMapWithAddress, 1000);
+                debounceTimer = setTimeout(updateMapWithAddress, 1500);
             });
         });
     </script>

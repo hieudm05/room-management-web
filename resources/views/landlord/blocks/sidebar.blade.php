@@ -78,5 +78,27 @@ $user = Auth::user(); ?>
                 </div>
             </li>
         @endif
+         </li>
+        @if ($user->role === 'Staff')
+            <li class="nav-item">
+                <a class="nav-link menu-link" href="#bills" data-bs-toggle="collapse" role="button"
+                    aria-expanded="false" aria-controls="bills">
+                    <i class="mdi mdi-bank"></i>
+                    <span data-key="t-bank">Hoá đơn</span>
+                </a>
+                <div class="collapse menu-dropdown" id="bills">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.staff.payment.index') }}" class="nav-link">
+                                Danh sách hoá đơn
+                            </a>
+                            
+                        </li>
+                       
+                    </ul>
+                </div>
+            </li>
+        @endif
+
     </ul>
 </div>
