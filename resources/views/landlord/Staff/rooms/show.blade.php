@@ -16,14 +16,12 @@
                 <div class="d-flex flex-wrap gap-2 my-3">
                     <a href="{{ route('landlords.staff.contract.', $room) }}" class="btn btn-outline-primary">📄 Hợp
                         đồng</a>
-                    <a href="{{ route('landlords.staff.services.', $room) }}" class="btn btn-outline-success">🛎️
-                        Dịch vụ</a>
-                    <a href="{{ route('landlords.staff.electric_water.', $room) }}"
+                    {{-- <a href="{{ route('landlords.staff.electric_water.', $room) }}"
                         class="btn btn-outline-warning">⚡ Điện/Nước</a>
                     <a href="{{ route('landlords.staff.documents.', $room) }}" class="btn btn-outline-secondary">📑
                         Giấy tờ</a>
                     <a href="{{ route('landlords.staff.payment.', $room) }}" class="btn btn-outline-danger">💰 Thu
-                        tiền</a>
+                        tiền</a> --}}
                 </div>
 
 

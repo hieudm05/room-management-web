@@ -22,7 +22,6 @@ $user = Auth::user(); ?>
             <div class="collapse menu-dropdown" id="sidebarRoom">
                 <ul class="nav nav-sm flex-column">
                     @if ($user->role === 'Landlord')
-<<<<<<< HEAD
                     <li class="nav-item">
                         <a href="{{ route('landlords.properties.list') }}" class="nav-link">
                             Properties Management
@@ -48,7 +47,6 @@ $user = Auth::user(); ?>
                             Approve room change request
                         </a>
                     
-=======
                         <li class="nav-item">
                             <a href="{{ route('landlords.properties.list') }}" class="nav-link">
                                 Properties Management
@@ -69,7 +67,6 @@ $user = Auth::user(); ?>
                                 Approval User
                             </a>
                         </li>
->>>>>>> d43ce1f04dd31810752cd03aed73eebd669990e0
                     @endif
 
                     @if ($user->role === 'Staff')
@@ -105,23 +102,29 @@ $user = Auth::user(); ?>
                 </div>
             </li>
         @endif
-        @if ($user->role === 'Landlord')
+         </li>
+        @if ($user->role === 'Staff')
             <li class="nav-item">
-                <a class="nav-link menu-link" href="#sidebarStaff" data-bs-toggle="collapse" role="button"
-                    aria-expanded="false" aria-controls="sidebarStaff">
-                    <i class="mdi mdi-account-group"></i>
-                    <span data-key="t-staff">Staff Accounts</span>
+                <a class="nav-link menu-link" href="#bills" data-bs-toggle="collapse" role="button"
+                    aria-expanded="false" aria-controls="bills">
+                    <i class="mdi mdi-bank"></i>
+                    <span data-key="t-bank">Hoá đơn</span>
                 </a>
-                <div class="collapse menu-dropdown" id="sidebarStaff">
+                <div class="collapse menu-dropdown" id="bills">
                     <ul class="nav nav-sm flex-column">
                         <li class="nav-item">
-                            <a href="{{ route('landlords.staff_accounts.index') }}" class="nav-link">
-                                All Staff Accounts
+                            <a href="{{ route('landlords.staff.payment.index') }}" class="nav-link">
+                                Danh sách hoá đơn
                             </a>
+                            
                         </li>
+                       
+
                     </ul>
                 </div>
             </li>
         @endif
+
+
     </ul>
 </div>

@@ -22,12 +22,17 @@ class Property extends Model
         'longitude',
         'description',
         'rules',
+        'image_url',
         'created_at',
         'updated_at',
     ];
     public function landlord()
     {
         return $this->belongsTo(User::class, 'landlord_id');
+    }
+    public function images()
+    {
+        return $this->hasMany(PropertyImage::class, 'property_id', 'property_id');
     }
     public function legalDocuments()
     {
@@ -39,17 +44,17 @@ class Property extends Model
         return $this->hasMany(Room::class, 'property_id', 'property_id');
     }
 
-   
-  public function bankAccount()
-{
-    return $this->belongsTo(BankAccount::class, 'bank_account_id', 'id');
-}
-    public function favoritedBy()
-{
-    return $this->belongsToMany(User::class, 'favorites', 'property_id', 'user_id')
-                ->withTimestamps();
 
-}
+    public function bankAccount()
+    {
+        return $this->belongsTo(BankAccount::class, 'bank_account_id', 'id');
+    }
+    public function favoritedBy()
+    {
+        return $this->belongsToMany(User::class, 'favorites', 'property_id', 'user_id')
+            ->withTimestamps();
+
+    }
 
 
 }
