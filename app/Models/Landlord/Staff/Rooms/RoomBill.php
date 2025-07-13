@@ -2,6 +2,7 @@
 
 namespace App\Models\Landlord\Staff\Rooms;
 
+use App\Models\Landlord\BankAccount;
 use Illuminate\Database\Eloquent\Model;
 
 class RoomBill extends Model
@@ -21,5 +22,10 @@ class RoomBill extends Model
 {
     return $this->status === 'paid';
 }
+    public function bankAccount()
+    {
+        return $this->belongsTo(BankAccount::class);
+    }
+
 
 }

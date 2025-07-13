@@ -42,15 +42,39 @@ $user = Auth::user(); ?>
                             Approval User
                         </a>
                     </li>
-
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.room_edit_requests.index') }}" class="nav-link">
+                            Approve room change request
+                        </a>
+                    
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.properties.list') }}" class="nav-link">
+                                Properties Management
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.rooms.index') }}" class="nav-link">
+                                Rooms Management
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.approvals.index') }}" class="nav-link">
+                                Approval
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.approvals.users.index') }}" class="nav-link">
+                                Approval User
+                            </a>
+                        </li>
                     @endif
 
                     @if ($user->role === 'Staff')
-                    <li class="nav-item">
-                        <a href="{{ route('landlords.staff.index') }}" class="nav-link">
-                            Properties Management for Staff
-                        </a>
-                    </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.staff.index') }}" class="nav-link">
+                                Properties Management for Staff
+                            </a>
+                        </li>
                     @endif
                 </ul>
             </div>
@@ -69,7 +93,7 @@ $user = Auth::user(); ?>
                                 All Bank Accounts
                             </a>
                         </li>
-                         <li class="nav-item">
+                        <li class="nav-item">
                             <a href="{{ route('landlords.bank_accounts.assign') }}" class="nav-link">
                                 Assign Bank Accounts to Properties
                             </a>
@@ -95,10 +119,12 @@ $user = Auth::user(); ?>
                             
                         </li>
                        
+
                     </ul>
                 </div>
             </li>
         @endif
+
 
     </ul>
 </div>
