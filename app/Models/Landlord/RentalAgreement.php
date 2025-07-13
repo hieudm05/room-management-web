@@ -3,11 +3,20 @@
 namespace App\Models\Landlord;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class RentalAgreement extends Model
 {
-    protected $primaryKey = 'rental_id'; 
+    use HasFactory;
+
+    protected $primaryKey = 'rental_id';
     public $incrementing = true;
     protected $keyType = 'int';
     protected $fillable = ['room_id', 'renter_id', 'landlord_id', 'start_date', 'end_date', 'rental_price', 'deposit', 'status', 'contract_file', 'agreement_terms', 'created_by'];
+
+    public function renter()
+    {
+        return $this->belongsTo(User::class, 'renter_id');
+    }
 }

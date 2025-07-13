@@ -8,19 +8,18 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('rooms', function (Blueprint $table) {
-            // Chỉ thêm cột nếu chưa tồn tại
-            if (!Schema::hasColumn('rooms', 'people_renter')) {
-                $table->integer('people_renter')->default(0)->after('id_rental_agreements');
+            if (!Schema::hasColumn('rooms', 'id_rental_agreements')) {
+                $table->unsignedBigInteger('id_rental_agreements')->nullable()->after('status');
             }
+            // Nếu muốn tạo foreign key:
+            // $table->foreign('id_rental_agreements')->references('id')->on('rental_agreements')->onDelete('set null');
         });
     }
+
     public function down(): void
     {
         Schema::table('rooms', function (Blueprint $table) {
-            // Chỉ xoá cột nếu đang tồn tại
-            if (Schema::hasColumn('rooms', 'people_renter')) {
-                $table->dropColumn('people_renter');
-            }
+            $table->dropColumn('id_rental_agreements');
         });
     }
 };

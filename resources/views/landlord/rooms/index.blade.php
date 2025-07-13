@@ -167,14 +167,29 @@
                                             class="btn btn-sm btn-outline-primary">✏️</a>
                                         <a href="{{ route('landlords.rooms.show', $room) }}"
                                             class="btn btn-sm btn-outline-warning">👁️</a>
+
                                         <form action="{{ route('landlords.rooms.destroy', $room) }}" method="POST"
                                             class="d-inline"
                                             onsubmit="return confirm('Bạn có chắc chắn muốn xoá phòng này?');">
                                             @csrf @method('DELETE')
                                             <button class="btn btn-sm btn-outline-danger">🗑️</button>
                                         </form>
+
                                         <a href="{{ route('landlords.rooms.staffs.edit', $room->room_id) }}"
-                                            class="btn btn-sm btn-outline-info">👤 Phân quyền</a>
+                                            class="btn btn-sm btn-outline-info">👤</a>
+
+                                        <div class="d-flex gap-1 mt-1">
+                                            @if ($room->currentAgreementValid && !$room->is_contract_locked)
+                                                <form action="{{ route('landlords.rooms.lockContract', $room) }}"
+                                                    method="POST"
+                                                    onsubmit="return confirm('Bạn có chắc chắn muốn khóa hợp đồng phòng này không?');">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-danger btn-sm">🔒</button>
+                                                </form>
+                                            @endif
+                                            <a href="{{ route('landlords.rooms.stats', $room) }}"
+                                                class="btn btn-sm btn-outline-secondary">📊</a>
+                                        </div>
 
                                     </td>
                                 </tr>
@@ -210,5 +225,4 @@
             });
         </script>
     @endsection
-
 @endsection
