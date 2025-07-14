@@ -117,6 +117,7 @@ class Room extends Model
     }
 
     public function staffs()
+
     {
         return $this->belongsToMany(User::class, 'room_staff', 'room_id', 'staff_id')
             ->where('role', 'Staff')
@@ -127,4 +128,10 @@ class Room extends Model
     {
         return $this->currentAgreement?->renter;
     }
+
+    public function roomStaff()
+    {
+        return $this->belongsToMany(User::class, 'room_staff', 'room_id', 'staff_id');
+    }
+
 }

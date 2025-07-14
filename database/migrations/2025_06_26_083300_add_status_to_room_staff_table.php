@@ -9,6 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+
     public function up(): void
     {
         Schema::table('room_staff', function (Blueprint $table) {
@@ -26,4 +27,7 @@ return new class extends Migration
             }
         });
     }
+
+  
+
 };
