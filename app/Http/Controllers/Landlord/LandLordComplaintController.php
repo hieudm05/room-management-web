@@ -119,7 +119,7 @@ class LandLordComplaintController extends Controller
             $this->sendNotificationToUser(
                 $complaint->user_id,
                 'Khiếu nại đang được xử lý',
-                'Chủ trọ đã giao nhân viên xử lý khiếu nại của bạn tại phòng ' . $complaint->room->name,
+                'Chủ trọ đã giao nhân viên xử lý khiếu nại của bạn tại phòng ' . $complaint->room_id->room_number,
                 route('home.complaints.show', $complaint->id)
             );
         }
@@ -149,7 +149,7 @@ class LandLordComplaintController extends Controller
                 $complaint->user_id,
                 'Khiếu nại đã bị huỷ xử lý',
                 'Chủ trọ đã đánh dấu khiếu nại của bạn là huỷ bỏ.',
-                route('complaints.show', $complaint->id)
+                route('landlord.complaints.show', $complaint->id)
             );
         }
 
@@ -162,7 +162,7 @@ class LandLordComplaintController extends Controller
 
         if ($complaint->status !== 'rejected') {
             return redirect()->route('landlord.complaints.index')
-                ->with('error', 'Khiếu nại này chưa bị từ chối.');
+                ->with('error', 'Đã từ chối xử lý khiếu nại.');
         }
 
         if ($complaint->property->landlord_id !== auth()->id()) {

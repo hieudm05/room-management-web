@@ -156,7 +156,7 @@ class StaffComplaintController extends Controller
                 $this->sendNotificationToUser(
                     $landlordId,
                     '❌ Nhân viên từ chối khiếu nại',
-                    "Khiếu nại tại phòng {$complaint->room->name} đã bị từ chối.",
+                    "Khiếu nại tại phòng {$complaint->room->room_number} đã bị từ chối.",
                     $link
                 );
             }
@@ -166,7 +166,7 @@ class StaffComplaintController extends Controller
                 $this->sendNotificationToUser(
                     $complaint->user_id,
                     '❌ Khiếu nại bị từ chối xử lý',
-                    "Nhân viên đã từ chối xử lý khiếu nại của bạn tại phòng {$complaint->room->name}.",
+                    "Nhân viên đã từ chối xử lý khiếu nại của bạn tại phòng {$complaint->room->room_number}.",
                     $link
                 );
             }
