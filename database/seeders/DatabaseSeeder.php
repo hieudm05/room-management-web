@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
             AttachAllServicesToRoomsSeeder::class,
             RentalAgreementSeeder::class,
             BankAccountsTableSeeder::class,
+            CommonIssueSeeder::class,
+
 
         ]);
         // Tạo dữ liệu PropertySeeder

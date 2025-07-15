@@ -76,6 +76,13 @@ $user = Auth::user(); ?>
                             </a>
                         </li>
                     @endif
+                     @if ($user->role === 'Staff')
+                    <li class="nav-item">
+                        <a href="{{ route('landlords.staff.complaints.index') }}" class="nav-link">
+                            Complaints Staff
+                        </a>
+                    </li>
+                    @endif
                 </ul>
             </div>
         </li>
@@ -97,8 +104,14 @@ $user = Auth::user(); ?>
                             <a href="{{ route('landlords.bank_accounts.assign') }}" class="nav-link">
                                 Assign Bank Accounts to Properties
                             </a>
-                        </li>
+                        </li>  
                     </ul>
+                <li class="nav-item">
+                <a class="nav-link menu-link" href="{{ route('landlord.complaints.index') }}">
+                 <i class="mdi mdi-alert-circle-outline"></i>
+                      <span data-key="t-complaints">Complaints</span>
+                    </a>
+                  </li>
                 </div>
             </li>
         @endif

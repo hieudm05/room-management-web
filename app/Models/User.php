@@ -3,10 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-
+use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Room;
-
-
 use App\Models\Landlord\Property;
 use App\Models\Landlord\BankAccount;
 use Illuminate\Notifications\Notifiable;
@@ -103,10 +101,23 @@ public function info()
 }
 
 
+
 public function staffs() {
     return $this->hasMany(User::class, 'landlord_id')->where('role', 'Staff');
 }
 public function rooms() {
     return $this->belongsToMany(Room::class, 'room_staff', 'staff_id', 'room_id');
 }
+public function assignedRooms()
+{
+    return $this->belongsToMany(Room::class, 'room_staff', 'staff_id', 'room_id')
+        ->withPivot('status');
 }
+public function notifications()
+{
+    return $this->belongsToMany(Notification::class, 'notification_user', 'user_id', 'notification_id')
+                ->withPivot(['is_read', 'read_at', 'received_at'])
+                ->withTimestamps();
+}
+
+};
