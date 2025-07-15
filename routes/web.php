@@ -248,66 +248,75 @@ Route::middleware('auth')->group(function () {
     Route::post('/add-user', [AddUserRequestController::class, 'store'])->name('renter.storeuser');
 });
 Route::middleware(['auth'])->group(function () {
+    /**
+     * ====================================
+     * 👤 Renter (Người thuê) Complaints
+     * ====================================
+     */
+    Route::prefix('complaints')->name('home.complaints.')->group(function () {
+        Route::get('/', [RenterComplaintController::class, 'index'])->name('index');
+        Route::get('/create', [RenterComplaintController::class, 'create'])->name('create');
+        Route::post('/', [RenterComplaintController::class, 'store'])->name('store');
+        Route::get('/{complaint}', [RenterComplaintController::class, 'show'])->name('show');
+        Route::get('/{complaint}/edit', [RenterComplaintController::class, 'edit'])->name('edit');
+        Route::put('/{complaint}', [RenterComplaintController::class, 'update'])->name('update');
+        Route::patch('/{complaint}', [RenterComplaintController::class, 'update']); // optional
+        Route::delete('/{complaint}', [RenterComplaintController::class, 'destroy'])->name('destroy');
+        Route::post('/{complaint}/cancel', [RenterComplaintController::class, 'cancel'])->name('cancel');
+    });
 
-    // CRUD khiếu nại: index, create, store, show, edit, update, destroy
-Route::get('complaints', [RenterComplaintController::class, 'index'])->name('home.complaints.index');
-Route::get('complaints/create', [RenterComplaintController::class, 'create'])->name('home.complaints.create');
-Route::post('complaints', [RenterComplaintController::class, 'store'])->name('home.complaints.store');
-Route::get('complaints/{complaint}', [RenterComplaintController::class, 'show'])->name('home.complaints.show');
-Route::get('complaints/{complaint}/edit', [RenterComplaintController::class, 'edit'])->name('home.complaints.edit');
-Route::put('complaints/{complaint}', [RenterComplaintController::class, 'update'])->name('home.complaints.update');
-Route::patch('complaints/{complaint}', [RenterComplaintController::class, 'update']); // optional
-Route::delete('complaints/{complaint}', [RenterComplaintController::class, 'destroy'])->name('home.complaints.destroy');
-    Route::post('complaints/{complaint}/cancel', [RenterComplaintController::class, 'cancel'])
-        ->name('home.complaints.cancel');
+    /**
+     * ====================================
+     * 🧑‍💼 Landlord (Chủ nhà)
+     * ====================================
+     */
+    Route::prefix('landlord')->name('landlord.')->group(function () {
+        // Khiếu nại
+        Route::get('/complaints', [LandlordComplaintController::class, 'index'])->name('complaints.index');
+        Route::get('/complaints/{id}', [LandlordComplaintController::class, 'show'])->name('complaints.show');
+        Route::post('/complaints/{id}/approve', [LandlordComplaintController::class, 'approve'])->name('complaints.approve');
+        Route::get('/complaints/{id}/rejection', [LandlordComplaintController::class, 'showRejection'])->name('complaints.rejection');
+        Route::get('/complaints/{id}/assign', [LandLordComplaintController::class, 'assignForm'])->name('complaints.assign.form');
+        Route::post('/complaints/{id}/assign', [LandLordComplaintController::class, 'assign'])->name('complaints.assign');
+        Route::post('/complaints/{id}/accept-reject', [LandLordComplaintController::class, 'acceptReject'])->name('complaints.accept-reject');
 
-Route::prefix('landlord')->middleware(['auth'])->group(function () {
-    Route::get('/complaints', [LandlordComplaintController::class, 'index'])->name('landlord.complaints.index');
-    Route::get('/complaints/{id}', [LandlordComplaintController::class, 'show'])->name('landlord.complaints.show');
+        // Thông báo
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [LandLordNotificationController::class, 'index'])->name('index');
+            Route::post('/{id}/read', [LandLordNotificationController::class, 'markAsRead'])->name('read');
+            Route::delete('/{id}', [LandLordNotificationController::class, 'destroy'])->name('destroy');
+            Route::post('/bulk-delete', [LandLordNotificationController::class, 'bulkDelete'])->name('bulk-delete');
+        });
+    });
 
-    // ✅ Route duyệt xử lý complaint (tự động gán staff từ phòng)
-    Route::post('/complaints/{id}/approve', [LandlordComplaintController::class, 'approve'])->name('landlord.complaints.approve');
-   Route::get('/landlord/complaints/{id}/rejection', [LandlordComplaintController::class, 'showRejection'])
-    ->name('landlord.complaints.rejection');
-     Route::get('/complaints/{id}/assign', [LandLordComplaintController::class, 'assignForm'])
-        ->name('landlord.complaints.assign.form');
+    /**
+     * ====================================
+     * 🧑‍🔧 Staff (Nhân viên)
+     * ====================================
+     */
+    Route::prefix('staff')->name('landlords.staff.')->group(function () {
+        Route::get('/complaints', [StaffComplaintController::class, 'index'])->name('complaints.index');
+        Route::get('/complaints/{id}/edit', [StaffComplaintController::class, 'edit'])->name('complaints.edit');
+        Route::post('/complaints/{id}/resolve', [StaffComplaintController::class, 'resolve'])->name('complaints.resolve');
+        Route::get('/complaints/{id}/reject', [StaffComplaintController::class, 'rejectForm'])->name('complaints.rejectform');
+        Route::post('/complaints/{id}/reject', [StaffComplaintController::class, 'reject'])->name('complaints.reject');
 
-    Route::post('/complaints/{id}/assign', [LandLordComplaintController::class, 'assign'])
-        ->name('landlord.complaints.assign');
-    Route::post('/complaints/{id}/accept-reject', [LandLordComplaintController::class, 'acceptReject'])
-    ->name('landlord.complaints.accept-reject');
-      Route::get('/notifications', [LandLordNotificationController::class, 'index'])->name('landlord.notifications.index');
-    Route::post('/notifications/{id}/read', [LandLordNotificationController::class, 'markAsRead'])->name('landlord.notifications.read');
-    Route::delete('/notifications/{id}', [LandLordNotificationController::class, 'destroy'])->name('landlord.notifications.destroy');
-    Route::post('/notifications/bulk-delete', [LandLordNotificationController::class, 'bulkDelete'])->name('landlord.notifications.bulk-delete');
-});
-});
-Route::prefix('staff')
-    ->middleware(['auth', ]) // đảm bảo chỉ nhân viên mới vào được
-    ->group(function () {
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [StaffNotificationController::class, 'index'])->name('index');
+            Route::post('/{id}/read', [StaffNotificationController::class, 'markAsRead'])->name('read');
+        });
+    });
 
-    // 📋 Danh sách khiếu nại được giao cho nhân viên
-    Route::get('/complaints', [StaffComplaintController::class, 'index'])
-        ->name('landlords.staff.complaints.index');
-
-    // 🛠 Hiển thị form xử lý khiếu nại
-    Route::get('/complaints/{id}/edit', [StaffComplaintController::class, 'edit'])
-        ->name('landlords.staff.complaints.edit');
-
-    // 💾 Gửi kết quả xử lý khiếu nại
-    Route::post('/complaints/{id}/resolve', [StaffComplaintController::class, 'resolve'])
-        ->name('landlords.staff.complaints.resolve');
-      Route::get('/complaints/{id}/reject', [StaffComplaintController::class, 'rejectForm'])->name('landlords.staff.complaints.rejectform');
-    Route::post('/complaints/{id}/reject', [StaffComplaintController::class, 'reject'])->name('landlords.staff.complaints.reject');
-    Route::get('/notifications', [StaffNotificationController::class, 'index'])->name('landlords.staff.notifications.index');
-    Route::post('/notifications/{id}/read', [StaffNotificationController::class, 'markAsRead'])->name('landlords.staff.notifications.read');
-});
-
-Route::middleware('auth')->group(function () {
-    Route::get('/notifications', [RenterNotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/{id}/read', [RenterNotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::delete('/notifications/{id}', [RenterNotificationController::class, 'destroy'])->name('notifications.delete');
-    Route::post('/notifications/bulk-delete', [RenterNotificationController::class, 'bulkDelete'])->name('notifications.bulk-delete');
-
+    /**
+     * ====================================
+     * 🔔 Renter Notifications
+     * ====================================
+     */
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [RenterNotificationController::class, 'index'])->name('index');
+        Route::post('/{id}/read', [RenterNotificationController::class, 'markAsRead'])->name('read');
+        Route::delete('/{id}', [RenterNotificationController::class, 'destroy'])->name('delete');
+        Route::post('/bulk-delete', [RenterNotificationController::class, 'bulkDelete'])->name('bulk-delete');
+    });
 });
 
