@@ -11,7 +11,7 @@ class LandLordNotificationController extends Controller
     public function index()
     {
         $notifications = Auth::user()
-            ->notifications()
+            ->customNotifications()
             ->withPivot('is_read', 'received_at')
             ->orderByDesc('notification_user.received_at')
             ->paginate(10);
@@ -21,7 +21,7 @@ class LandLordNotificationController extends Controller
 
     public function markAsRead($id)
     {
-        $notification = Auth::user()->notifications()->where('notifications.id', $id)->firstOrFail();
+        $notification = Auth::user()->customNotifications()->where('notifications.id', $id)->firstOrFail();
 
         $notification->pivot->is_read = true;
         $notification->pivot->read_at = now();
@@ -33,13 +33,13 @@ class LandLordNotificationController extends Controller
 {
     $user = auth()->user();
 
-    $notification = $user->notifications()->where('notifications.id', $id)->first();
+    $notification = $user->customNotifications()->where('notifications.id', $id)->first();
 
     if (!$notification) {
         return back()->with('error', 'Không tìm thấy thông báo.');
     }
 
-    $user->notifications()->detach($id);
+    $user->customNotifications()->detach($id);
 
     return back()->with('success', 'Đã xoá thông báo.');
 }
@@ -54,7 +54,7 @@ public function bulkDelete(Request $request)
         return back()->with('error', 'Vui lòng chọn ít nhất một thông báo để xoá.');
     }
 
-    Auth::user()->notifications()->detach($ids);
+    Auth::user()->customNotifications()->detach($ids);
 
     return back()->with('success', 'Đã xoá các thông báo đã chọn.');
 }

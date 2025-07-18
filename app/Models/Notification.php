@@ -11,18 +11,21 @@ class Notification extends Model
         'message',
         'type',
         'link',
-        'created_at',
         'expired_at',
         'is_global',
     ];
 
-    public $timestamps = false;
-    
- 
-   public function users()
-{
-    return $this->belongsToMany(User::class, 'notification_user')
-                ->withPivot(['is_read', 'read_at', 'received_at', 'created_at', 'updated_at'])
-                ->withTimestamps();
-}
+    public $timestamps = true; // Laravel sẽ xử lý created_at, updated_at
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'notification_user')
+            ->withPivot(['is_read', 'read_at', 'received_at', 'created_at', 'updated_at'])
+            ->withTimestamps();
+    }
+
+    public function scopeUnread($query)
+    {
+        return $query->wherePivot('is_read', false);
+    }
 }

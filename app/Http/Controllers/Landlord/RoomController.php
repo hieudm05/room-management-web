@@ -256,10 +256,25 @@ class RoomController extends Controller
             return redirect()->route('staff.index')->with('success', 'Yêu cầu sửa đã được gửi, chờ chủ trọ duyệt.');
         }
 
+        // ✅ Ghi lại giá cũ
+        $oldRentalPrice = $room->rental_price;
+        $oldDepositPrice = $room->deposit_price;
 
+        // ✅ Cập nhật chính thức
         $room->update($request->only(['area', 'rental_price', 'status', 'occupants', 'deposit_price']));
+
+        // ✅ Tăng số lần sửa nếu có thay đổi
+        if ($oldRentalPrice != $request->rental_price) {
+            $room->increment('price_edit_count');
+        }
+
+        if ($oldDepositPrice != $request->deposit_price) {
+            $room->increment('deposit_edit_count');
+        }
+
         $room->facilities()->sync($request->facilities ?? []);
 
+        // Xử lý ảnh xoá
         if ($request->has('delete_photos')) {
             $photosToDelete = RoomPhoto::whereIn('photo_id', $request->delete_photos)->get();
             foreach ($photosToDelete as $photo) {
@@ -271,6 +286,7 @@ class RoomController extends Controller
             }
         }
 
+        // Xử lý ảnh mới
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
                 try {
@@ -289,7 +305,7 @@ class RoomController extends Controller
             }
         }
 
-
+        // Dịch vụ
         $services = $request->input('services', []);
         if (!empty($services)) {
             $serviceData = [];
@@ -309,13 +325,16 @@ class RoomController extends Controller
 
         $room->load('property', 'facilities', 'services');
         $landlord = $this->getCurrentUserAsLandlord();
+        $agreement = $room->rentalAgreements()->latest()->first();
+        $tenant = $agreement?->renter;
 
         $this->generateContractPDF($room, $landlord);
-        $this->generateContractWord($room, $landlord);
+        $this->generateContractWord($room, $landlord, $tenant);
 
         return redirect()->route('landlords.rooms.index', ['property_id' => $room->property_id])
             ->with('success', 'Cập nhật phòng thành công!');
     }
+
 
     public function downloadContractWord(Room $room)
     {
@@ -463,6 +482,7 @@ class RoomController extends Controller
         $templateProcessor->saveAs(storage_path("app/public/contracts/{$filename}"));
         $room->update(['contract_word_file' => "contracts/{$filename}"]);
     }
+
 
     public function hide(Room $room)
     {
@@ -814,20 +834,19 @@ class RoomController extends Controller
     }
     // Hiển thị thống kê hợp đồng của phòng
     public function showStats(Room $room)
-{
-    $room->load('rentalAgreements');
+    {
+        $room->load('rentalAgreements');
 
-    $contracts = $room->rentalAgreements()
-        ->selectRaw('status, COUNT(*) as total')
-        ->groupBy('status')
-        ->pluck('total', 'status');
+        $contracts = $room->rentalAgreements()
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
-    // Nếu không có dữ liệu, gán giá trị mặc định để Chart.js không bị trắng
-    if ($contracts->isEmpty()) {
-        $contracts = collect(['Không có hợp đồng' => 0]);
+        // Nếu không có dữ liệu, gán giá trị mặc định để Chart.js không bị trắng
+        if ($contracts->isEmpty()) {
+            $contracts = collect(['Không có hợp đồng' => 0]);
+        }
+
+        return view('landlord.rooms.statistics', compact('room', 'contracts'));
     }
-
-    return view('landlord.rooms.statistics', compact('room', 'contracts'));
-}
-
 }

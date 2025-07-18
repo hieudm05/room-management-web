@@ -23,37 +23,67 @@ class RoomEditRequestController extends Controller
 
     // Phê duyệt yêu cầu (chủ bấm "duyệt")
     public function approve($id)
-{
-    $requestEdit = RoomEditRequest::findOrFail($id);
-    $room = $requestEdit->room;
+    {
+        $requestEdit = RoomEditRequest::findOrFail($id);
+        $room = $requestEdit->room;
 
-    $room->update(json_decode($requestEdit->requested_data, true));
-    $requestEdit->status = 'approved';
-    $requestEdit->save();
+        $room->update(json_decode($requestEdit->requested_data, true));
+        $requestEdit->status = 'approved';
+        $requestEdit->save();
 
-    // Gửi thông báo
-    $requestEdit->staff->notify(new RoomEditRequestResultNotification('approved'));
+        // Gửi thông báo rõ ràng
+        $notification = \App\Models\Notification::create([
+            'title' => 'Yêu cầu chỉnh sửa phòng đã được phê duyệt',
+            'message' => 'Yêu cầu chỉnh sửa phòng ' . $room->room_number .
+                ' thuộc khu trọ "' . $room->property->name . '" đã được phê duyệt.',
+            'type' => 'user',
+            'link' => route('landlords.staff.show', $room->room_id),
+            'is_global' => false,
+            'expired_at' => now()->addDays(3),
+        ]);
 
-    return redirect()->back()->with('success', 'Đã duyệt yêu cầu và cập nhật phòng.');
-}
+        $notification->users()->attach($requestEdit->staff_id, [
+            'is_read' => false,
+            'received_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Đã duyệt yêu cầu và cập nhật phòng.');
+    }
+
 
     // Từ chối yêu cầu
     public function reject(Request $request, $id)
-{
-    $request->validate([
-        'note' => 'nullable|string|max:1000',
-    ]);
+    {
+        $request->validate([
+            'note' => 'nullable|string|max:1000',
+        ]);
 
-    $requestEdit = RoomEditRequest::findOrFail($id);
-    $requestEdit->status = 'rejected';
-    $requestEdit->note = $request->input('note');
-    $requestEdit->save();
+        $requestEdit = RoomEditRequest::findOrFail($id);
+        $requestEdit->status = 'rejected';
+        $requestEdit->note = $request->input('note');
+        $requestEdit->save();
 
-    // Gửi thông báo kèm lý do
-    $requestEdit->staff->notify(new RoomEditRequestResultNotification('rejected', $requestEdit->note));
+        // Gửi thông báo kèm lý do
+        $notification = \App\Models\Notification::create([
+            'title' => 'Yêu cầu chỉnh sửa phòng bị từ chối',
+            'message' => 'Yêu cầu chỉnh sửa phòng ' . $requestEdit->room->room_number .
+                ' thuộc khu trọ "' . $requestEdit->room->property->name . '" đã bị từ chối. ' .
+                'Lý do: ' . ($requestEdit->note ?: 'Không có.'),
 
-    return redirect()->back()->with('success', 'Đã từ chối yêu cầu.');
-}
+            'type' => 'user',
+            'link' => route('landlords.staff.show', $requestEdit->room_id),
+            'is_global' => false,
+            'expired_at' => now()->addDays(3),
+        ]);
+
+        $notification->users()->attach($requestEdit->staff_id, [
+            'is_read' => false,
+            'received_at' => now(),
+        ]);
+
+
+        return redirect()->back()->with('success', 'Đã từ chối yêu cầu.');
+    }
 
 
     // Xem chi tiết từng yêu cầu

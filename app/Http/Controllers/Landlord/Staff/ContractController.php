@@ -19,11 +19,20 @@ class ContractController extends Controller
             ->where('status', 'pending')
             ->latest()
             ->first();
-        $existingAgreement = RentalAgreement::where('room_id', $room->room_id)
+
+        // Hợp đồng đang hoạt động (nếu có)
+        $activeAgreement = RentalAgreement::where('room_id', $room->room_id)
+            ->whereIn('status', ['Signed', 'Active']) // hoặc trạng thái của bạn
             ->latest()
             ->first();
-        $pdfText = null;
 
+        // Các hợp đồng cũ đã bị khóa
+        $terminatedAgreements = RentalAgreement::where('room_id', $room->room_id)
+            ->where('status', 'Terminated')
+            ->latest()
+            ->get();
+
+        $pdfText = null;
         if ($pendingApproval && $pendingApproval->file_path) {
             try {
                 $parser = new Parser();
@@ -34,8 +43,15 @@ class ContractController extends Controller
             }
         }
 
-        return view('landlord.Staff.rooms.contract', compact('room', 'existingAgreement', 'pendingApproval', 'pdfText'));
+        return view('landlord.staff.rooms.contract', compact(
+            'room',
+            'pendingApproval',
+            'activeAgreement',
+            'terminatedAgreements',
+            'pdfText'
+        ));
     }
+
 
     // Staff tải hợp đồng lên → Gửi duyệt
     public function uploadAgreementFile(Request $request, Room $room)

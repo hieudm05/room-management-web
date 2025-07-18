@@ -11,13 +11,13 @@ class UserSeeder extends Seeder
 {
     public function run()
     {
-        // // Admin
-        // User::create([
-        //     'name' => 'Admin',
-        //     'email' => 'admin@example.com',
-        //     'password' => 'admin12345',
-        //     'role' => 'Admin',
-        // ]);
+        // Admin
+        User::create([
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+            'password' => 'admin12345',
+            'role' => 'Admin',
+        ]);
 
         // Chủ trọ
         User::create([
@@ -37,15 +37,15 @@ class UserSeeder extends Seeder
             ]);
         }
 
-        // // 3 Quản lý
-        // for ($i = 1; $i <= 3; $i++) {
-        //     User::create([
-        //         'name' => 'Manager ' . $i,
-        //         'email' => 'Manager' . $i . '@example.com',
-        //         'password' => Hash::make('password'),
-        //         'role' => 'Manager',
-        //     ]);
-        // }
+        // 3 Quản lý
+        for ($i = 1; $i <= 3; $i++) {
+            User::create([
+                'name' => 'Manager ' . $i,
+                'email' => 'Manager' . $i . '@example.com',
+                'password' => Hash::make('password'),
+                'role' => 'Manager',
+            ]);
+        }
 
         // 3 User thường
         for ($i = 1; $i <= 3; $i++) {
