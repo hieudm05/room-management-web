@@ -26,6 +26,8 @@ class RentalAgreement extends Model
         'status',
         'contract_file',
         'agreement_terms',
+        'price_edit_count',
+        'deposit_edit_count',
         'created_by'
     ];
 

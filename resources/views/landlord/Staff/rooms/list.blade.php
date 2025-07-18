@@ -12,17 +12,35 @@
         </script>
     @endif
 
-    @if (auth()->user()->unreadNotifications->count())
+    @php use Illuminate\Support\Str; @endphp
+
+    @php
+        $unreadNotifications = auth()
+            ->user()
+            ->customNotifications()
+            ->wherePivot('is_read', false)
+            ->orderBy('notifications.created_at', 'desc')
+            ->get();
+    @endphp
+
+    @if ($unreadNotifications->count())
         <div class="alert alert-info">
             <h5>🔔 Thông báo mới:</h5>
             <ul>
-                @foreach (auth()->user()->unreadNotifications as $notification)
+                @foreach ($unreadNotifications as $notification)
                     <li>
-                        {{ $notification->data['title'] }}
-                        @if ($notification->data['status'] === 'rejected')
-                            <br><small class="text-danger">📝 Lý do: {{ $notification->data['note'] ?? 'Không có' }}</small>
+                        <span class="text-dark">
+                            📌 {!! Str::before($notification->message, 'Lý do:') !!}
+                        </span>
+
+                        @if (Str::contains($notification->message, 'Lý do:'))
+                            @php
+                                $reason = Str::after($notification->message, 'Lý do:');
+                            @endphp
+                            <br><small class="text-danger">📄 Lý do: {{ trim($reason) }}</small>
                         @endif
-                        <br><small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
+
+                        <br><small class="text-muted">{{ optional($notification->created_at)->diffForHumans() }}</small>
                     </li>
                 @endforeach
             </ul>
@@ -32,6 +50,7 @@
             </form>
         </div>
     @endif
+
 
     <div class="col-xl-12">
         <div class="card mb-3">
