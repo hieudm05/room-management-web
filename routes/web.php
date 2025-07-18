@@ -178,10 +178,19 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     });
 
     // Đánh dấu thông báo đã đọc
-    Route::post('/staff/notifications/mark-as-read', function () {
-        auth()->user()->unreadNotifications->markAsRead();
-        return back();
-    })->name('staff.notifications.markAsRead');
+Route::post('/staff/notifications/mark-as-read', function () {
+    $user = auth()->user();
+
+    $user->customNotifications()
+        ->wherePivot('is_read', false)
+        ->updateExistingPivot(
+            $user->customNotifications()->pluck('notifications.id')->toArray(),
+            ['is_read' => true, 'read_at' => now()]
+        );
+
+    return back()->with('success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
+})->name('staff.notifications.markAsRead');
+
 });
 
 // Các route ngoài landlords
@@ -317,6 +326,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/read', [RenterNotificationController::class, 'markAsRead'])->name('read');
         Route::delete('/{id}', [RenterNotificationController::class, 'destroy'])->name('delete');
         Route::post('/bulk-delete', [RenterNotificationController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('/mark-all-read', [StaffNotificationController::class, 'markAllAsRead'])->name('markAllRead');
     });
 });
-

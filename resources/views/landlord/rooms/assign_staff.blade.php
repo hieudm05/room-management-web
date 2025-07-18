@@ -3,14 +3,14 @@
 @section('title', 'Phân quyền nhân viên')
 
 @section('content')
-<div class="container">
+<div class="container bg-white p-4 rounded shadow-sm">
     <h4>Phân quyền cho phòng: <strong>{{ $room->room_number }}</strong></h4>
 
     <form method="POST" action="{{ route('landlords.rooms.staffs.update', $room->room_id) }}">
         @csrf
 
-        <table class="table table-bordered">
-            <thead>
+        <table class="table table-bordered bg-white">
+            <thead class="table-light">
                 <tr>
                     <th>Chọn</th>
                     <th>Tên nhân viên</th>
@@ -27,8 +27,6 @@
                     @php
                         $assignedRecord = $room->staffs->firstWhere('id', $staff->id);
                         $status = $assignedRecord ? $assignedRecord->pivot->status : null;
-
-                        // Đếm số lần sửa của nhân viên này cho phòng này
                         $editCount = \App\Models\Landlord\RoomEditRequest::where('room_id', $room->room_id)
                             ->where('staff_id', $staff->id)->count();
                     @endphp

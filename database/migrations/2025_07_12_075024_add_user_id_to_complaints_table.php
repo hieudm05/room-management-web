@@ -9,26 +9,29 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-  public function up()
-{
-    Schema::table('complaints', function (Blueprint $table) {
-        // Không thêm cột nữa — chỉ gắn foreign key nếu cần
-        $table->foreign('user_id')
-              ->references('id')
-              ->on('users')
-              ->onDelete('cascade');
-    });
-}
+    public function up()
+    {
+        Schema::table('complaints', function (Blueprint $table) {
+            // Thêm cột user_id trước
+            $table->unsignedBigInteger('user_id')->after('id');
+
+            // Rồi gán foreign key
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
+        });
+    }
+
 
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
-{
-    Schema::table('complaints', function (Blueprint $table) {
-        $table->dropForeign(['user_id']);
-    });
-}
-
+    {
+        Schema::table('complaints', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
+        });
+    }
 };
