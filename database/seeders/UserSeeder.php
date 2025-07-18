@@ -19,23 +19,23 @@ class UserSeeder extends Seeder
         //     'role' => 'Admin',
         // ]);
 
-        // // Chủ trọ
-        // User::create([
-        //     'name' => 'Landlord',
-        //     'email' => 'Landlord@example.com',
-        //     'password' => Hash::make('password'),
-        //     'role' => 'Landlord',
-        // ]);
+        // Chủ trọ
+        User::create([
+            'name' => 'Landlord',
+            'email' => 'Landlord@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'Landlord',
+        ]);
 
-        // // 3 Nhân viên
-        // for ($i = 1; $i <= 3; $i++) {
-        //     User::create([
-        //         'name' => 'Staff ' . $i,
-        //         'email' => 'Staff' . $i . '@example.com',
-        //         'password' => Hash::make('password'),
-        //         'role' => 'Staff',
-        //     ]);
-        // }
+        // 3 Nhân viên
+        for ($i = 1; $i <= 3; $i++) {
+            User::create([
+                'name' => 'Staff ' . $i,
+                'email' => 'Staff' . $i . '@example.com',
+                'password' => Hash::make('password'),
+                'role' => 'Staff',
+            ]);
+        }
 
         // // 3 Quản lý
         // for ($i = 1; $i <= 3; $i++) {
@@ -47,15 +47,15 @@ class UserSeeder extends Seeder
         //     ]);
         // }
 
-        // // 3 User thường
-        // for ($i = 1; $i <= 3; $i++) {
-        //     User::create([
-        //         'name' => 'Renter ' . $i,
-        //         'email' => 'Renter' . $i . '@example.com',
-        //         'password' => Hash::make('password'),
-        //         'role' => 'Renter',
-        //     ]);
-        // }
+        // 3 User thường
+        for ($i = 1; $i <= 3; $i++) {
+            User::create([
+                'name' => 'Renter ' . $i,
+                'email' => 'Renter' . $i . '@example.com',
+                'password' => Hash::make('password'),
+                'role' => 'Renter',
+            ]);
+        }
     }
 }
 

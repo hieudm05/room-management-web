@@ -206,7 +206,8 @@ Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('/register', [AuthUserController::class, 'register'])->name('register.post');
     Route::get('/login', [AuthUserController::class, 'loginForm'])->name('login');
     Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
-    Route::post('/logout', [AuthUserController::class, 'logout'])->name('logout');
+    Route::any('/logout', [AuthUserController::class, 'logout'])->name('logout');
+
 });
 
 Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
