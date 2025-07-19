@@ -13,22 +13,22 @@ class MyRoomController extends Controller
     {
 
         $user = Auth::user();
-$roomId = $user->info?->room_id; // dấu ? để tránh lỗi nếu info null
+        $roomId = $user->info?->room_id; // dấu ? để tránh lỗi nếu info null
 
-if (!$roomId) {
-    return redirect()->back()->with('error', 'Bạn chưa được gán vào phòng nào.');
-}
+        if (!$roomId) {
+            return redirect()->back()->with('error', 'Bạn chưa được gán vào phòng nào.');
+        }
 
-$room = LandlordRoom::with('property')->find($roomId);
+        $room = LandlordRoom::with('property')->find($roomId);
 
-if (!$room) {
-    return redirect()->back()->with('error', 'Không tìm thấy thông tin phòng.');
-}
+        if (!$room) {
+            return redirect()->back()->with('error', 'Không tìm thấy thông tin phòng.');
+        }
 
-// Lấy danh sách hóa đơn
-$bills = RoomBill::where('room_id', $room->room_id)->orderByDesc('month')->get();
+        // Lấy danh sách hóa đơn
+        $bills = RoomBill::where('room_id', $room->room_id)->orderByDesc('month')->get();
 
-return view('home.my-room', compact('room', 'bills'));
+        return view('home.my-room', compact('room', 'bills'));
 
     }
 }

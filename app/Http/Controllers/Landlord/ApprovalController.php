@@ -68,31 +68,32 @@ class ApprovalController extends Controller
         try {
             $parser = new Parser();
             $pdf = $parser->parseFile($fullPath);
-            $text = $pdf->getText();
+            // $text = $pdf->getText();
+            $text = mb_convert_encoding($pdf->getText(), 'UTF-8', 'auto');
+            // dd($text);
         } catch (\Exception $e) {
             $text = '';
         }
         // 4. Lấy thông tin khách thuê
         $fullName = $cccd = $phone = $tenantEmail = null;
-
         // Trích toàn bộ khối từ "BÊN THUÊ PHÒNG TRỌ" đến "Căn cứ pháp lý"
-        if (preg_match('/BÊN THUÊ PHÒNG TRỌ \(gọi tắt là Bên B\):\s*(.*?)Căn cứ pháp lý/su', $text, $match)) {
+        if (preg_match('/BÊN THUÊ PHÒNG TR Ọ\s*\(gọi tắt là Bên B\):\s*(.*?)(?:Căn cứ pháp lý|BÊN CHO THUÊ)/siu', $text, $match)) {
             $infoBlock = $match[1];
-
-            // dd($infoBlock); 
-
+            // dd($infoBlock);
+            // dd("Đã vào đây");
             preg_match('/- Ông\/Bà:\s*(.+)/u', $infoBlock, $nameMatch);
             preg_match('/- CMND\/CCCD số:\s*([0-9]+)/u', $infoBlock, $cccdMatch);
             preg_match('/- SĐT:\s*([0-9]+)/u', $infoBlock, $phoneMatch);
             preg_match('/- Email:\s*([^\s]+)/iu', $infoBlock, $emailMatch);
 
-            $fullName = trim($nameMatch[1] ?? '');
-            $phone = $phoneMatch[1] ?? '';
+            $fullName = $nameMatch[1] ?? '';
             $cccd = $cccdMatch[1] ?? '';
+            $phone = $phoneMatch[1] ?? '';
             $tenantEmail = $emailMatch[1] ?? '';
+
         }
 
-        // dd($text);
+        // dd($fullName);
 
         // 5. Kiểm tra user tồn tại
         $user = User::where('email', $tenantEmail)->first();
@@ -181,10 +182,10 @@ class ApprovalController extends Controller
             $password = Str::random(8);
 
             $user = User::create([
-                'name'     => $userInfo->full_name ?: $fullNameFromNote,
-                'email'    => $userInfo->email,
+                'name' => $userInfo->full_name ?: $fullNameFromNote,
+                'email' => $userInfo->email,
                 'password' => Hash::make($password),
-                'role'     => 'Renter', // hoặc dùng constant nếu có
+                'role' => 'Renter', // hoặc dùng constant nếu có
             ]);
 
             // 🔄 Gán user_id vào user_info

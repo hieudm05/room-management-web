@@ -12,7 +12,7 @@
             <h5><strong>Địa chỉ:</strong> {{ $room->property->address ?? 'Không rõ địa chỉ' }}</h5>
             <p><strong>Số người ở:</strong> {{ $room->occupants }}</p>
             <p><strong>Diện tích:</strong> {{ $room->area }} m²</p>
-            <p><strong>Trạng thái:</strong> {{ $room->status == 1 ? 'Đang cho thuê' : 'Ngừng hoạt động' }}</p>
+            <p><strong>Trạng thái:</strong> {{ $room->status === "Rented" ? 'Đang cho thuê' : 'Ngừng hoạt động' }}</p>
         </div>
     </div>
 
