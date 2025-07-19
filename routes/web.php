@@ -12,6 +12,7 @@ use App\Http\Controllers\Landlord\ApprovalUserController;
 use App\Http\Controllers\Landlord\PropertyController;
 use App\Http\Controllers\Landlord\RoomController;
 use App\Http\Controllers\Renter\AddUserRequestController;
+use App\Http\Controllers\Renter\AddUserRequestController2;
 use App\Http\Controllers\TenantProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminProfileController;
