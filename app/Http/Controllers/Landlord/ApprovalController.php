@@ -25,6 +25,7 @@ class ApprovalController extends Controller
         $landlordId = Auth::id();
         $pendingApprovals = Approval::where('landlord_id', $landlordId)
             ->where('status', 'pending')
+            ->where('type', 'contract')
             ->with('room')
             ->latest()
             ->get();
