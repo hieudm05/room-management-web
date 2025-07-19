@@ -103,14 +103,16 @@ class ApprovalUserController extends Controller
             $password = Str::random(8);
 
             $user = User::create([
-                'name'     => $userInfo->full_name ?: $fullNameFromNote,
-                'email'    => $userInfo->email,
+                'name' => $userInfo->full_name ?: $fullNameFromNote,
+                'email' => $userInfo->email,
                 'password' => Hash::make($password),
-                'role'     => 'Renter', // hoặc dùng constant nếu có
+                'role' => 'Renter', // hoặc dùng constant nếu có
             ]);
 
             // 🔄 Gán user_id vào user_info
             $userInfo->update(['user_id' => $user->id]);
+            // 🔼 Tăng số người thuê trong phòng
+            Room::where('room_id', $approval->room_id)->increment('people_renter');
 
             // 📧 Gửi mail thông báo
             Mail::raw(
