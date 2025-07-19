@@ -3,6 +3,17 @@
 @section('title', 'Danh sách phòng')
 
 @section('content')
+
+    {{-- ✅ Thông báo lỗi khi xóa phòng có hợp đồng với khách thuê --}}
+    @if ($errors->has('delete'))
+        <script>
+            window.onload = function() {
+                alert("{{ $errors->first('delete') }}");
+            };
+        </script>
+    @endif
+
+    {{-- ✅ Thông báo khi thao tác thành công --}}
     @if (session('success'))
         <script>
             window.onload = function() {
@@ -100,6 +111,7 @@
                                 <th>Tiện nghi</th>
                                 <th>Dịch vụ</th>
                                 <th>Ảnh</th>
+                                <th>Nhân viên quản lý</th>
                                 <th>Hành động</th>
                             </tr>
                         </thead>
@@ -141,17 +153,44 @@
                                             <span class="text-muted">Chưa có ảnh</span>
                                         @endif
                                     </td>
+
+                                    <td>
+                                        @forelse ($room->staffs as $staff)
+                                            <span class="badge bg-info">{{ $staff->name }}</span>
+                                        @empty
+                                            <span class="text-muted">Chưa phân quyền</span>
+                                        @endforelse
+                                    </td>
+
                                     <td>
                                         <a href="{{ route('landlords.rooms.edit', $room) }}"
                                             class="btn btn-sm btn-outline-primary">✏️</a>
                                         <a href="{{ route('landlords.rooms.show', $room) }}"
                                             class="btn btn-sm btn-outline-warning">👁️</a>
+
                                         <form action="{{ route('landlords.rooms.destroy', $room) }}" method="POST"
                                             class="d-inline"
                                             onsubmit="return confirm('Bạn có chắc chắn muốn xoá phòng này?');">
                                             @csrf @method('DELETE')
                                             <button class="btn btn-sm btn-outline-danger">🗑️</button>
                                         </form>
+
+                                        <a href="{{ route('landlords.rooms.staffs.edit', $room->room_id) }}"
+                                            class="btn btn-sm btn-outline-info">👤</a>
+
+                                        <div class="d-flex gap-1 mt-1">
+                                            @if ($room->currentAgreementValid && !$room->is_contract_locked)
+                                                <form action="{{ route('landlords.rooms.lockContract', $room) }}"
+                                                    method="POST"
+                                                    onsubmit="return confirm('Bạn có chắc chắn muốn khóa hợp đồng phòng này không?');">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-danger btn-sm">🔒</button>
+                                                </form>
+                                            @endif
+                                            <a href="{{ route('landlords.rooms.stats', $room) }}"
+                                                class="btn btn-sm btn-outline-secondary">📊</a>
+                                        </div>
+
                                     </td>
                                 </tr>
                             @empty
@@ -173,19 +212,17 @@
         @endif
     </div>
 
-@section('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#select-khu-tro').select2({
-                placeholder: "🔍 Chọn khu trọ",
-                allowClear: true,
-                width: '100%'
+    @section('scripts')
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                $('#select-khu-tro').select2({
+                    placeholder: "🔍 Chọn khu trọ",
+                    allowClear: true,
+                    width: '100%'
+                });
             });
-        });
-    </script>
-@endsection
-
-
+        </script>
+    @endsection
 @endsection

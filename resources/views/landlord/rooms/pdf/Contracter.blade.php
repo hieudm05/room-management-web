@@ -87,7 +87,7 @@
 <h4>VII. Điều khoản thuê:</h4>
 <ul>
     <li>Thời gian thuê: tối thiểu 6 tháng.</li>
-<li>Đặt cọc 1 tháng tiền nhà.</li>
+    <li>Đặt cọc 1 tháng tiền nhà.</li>
     <li>Không tự ý chuyển nhượng hoặc cho người khác thuê lại.</li>
 </ul>
 

@@ -33,7 +33,8 @@
                                         id="bank_{{ $bank->id }}" value="{{ $bank->id }}" required>
                                     <label class="form-check-label" for="bank_{{ $bank->id }}">
                                         <strong>{{ $bank->bank_name }}</strong> - {{ $bank->bank_account_number }}<br>
-                                        <small>{{ $bank->bank_account_name }}</small>
+                                        <small>{{ $bank->bank_account_name }} - <span
+                                                class="text-primary">{{ $bank->owner_name }}</span></small>
                                     </label>
                                 </div>
                             @endforeach
@@ -91,21 +92,47 @@
 
 @push('scripts')
     <script>
-        document.getElementById('checkAll').addEventListener('change', function() {
-            let checked = this.checked;
-            document.querySelectorAll('.property-checkbox').forEach(cb => cb.checked = checked);
-        });
-        setTimeout(function() {
-            let alertNode = document.querySelector('#alert-area .alert');
-            if (alertNode) {
-                let bsAlert = bootstrap.Alert.getOrCreateInstance(alertNode);
-                bsAlert.close();
-            }
-        }, 3000);
+    let banks = [];
+    fetch('https://api.vietqr.io/v2/banks')
+        .then(res => res.json())
+        .then(data => banks = data.data);
 
-        document.getElementById('checkAll').addEventListener('change', function() {
-            let checked = this.checked;
-            document.querySelectorAll('.property-checkbox').forEach(cb => cb.checked = checked);
+    document.getElementById('bank_name').addEventListener('input', function() {
+        const val = this.value.toLowerCase();
+        const suggestions = banks.filter(b => b.name.toLowerCase().includes(val) || b.shortName.toLowerCase().includes(val));
+        let html = '';
+        suggestions.slice(0, 8).forEach(b => {
+            html += `<button type="button" class="list-group-item list-group-item-action" data-code="${b.code}" data-name="${b.name}">${b.name} (${b.code})</button>`;
         });
-    </script>
+        document.getElementById('bank_suggestions').innerHTML = html;
+        document.getElementById('bank_suggestions').style.display = html ? 'block' : 'none';
+    });
+
+    document.getElementById('bank_suggestions').addEventListener('click', function(e) {
+        if (e.target.dataset.code) {
+            document.getElementById('bank_name').value = e.target.dataset.name;
+            document.getElementById('bank_code').value = e.target.dataset.code;
+            this.innerHTML = '';
+            this.style.display = 'none';
+        }
+    });
+
+    // Bắt buộc phải chọn ngân hàng từ gợi ý
+    document.getElementById('addBankForm').addEventListener('submit', function(e) {
+        if (!document.getElementById('bank_code').value) {
+            alert('Vui lòng chọn ngân hàng từ gợi ý để lấy đúng mã ngân hàng!');
+            document.getElementById('bank_name').focus();
+            e.preventDefault();
+        }
+    });
+
+    // Ẩn gợi ý khi click ra ngoài
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('bank_name').contains(e.target) &&
+            !document.getElementById('bank_suggestions').contains(e.target)) {
+            document.getElementById('bank_suggestions').innerHTML = '';
+            document.getElementById('bank_suggestions').style.display = 'none';
+        }
+    });
+</script>
 @endpush

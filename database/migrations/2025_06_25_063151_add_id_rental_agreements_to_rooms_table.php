@@ -8,7 +8,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('rooms', function (Blueprint $table) {
-            $table->unsignedBigInteger('id_rental_agreements')->nullable()->after('status');
+            if (!Schema::hasColumn('rooms', 'id_rental_agreements')) {
+                $table->unsignedBigInteger('id_rental_agreements')->nullable()->after('status');
+            }
             // Nếu muốn tạo foreign key:
             // $table->foreign('id_rental_agreements')->references('id')->on('rental_agreements')->onDelete('set null');
         });

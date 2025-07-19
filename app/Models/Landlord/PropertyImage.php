@@ -11,4 +11,8 @@ class PropertyImage extends Model
     {
         return $this->belongsTo(\App\Models\Landlord\Property::class);
     }
+    public function images()
+{
+    return $this->hasMany(\App\Models\Landlord\PropertyImage::class, 'property_id', 'property_id');
+}
 }
