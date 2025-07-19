@@ -17,6 +17,10 @@ class Complaint extends Model
         'detail',
         'staff_id',
         'user_id',
+        'user_cost',
+        'landlord_cost',
+        'note',
+        'resolved_at',
         'status',
     ];
 

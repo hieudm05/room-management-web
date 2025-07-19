@@ -36,24 +36,25 @@ class StaffComplaintController extends Controller
     public function resolve(Request $request, $id)
 {
     $request->validate([
-        'user_cost' => 'required|numeric|min:0',
-        'landlord_cost' => 'required|numeric|min:0',
+        'user_cost' => 'nullable|numeric|min:0',
+        'landlord_cost' => 'nullable|numeric|min:0',
         'note' => 'nullable|string|max:1000',
-        'photos.*' => 'nullable|image|max:5120', // ảnh tối đa 5MB
+        'photos.*' => 'nullable|image|max:5120',
     ]);
 
     $complaint = Complaint::findOrFail($id);
     $this->authorizeComplaint($complaint);
 
+    $userCost = $request->filled('user_cost') ? (float) $request->input('user_cost') : 0;
+    $landlordCost = $request->filled('landlord_cost') ? (float) $request->input('landlord_cost') : 0;
+
     $complaint->update([
-        'user_cost' => $request->user_cost,
-        'landlord_cost' => $request->landlord_cost,
+        'user_cost' => $userCost,
+        'landlord_cost' => $landlordCost,
         'note' => $request->note,
         'status' => 'resolved',
         'resolved_at' => now(),
     ]);
-  
-
     // ✅ Upload ảnh xử lý nếu có
     if ($request->hasFile('photos')) {
         foreach ($request->file('photos') as $file) {
