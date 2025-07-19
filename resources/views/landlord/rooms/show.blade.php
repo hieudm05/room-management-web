@@ -71,10 +71,28 @@
                     </ul>
                 </div>
 
-                {{-- Số người ở --}}
+                {{-- Người thuê / Số người ở --}}
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Số người ở</label>
-                    <input type="text" class="form-control" value="{{ $room->occupants }}" disabled>
+                    {{-- <label class="form-label fw-bold">Người thuê đại diện (từ hợp đồng)</label> --}}
+                    @if ($room->currentAgreementValid && !$room->is_contract_locked)
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Người thuê</label>
+                            <input type="text" class="form-control mb-2"
+                                value="{{ $room->renter?->info?->full_name ?? ($room->renter?->name ?? 'Chưa có tên') }}"
+                                disabled>
+                            <input type="text" class="form-control mb-2"
+                                value="SĐT: {{ $room->renter->phone_number ?? 'Chưa có số điện thoại' }}" disabled>
+
+                            <input type="text" class="form-control mb-2"
+                                value="Email: {{ $room->renter->email ?? 'Chưa có email' }}" disabled>
+
+                            <input type="text" class="form-control"
+                                value="CCCD/CMND: {{ $room->renter->identity_number ?? 'Chưa có CCCD' }}" disabled>
+                        </div>
+                    @else
+                        <p class="text-muted">Chưa có người thuê đại diện trong hợp đồng.</p>
+                    @endif
+
                 </div>
 
                 {{-- Dịch vụ --}}

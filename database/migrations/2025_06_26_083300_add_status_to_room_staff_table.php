@@ -9,20 +9,25 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+
     public function up(): void
     {
         Schema::table('room_staff', function (Blueprint $table) {
-            $table->string('status')->default('active');
+            if (!Schema::hasColumn('room_staff', 'status')) {
+                $table->string('status')->default('active');
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('room_staff', function (Blueprint $table) {
-               // hoặc enum nếu cần
+            if (Schema::hasColumn('room_staff', 'status')) {
+                $table->dropColumn('status');
+            }
         });
     }
+
+  
+
 };
