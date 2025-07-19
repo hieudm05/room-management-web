@@ -10,7 +10,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <h5><strong>Địa chỉ:</strong> {{ $room->property->address ?? 'Không rõ địa chỉ' }}</h5>
-            <p><strong>Số người ở:</strong> {{ $room->occupants }}</p>
+            <p><strong>Số người ở:</strong> {{ $room->people_renter }}</p>
             <p><strong>Diện tích:</strong> {{ $room->area }} m²</p>
             <p><strong>Trạng thái:</strong> {{ $room->status === "Rented" ? 'Đang cho thuê' : 'Ngừng hoạt động' }}</p>
         </div>
@@ -93,13 +93,21 @@
 
                     <!-- Bên phải: Mã QR -->
                     <div class="col-md-6 text-center">
-                        @if ($bill->bankAccount)
-                            <img src="https://img.vietqr.io/image/{{ urlencode($bill->bankAccount->bank_name) }}-{{ $bill->bankAccount->bank_account_number }}-compact2.png?amount={{ $bill->total }}&addInfo=Thanh+toan+hoa+don+{{ $bill->month }}&accountName={{ urlencode($bill->bankAccount->bank_account_name) }}"
-                                 alt="QR Code" class="img-fluid rounded shadow border">
-                            <p class="mt-2 text-muted"><small>📷 Quét mã để thanh toán tự động</small></p>
-                        @else
-                            <p class="text-danger">⚠️ Chưa cấu hình tài khoản ngân hàng</p>
-                        @endif
+                      @if ($bill->bankAccount)
+                @php
+                    $bankCode = $bill->bankAccount->bank_code; // Ví dụ: TPB, VCB, TCB...
+                    $accountNumber = $bill->bankAccount->bank_account_number;
+                    $accountName = urlencode($bill->bankAccount->bank_account_name);
+                    $amount = number_format($bill->total, 2, '.', '');
+                    $addInfo = urlencode('Thanh toan hoa don ' . $bill->month);
+                @endphp
+
+                <img src="https://img.vietqr.io/image/{{ $bankCode }}-{{ $accountNumber }}-compact2.png?amount={{ $amount }}&addInfo={{ $addInfo }}&accountName={{ $accountName }}"
+                    alt="QR Code" class="img-fluid rounded shadow border">
+
+                <p class="mt-2 text-muted"><small>📷 Quét mã để thanh toán tự động</small></p>
+            @endif
+
                     </div>
                 </div>
 
@@ -108,10 +116,10 @@
                     @csrf
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="payment_time_{{ $bill->id }}" class="form-label">🕒 Thời gian thanh toán</label>
-                            <input type="datetime-local" id="payment_time_{{ $bill->id }}" name="payment_time" class="form-control" required>
+                            {{-- <label for="payment_time_{{ $bill->id }}" class="form-label">🕒 Thời gian thanh toán</label> --}}
+                            <input type="datetime-local" id="payment_time_{{ $bill->id }}" hidden name="payment_time" class="form-control" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label for="receipt_image_{{ $bill->id }}" class="form-label">📎 Ảnh chụp biên lai</label>
                             <input type="file" id="receipt_image_{{ $bill->id }}" name="receipt_image" class="form-control" accept="image/*" required>
                         </div>
