@@ -3,6 +3,7 @@
 namespace App\Models\Landlord\Staff\Rooms;
 
 use App\Models\Landlord\BankAccount;
+use App\Models\Landlord\Room;
 use Illuminate\Database\Eloquent\Model;
 
 class RoomBill extends Model
@@ -26,6 +27,18 @@ class RoomBill extends Model
     {
         return $this->belongsTo(BankAccount::class);
     }
+
+    public function room()
+{
+    return $this->belongsTo(Room::class);
+}
+// App\Models\Landlord\Staff\Rooms\RoomBill.php
+
+public function utilityPhotos()
+{
+    return $this->hasMany(RoomUtilityPhoto::class, 'room_bill_id');
+}
+
 
 
 }

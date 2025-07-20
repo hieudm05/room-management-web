@@ -151,40 +151,43 @@
                                                 <input type="text" class="form-control" value="{{ $item['month'] }}"
                                                     readonly>
                                             </div>
-                                            {{-- <div class="col-md-4">
-                                                <label class="form-label">Trạng thái</label>
-                                                <input type="text" class="form-control"
-                                                    value="{{ $item['status'] == 'unpaid' ? 'Chưa thanh toán' : 'Đã thanh toán' }}"
-                                                    readonly>
-                                            </div> --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Trạng thái thanh toán</label>
-                                                <div class="input-group">
-                                                    <select
-                                                        class="form-control status-select 
-            @if ($item['bill']->status == 'unpaid') border-warning shadow-sm @endif"
-                                                        data-id="{{ $item['id_bill'] }}"
-                                                        @if ($item['bill']->status == 'paid') disabled @endif
-                                                        title="Chọn trạng thái thanh toán">
-                                                        <option value="unpaid"
-                                                            {{ $item['bill']->status == 'unpaid' ? 'selected' : '' }}>
-                                                            ⏳ Chưa thanh toán
-                                                        </option>
-                                                        <option value="pending"
-                                                            {{ $item['bill']->status == 'pending' ? 'selected' : '' }}>
-                                                            🔄 Đang xử lý
-                                                        </option>
-                                                        <option value="paid"
-                                                            {{ $item['bill']->status == 'paid' ? 'selected' : '' }}>
-                                                            ✅ Đã thanh toán
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                                <small class="form-text text-muted">Bấm để thay đổi nếu chưa thanh
-                                                    toán</small>
-                                                <span class="status-msg text-success small mt-1 d-block"
-                                                    id="status-msg-{{ $item['id_bill'] }}"></span>
-                                            </div>
+
+                                           <div class="col-md-4">
+    <label class="form-label">Trạng thái thanh toán</label>
+    <div class="input-group">
+        @if (!empty($item['bill']))
+            <select
+                class="form-control status-select
+                    @if ($item['bill']->status == 'unpaid') border-warning shadow-sm @endif"
+                data-id="{{ $item['id_bill'] }}"
+                @if ($item['bill']->status == 'paid' || $item['bill']->status == 'pending') disabled @endif
+                title="Chọn trạng thái thanh toán">
+
+                <option value="unpaid" {{ $item['bill']->status == 'unpaid' ? 'selected' : '' }}>
+                    ⏳ Chưa thanh toán
+                </option>
+                <option value="pending" {{ $item['bill']->status == 'pending' ? 'selected' : '' }}>
+                    🔄 Đang xử lý
+                </option>
+                <option value="paid" {{ $item['bill']->status == 'paid' ? 'selected' : '' }}>
+                    ✅ Đã thanh toán
+                </option>
+            </select>
+        @else
+            <input type="text" class="form-control text-muted bg-light" value="Chưa tạo hóa đơn" disabled>
+        @endif
+    </div>
+    <small class="form-text text-muted">
+        @if (!empty($item['bill']))
+            Bấm để thay đổi nếu chưa thanh toán
+        @else
+            Không thể thao tác khi chưa có hóa đơn
+        @endif
+    </small>
+    <span class="status-msg text-success small mt-1 d-block"
+          id="status-msg-{{ $item['id_bill'] ?? 'no-bill' }}"></span>
+</div>
+
 
 
                                         </div>

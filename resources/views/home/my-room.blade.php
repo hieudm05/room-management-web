@@ -29,7 +29,7 @@
                         <th>Tiền phòng</th>
                         <th>Trạng thái</th>
                         <th>Ngày tạo</th>
-                         <th>Hành động</th>
+                        <th>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -49,98 +49,182 @@
                                 <span class="badge {{ $statusLabel['class'] }}">
                                     {{ $statusLabel['text'] }}
                                 </span>
-
                             </td>
                             <td>{{ $bill->created_at->format('d/m/Y') }}</td>
                             <td>
-    @if (!$bill->is_paid)
-        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#qrModal{{ $bill->id }}">
-            Thanh toán
-        </button>
+                                @if (!$bill->is_paid)
+                                    <button class="btn btn-sm btn-outline-primary mb-1" data-bs-toggle="modal" data-bs-target="#qrModal{{ $bill->id }}">
+                                        Thanh toán
+                                    </button>
+                                @endif
 
-       <!-- Modal QR -->
-<div class="modal fade" id="qrModal{{ $bill->id }}" tabindex="-1" aria-labelledby="qrModalLabel{{ $bill->id }}" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-header text-white">
-                <h5 class="modal-title d-flex align-items-center" id="qrModalLabel{{ $bill->id }}">
-                    🧾 Thanh Toán Hóa Đơn Tháng {{ $bill->month }}
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
-            </div>
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#detailModal{{ $bill->id }}">
+                                    Chi tiết
+                                </button>
+                            </td>
 
-            <div class="modal-body">
-                <div class="row align-items-center">
-                    <!-- Bên trái: Thông tin ngân hàng -->
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <h6><strong>Tên tài khoản:</strong></h6>
-                            <p>{{ $bill->bankAccount->bank_account_name ?? '---' }}</p>
-                        </div>
-                        <div class="mb-3">
-                            <h6><strong>Số tài khoản:</strong></h6>
-                            <p>{{ $bill->bankAccount->bank_account_number ?? '---' }}</p>
-                        </div>
-                        <div class="mb-3">
-                            <h6><strong>Ngân hàng:</strong></h6>
-                            <p>{{ $bill->bankAccount->bank_name ?? '---' }}</p>
-                        </div>
-                        <div class="mb-3">
-                            <h6><strong>Số tiền:</strong></h6>
-                            <p class="text-danger fs-5 fw-bold">{{ number_format($bill->total) }} đ</p>
-                        </div>
-                    </div>
+                            <!-- Modal QR -->
+                            <div class="modal fade" id="qrModal{{ $bill->id }}" tabindex="-1" aria-labelledby="qrModalLabel{{ $bill->id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-lg">
+                                    <div class="modal-content shadow-lg border-0">
+                                        <div class="modal-header text-white">
+                                            <h5 class="modal-title d-flex align-items-center" id="qrModalLabel{{ $bill->id }}">
+                                                🧾 Thanh Toán Hóa Đơn Tháng {{ $bill->month }}
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <h6><strong>Tên tài khoản:</strong></h6>
+                                                        <p>{{ $bill->bankAccount->bank_account_name ?? '---' }}</p>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <h6><strong>Số tài khoản:</strong></h6>
+                                                        <p>{{ $bill->bankAccount->bank_account_number ?? '---' }}</p>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <h6><strong>Ngân hàng:</strong></h6>
+                                                        <p>{{ $bill->bankAccount->bank_name ?? '---' }}</p>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <h6><strong>Số tiền:</strong></h6>
+                                                        <p class="text-danger fs-5 fw-bold">{{ number_format($bill->total) }} đ</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 text-center">
+                                                    @if ($bill->bankAccount)
+                                                        @php
+                                                            $bankCode = $bill->bankAccount->bank_code;
+                                                            $accountNumber = $bill->bankAccount->bank_account_number;
+                                                            $accountName = urlencode($bill->bankAccount->bank_account_name);
+                                                            $amount = number_format($bill->total, 2, '.', '');
+                                                            $addInfo = urlencode('Thanh toan hoa don ' . $bill->month);
+                                                        @endphp
 
-                    <!-- Bên phải: Mã QR -->
-                    <div class="col-md-6 text-center">
-                      @if ($bill->bankAccount)
-                @php
-                    $bankCode = $bill->bankAccount->bank_code; // Ví dụ: TPB, VCB, TCB...
-                    $accountNumber = $bill->bankAccount->bank_account_number;
-                    $accountName = urlencode($bill->bankAccount->bank_account_name);
-                    $amount = number_format($bill->total, 2, '.', '');
-                    $addInfo = urlencode('Thanh toan hoa don ' . $bill->month);
-                @endphp
+                                                        <img src="https://img.vietqr.io/image/{{ $bankCode }}-{{ $accountNumber }}-compact2.png?amount={{ $amount }}&addInfo={{ $addInfo }}&accountName={{ $accountName }}"
+                                                            alt="QR Code" class="img-fluid rounded shadow border">
+                                                        <p class="mt-2 text-muted"><small>📷 Quét mã để thanh toán tự động</small></p>
+                                                    @endif
+                                                </div>
+                                            </div>
 
-                <img src="https://img.vietqr.io/image/{{ $bankCode }}-{{ $accountNumber }}-compact2.png?amount={{ $amount }}&addInfo={{ $addInfo }}&accountName={{ $accountName }}"
-                    alt="QR Code" class="img-fluid rounded shadow border">
+                                            <form action="{{ route('bills.markPending', $bill->id) }}" method="POST" enctype="multipart/form-data" class="mt-4">
+                                                @csrf
+                                                <input type="datetime-local" id="payment_time_{{ $bill->id }}" hidden name="payment_time" class="form-control" required>
+                                                <div class="col-md-12 mb-3">
+                                                    <label for="receipt_image_{{ $bill->id }}" class="form-label">📎 Ảnh chụp biên lai</label>
+                                                    <input type="file" id="receipt_image_{{ $bill->id }}" name="receipt_image" class="form-control" accept="image/*" required>
+                                                </div>
+                                                <div class="text-end">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        Tôi đã thanh toán
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                <p class="mt-2 text-muted"><small>📷 Quét mã để thanh toán tự động</small></p>
-            @endif
+                            <!-- Modal Chi Tiết -->
+                            <div class="modal fade" id="detailModal{{ $bill->id }}" tabindex="-1" aria-labelledby="detailModalLabel{{ $bill->id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-lg">
+                                    <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+                                        <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">
+                                            <div>
+                                                <h5 class="modal-title fw-bold" id="detailModalLabel{{ $bill->id }}">
+                                                    🧾 Hóa Đơn Tháng {{ $bill->month }}
+                                                </h5>
+                                                <small class="text-light">Mã HĐ: #{{ $bill->id }}</small>
+                                            </div>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                        </div>
+                                        <div class="modal-body p-4 bg-light">
+                                            <div class="row g-4">
+                                                <div class="col-md-6">
+                                                    <div class="p-4 bg-white rounded-4 shadow-sm h-100 border border-light-subtle">
+                                                        <h6 class="text-muted mb-3">📋 Thông tin chi tiết</h6>
+                                                        @php
+                                                            $items = [
+                                                                '📌 Tiền phòng' => $bill->rent_price,
+                                                                '⚡ Điện' => $bill->electric_total,
+                                                                '🚿 Nước' => $bill->water_total,
+                                                                '🛠️ Dịch vụ' => $bill->complaint_landlord_cost,
+                                                            ];
+                                                        @endphp
 
-                    </div>
-                </div>
+                                                            @foreach ($items as $label => $value)
+                                                                <div class="d-flex justify-content-between border-bottom border-dashed py-2">
+                                                                    <span>{{ $label }}</span>
+                                                                    <span class="fw-semibold text-dark">{{ number_format($value ?? 0) }} đ</span>
+                                                                </div>
+                                                            @endforeach
 
-                <!-- Form xác nhận thanh toán -->
-                <form action="{{ route('bills.markPending', $bill->id) }}" method="POST" enctype="multipart/form-data" class="mt-4">
-                    @csrf
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{-- <label for="payment_time_{{ $bill->id }}" class="form-label">🕒 Thời gian thanh toán</label> --}}
-                            <input type="datetime-local" id="payment_time_{{ $bill->id }}" hidden name="payment_time" class="form-control" required>
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <label for="receipt_image_{{ $bill->id }}" class="form-label">📎 Ảnh chụp biên lai</label>
-                            <input type="file" id="receipt_image_{{ $bill->id }}" name="receipt_image" class="form-control" accept="image/*" required>
-                        </div>
-                    </div>
-
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary">
-                             Tôi đã thanh toán
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+                                                            <div class="d-flex justify-content-between border-top pt-3 mt-3">
+                                                                <span class="fw-bold fs-5 text-danger">💰 Tổng cộng:</span>
+                                                                <span class="fw-bold fs-5 text-danger">{{ number_format($bill->total ?? 0) }} đ</span>
+                                                            </div>
+                                                            @if ($bill->utilityPhotos && $bill->utilityPhotos->isNotEmpty())
+                                                                <div class="mt-4">
+                                                                    <strong>🖼️ Biên lai điện nước:</strong>
+                                                                    <div class="row">
+                                                                        @foreach ($bill->utilityPhotos as $photo)
+                                                                            <div class="col-md-6 mt-2">
+                                                                                <div class="ratio ratio-4x3 rounded border shadow-sm overflow-hidden">
+                                                                                    <img src="{{ asset('storage/' . $photo->image_path) }}"
+                                                                                        alt="Biên lai"
+                                                                                        class="w-100 h-100 object-fit-cover">
+                                                                                </div>
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                </div>
+                                                            @endif
 
 
-    @else
-        <span class="text-success">✔</span>
-    @endif
-</td>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <div class="p-4 bg-white rounded-4 shadow-sm h-100 border border-light-subtle">
+                                                        <h6 class="text-muted mb-3">📆 Trạng thái thanh toán</h6>
+                                                        <p class="mb-2"><strong>Ngày tạo:</strong><br>{{ $bill->created_at->format('d/m/Y H:i') }}</p>
+                                                        <p class="mb-2"><strong>Trạng thái:</strong><br>
+                                                            @php
+                                                                $status = match($bill->status) {
+                                                                    'paid' => ['Đã thanh toán ✅', 'bg-success'],
+                                                                    'pending' => ['Chờ xác nhận ⏳', 'bg-warning text-dark'],
+                                                                    default => ['Chưa thanh toán ❌', 'bg-secondary'],
+                                                                };
+                                                            @endphp
+                                                            <span class="badge {{ $status[1] }} rounded-pill px-3 py-2">{{ $status[0] }}</span>
+                                                        </p>
+
+                                                        @if ($bill->payment_time)
+                                                            <p class="mb-2"><strong>🕒 Thời gian TT:</strong><br>{{ \Carbon\Carbon::parse($bill->payment_time)->format('d/m/Y H:i') }}</p>
+                                                        @endif
+
+                                                        @if ($bill->receipt_image)
+                                                            <div class="mt-4">
+                                                                <strong>🖼️ Biên lai thanh toán:</strong>
+                                                                <div class="ratio ratio-4x3 rounded border shadow-sm mt-2 overflow-hidden">
+                                                                    <img src="{{ asset('storage/' . $bill->receipt_image) }}"
+                                                                         alt="Ảnh biên lai"
+                                                                         class="w-100 h-100 object-fit-cover">
+                                                                </div>
+                                                            </div>
+                                                        @else
+                                                            <p class="text-muted mt-4">⚠️ Chưa có biên lai thanh toán.</p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                         </tr>
                     @endforeach
@@ -151,3 +235,20 @@
 
 </div>
 @endsection
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modals = document.querySelectorAll('[id^="qrModal"]');
+        modals.forEach(modal => {
+            modal.addEventListener('show.bs.modal', function () {
+                const billId = this.id.replace('qrModal', '');
+                const input = document.querySelector(`#payment_time_${billId}`);
+                if (input) {
+                    const now = new Date();
+                    const formatted = now.toISOString().slice(0, 16);
+                    input.value = formatted;
+                }
+            });
+        });
+    });
+</script>
