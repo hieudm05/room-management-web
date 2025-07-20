@@ -142,15 +142,30 @@ public function store(Request $request)
 
     return redirect()->back()->with('success', 'Đăng ký thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất có thể.');
     }
-    public function myRoom()
+  public function myRoom()
 {
     $user = Auth::user();
 
-    // Ví dụ: lấy danh sách các phòng mà user đang thuê
-    $rooms = $user->rentedRooms()->with('property', 'photos')->paginate(6);
+    // Lấy hợp đồng mới nhất của người dùng
+    $rentalAgreement = RentalAgreement::where('renter_id', $user->id)
+        ->latest()
+        ->with(['room.property', 'room.photos', 'room.roomUsers', 'room.bills.bankAccount'])
+        ->first();
 
-    return view('home.my-room', compact('rooms'));
+    // Nếu không có hợp đồng → chưa có phòng thuê
+    if (!$rentalAgreement || !$rentalAgreement->room) {
+        return view('home.my-room', [
+            'room' => null,
+            'bills' => collect()
+        ]);
+    }
+
+    $room = $rentalAgreement->room;
+    $bills = $room->bills()->with('bankAccount')->latest()->get();
+
+    return view('home.my-room', compact('room', 'bills'));
 }
+
 
 
 }

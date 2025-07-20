@@ -329,4 +329,5 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bulk-delete', [RenterNotificationController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('/mark-all-read', [StaffNotificationController::class, 'markAllAsRead'])->name('markAllRead');
     });
+    
 });

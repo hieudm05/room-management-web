@@ -53,8 +53,8 @@
         <ul class="nav-menu nav-menu-social align-to-right">
             @auth
                 @php
-                    $unreadCount = auth()->user()->notifications()->wherePivot('is_read', false)->count();
-                    $latest = auth()->user()->notifications()
+                    $unreadCount = auth()->user()->customNotifications()->wherePivot('is_read', false)->count();
+                    $latest = auth()->user()->customNotifications()
                                            ->orderByDesc('notification_user.received_at')
                                            ->take(5)
                                            ->get();
