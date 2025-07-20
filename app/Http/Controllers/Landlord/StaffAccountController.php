@@ -14,17 +14,23 @@ class StaffAccountController extends Controller
     public function index()
     {
         // lấy danh sách tài khoản của staff
-        $staffAccounts = User::where('role', 'staff')->get();
+        $staffAccounts = User::where('role', 'staff')
+                        ->orderBy('created_at', 'desc')
+                        ->get();
 
         return \view('landlord.StaffAccounts.index',compact('staffAccounts'));
     }
 
-    public function create()
-    {
-         $statuses = [1, 0];
+  public function create()
+{
+    // 0 là không hoạt động, 1 là đang hoạt động
+    $statuses = [
+        1 => 'Đang hoạt động',
+        0 => 'Không hoạt động',
+    ];
 
-        return view('landlord.StaffAccounts.createSatffAccounts1', compact('statuses'));
-    }
+    return view('landlord.StaffAccounts.createSatffAccounts1', compact('statuses'));
+}
 
 public function store(Request $request)
 {
