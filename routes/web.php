@@ -159,8 +159,10 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
             // Route::post('/{room}/send-bill', action: [PaymentController::class, 'sendBillmmm'])->name('payment.send_bills');
 
             Route::get('/', [PaymentController::class, 'index'])->name('index');
-    Route::post('/{room}', [PaymentController::class, 'store'])->name('store');
-    Route::get('/{room}/export', [PaymentController::class, 'exportExcel'])->name('exportExcel');
+            Route::post('/{room}', [PaymentController::class, 'store'])->name('store');
+            Route::get('/{room}/export', [PaymentController::class, 'exportExcel'])->name('exportExcel');
+            Route::post('/room-bills/{id}/update-status', [PaymentController::class, 'updateStatus']);
+
         });
     });
 

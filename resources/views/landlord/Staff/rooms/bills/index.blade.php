@@ -112,9 +112,12 @@
                                         value="{{ $item['water_price'] ?? 20000 }}">
                                     <input type="hidden" name="data[water_unit]" class="water-unit"
                                         value="{{ $item['water_unit'] ?? 'per_m3' }}">
-                                    <input type="hidden" class="total-after-complaint" value="{{ $item['total_after_complaint'] ?? 0 }}">
-                                    <input type="hidden" name="data[complaint_user_cost]" value="{{ $item['complaint_user_cost'] ?? 0 }}">
-                                    <input type="hidden" name="data[complaint_landlord_cost]" value="{{ $item['complaint_landlord_cost'] ?? 0 }}">
+                                    <input type="hidden" class="total-after-complaint"
+                                        value="{{ $item['total_after_complaint'] ?? 0 }}">
+                                    <input type="hidden" name="data[complaint_user_cost]"
+                                        value="{{ $item['complaint_user_cost'] ?? 0 }}">
+                                    <input type="hidden" name="data[complaint_landlord_cost]"
+                                        value="{{ $item['complaint_landlord_cost'] ?? 0 }}">
 
 
 
@@ -148,12 +151,42 @@
                                                 <input type="text" class="form-control" value="{{ $item['month'] }}"
                                                     readonly>
                                             </div>
-                                            <div class="col-md-4">
+                                            {{-- <div class="col-md-4">
                                                 <label class="form-label">Trạng thái</label>
                                                 <input type="text" class="form-control"
                                                     value="{{ $item['status'] == 'unpaid' ? 'Chưa thanh toán' : 'Đã thanh toán' }}"
                                                     readonly>
+                                            </div> --}}
+                                            <div class="col-md-4">
+                                                <label class="form-label">Trạng thái thanh toán</label>
+                                                <div class="input-group">
+                                                    <select
+                                                        class="form-control status-select 
+            @if ($item['bill']->status == 'unpaid') border-warning shadow-sm @endif"
+                                                        data-id="{{ $item['id_bill'] }}"
+                                                        @if ($item['bill']->status == 'paid') disabled @endif
+                                                        title="Chọn trạng thái thanh toán">
+                                                        <option value="unpaid"
+                                                            {{ $item['bill']->status == 'unpaid' ? 'selected' : '' }}>
+                                                            ⏳ Chưa thanh toán
+                                                        </option>
+                                                        <option value="pending"
+                                                            {{ $item['bill']->status == 'pending' ? 'selected' : '' }}>
+                                                            🔄 Đang xử lý
+                                                        </option>
+                                                        <option value="paid"
+                                                            {{ $item['bill']->status == 'paid' ? 'selected' : '' }}>
+                                                            ✅ Đã thanh toán
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <small class="form-text text-muted">Bấm để thay đổi nếu chưa thanh
+                                                    toán</small>
+                                                <span class="status-msg text-success small mt-1 d-block"
+                                                    id="status-msg-{{ $item['id_bill'] }}"></span>
                                             </div>
+
+
                                         </div>
                                     </div>
 
@@ -360,7 +393,7 @@
 
                                     <div class="form-section">
                                         @if (!empty($item['complaints']))
-                                        <h5>Chi phí sau khiếu nại</h5>
+                                            <h5>Chi phí sau khiếu nại</h5>
                                             <table class="table">
                                                 <thead>
                                                     <tr>
@@ -478,6 +511,95 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery (CDN) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJ+YxkTn6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            $('.status-select').on('change', function() {
+                const selectBox = $(this);
+                const billId = selectBox.data('id');
+                const newStatus = selectBox.val();
+                const msgSpan = $('#status-msg-' + billId);
+
+                // Không cho đổi nếu là pending hoặc paid
+                if (newStatus === 'pending' || newStatus === 'paid') {
+                    msgSpan.text('⚠️ Trạng thái này không thể chỉnh sửa.')
+                        .removeClass('text-success').addClass('text-warning');
+                    selectBox.prop('disabled', true); // Khoá luôn nếu chuyển sang trạng thái này
+                    return;
+                }
+
+                $.ajax({
+                    url: '/landlords/staff/payment/room-bills/' + billId + '/update-status',
+                    type: 'POST',
+                    data: {
+                        status: newStatus,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        msgSpan.text('✅ Trạng thái đã được cập nhật thành công!')
+                            .removeClass('text-danger text-warning')
+                            .addClass('text-success');
+
+                        // Nếu chuyển sang pending hoặc paid thì khóa select lại
+                        if (['pending', 'paid'].includes(newStatus)) {
+                            selectBox.prop('disabled', true);
+                        }
+                    },
+                    error: function() {
+                        msgSpan.text('❌ Cập nhật thất bại!')
+                            .removeClass('text-success')
+                            .addClass('text-danger');
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('.status-select').on('change', function() {
+                const selectBox = $(this);
+                const billId = selectBox.data('id');
+                const newStatus = selectBox.val();
+                const msgSpan = $('#status-msg-' + billId);
+
+                // Không cho đổi nếu là pending hoặc paid
+                if (newStatus === 'pending') {
+                    msgSpan.text('⚠️ Trạng thái này không thể chỉnh sửa.')
+                        .removeClass('text-success').addClass('text-warning');
+                    selectBox.prop('disabled', true); // Khoá luôn nếu chuyển sang trạng thái này
+                    return;
+                }
+
+                $.ajax({
+                    url: '/landlords/staff/payment/room-bills/' + billId + '/update-status',
+                    type: 'POST',
+                    data: {
+                        status: newStatus,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        msgSpan.text('✅ Trạng thái đã được cập nhật thành công!')
+                            .removeClass('text-danger text-warning')
+                            .addClass('text-success');
+
+                        // Nếu chuyển sang pending hoặc paid thì khóa select lại
+                        if (['pending', 'paid'].includes(newStatus)) {
+                            selectBox.prop('disabled', true);
+                        }
+                    },
+                    error: function() {
+                        msgSpan.text('❌ Cập nhật thất bại!')
+                            .removeClass('text-success')
+                            .addClass('text-danger');
+                    }
+                });
+            });
+        });
+    </script>
+
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             function updateBill(roomId) {
