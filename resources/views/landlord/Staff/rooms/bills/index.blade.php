@@ -443,7 +443,7 @@
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label">Giá (VND)</label>
-                                                        <input type="number" class="form-control additional-fee-price"
+                                                        <input type="number" class="form-control additional-fee-price" 
                                                             name="data[additional_fees][{{ $index }}][price]"
                                                             value="{{ $fee['price'] ?? '' }}" placeholder="0"
                                                             min="0"
@@ -461,9 +461,11 @@
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label">Tổng (VND)</label>
-                                                        <input type="text" class="form-control additional-fee-total"
-                                                            name="data[additional_fees][{{ $index }}][total]"
-                                                            value="{{ $fee['total'] ?? 0 }}" readonly>
+                                                       
+<input type="text" class="form-control additional-fee-total"
+    name="data[additional_fees][{{ $index }}][total]"
+    value="{{ $fee['total'] ?? '' }}"
+    readonly>
                                                     </div>
                                                     <div class="col-md-1">
                                                         <label class="form-label"> </label>
@@ -748,7 +750,7 @@
                     row.querySelector('.additional-fee-qty-error').textContent = '';
 
                     const name = nameInput.value.trim();
-                    const price = parseFloat(priceInput.value) || 0;
+                   const price = parseFloat(priceInput.value) || 0;
                     const qty = parseInt(qtyInput.value) || 1;
 
                     if (!name && !row.closest('form').querySelector('button.btn-success').disabled) {
