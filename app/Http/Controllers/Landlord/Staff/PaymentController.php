@@ -164,6 +164,8 @@ class PaymentController extends Controller
                     || ($bill->water_unit == 'per_person' && $bill->water_occupants > 0 && $bill->water_total > 0)
                 );
             $data[] = [
+                'id_bill' => $bill->id,
+                'bill' => $bill,
                 'room_id' => $room->room_id,
                 'room_name' => $room->room_number ?? $room->room_name ?? 'P101',
                 'tenant_name' => $tenant ? $tenant->name : 'Chưa có',
@@ -443,5 +445,33 @@ class PaymentController extends Controller
 
         return Excel::download(new RoomBillExport($room, $data), 'hoadon_' . $month . '.xlsx');
     }
+
+    // Update trạng thái thanh toán
+ public function updateStatus(Request $request, $id)
+
+{
+    $bill = RoomBill::findOrFail($id);
+    $newStatus = $request->input('status');
+
+    $validStatuses = ['unpaid', 'pending', 'paid'];
+
+    if (!in_array($newStatus, $validStatuses)) {
+        return response()->json(['error' => '❌ Trạng thái không hợp lệ.'], 400);
+    }
+
+    $currentIndex = array_search($bill->status, $validStatuses);
+    $newIndex = array_search($newStatus, $validStatuses);
+
+    if ($newIndex <= $currentIndex) {
+        return response()->json(['error' => '❌ Không thể chuyển về trạng thái trước đó.'], 400);
+    }
+
+    $bill->status = $newStatus;
+    $bill->save();
+
+    return response()->json(['success' => '✅ Đã cập nhật trạng thái!', 'status' => $newStatus]);
+}
+
+
 
 }
