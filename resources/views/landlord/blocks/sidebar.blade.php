@@ -21,7 +21,7 @@ $user = Auth::user();
         <!-- Room Management Menu -->
         <li class="nav-item">
             <a class="nav-link menu-link" href="#sidebarRoom" data-bs-toggle="collapse" role="button"
-               aria-expanded="false" aria-controls="sidebarRoom">
+                aria-expanded="false" aria-controls="sidebarRoom">
                 <i class="mdi mdi-view-grid-plus-outline"></i>
                 <span data-key="t-apps">Room Management</span>
             </a>
@@ -30,7 +30,8 @@ $user = Auth::user();
 
                     @if ($user->role === 'Landlord')
                         <li class="nav-item">
-                            <a href="{{ route('landlords.properties.list') }}" class="nav-link">Properties Management</a>
+                            <a href="{{ route('landlords.properties.list') }}" class="nav-link">Properties
+                                Management</a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('landlords.rooms.index') }}" class="nav-link">Rooms Management</a>
@@ -46,6 +47,11 @@ $user = Auth::user();
                                 Approve room change request
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlord.posts.approval.index') }}" class="nav-link">
+                                Approve post
+                            </a>
+                        </li>
                     @endif
 
                     @if ($user->role === 'Staff')
@@ -59,6 +65,11 @@ $user = Auth::user();
                                 Complaints Staff
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('staff.posts.index') }}" class="nav-link">
+                                Post Article
+                            </a>
+                        </li>
                     @endif
 
                 </ul>
@@ -69,7 +80,7 @@ $user = Auth::user();
         @if ($user->role === 'Landlord')
             <li class="nav-item">
                 <a class="nav-link menu-link" href="#sidebarBank" data-bs-toggle="collapse" role="button"
-                   aria-expanded="false" aria-controls="sidebarBank">
+                    aria-expanded="false" aria-controls="sidebarBank">
                     <i class="mdi mdi-bank"></i>
                     <span data-key="t-bank">Bank Accounts</span>
                 </a>
@@ -96,13 +107,11 @@ $user = Auth::user();
                     <span data-key="t-complaints">Complaints</span>
                 </a>
             </li>
-        @endif
 
-        <!-- Staff Accounts (Landlord only) -->
-        @if ($user->role === 'Landlord')
+            <!-- Staff Accounts -->
             <li class="nav-item">
                 <a class="nav-link menu-link" href="#sidebarStaff" data-bs-toggle="collapse" role="button"
-                   aria-expanded="false" aria-controls="sidebarStaff">
+                    aria-expanded="false" aria-controls="sidebarStaff">
                     <i class="mdi mdi-account-group"></i>
                     <span data-key="t-staff">Staff Accounts</span>
                 </a>
@@ -122,7 +131,7 @@ $user = Auth::user();
         @if ($user->role === 'Staff')
             <li class="nav-item">
                 <a class="nav-link menu-link" href="#bills" data-bs-toggle="collapse" role="button"
-                   aria-expanded="false" aria-controls="bills">
+                    aria-expanded="false" aria-controls="bills">
                     <i class="mdi mdi-bank"></i>
                     <span data-key="t-bank">Hoá đơn</span>
                 </a>
