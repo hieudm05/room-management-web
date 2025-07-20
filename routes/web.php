@@ -159,8 +159,10 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
             // Route::post('/{room}/send-bill', action: [PaymentController::class, 'sendBillmmm'])->name('payment.send_bills');
 
             Route::get('/', [PaymentController::class, 'index'])->name('index');
-    Route::post('/{room}', [PaymentController::class, 'store'])->name('store');
-    Route::get('/{room}/export', [PaymentController::class, 'exportExcel'])->name('exportExcel');
+            Route::post('/{room}', [PaymentController::class, 'store'])->name('store');
+            Route::get('/{room}/export', [PaymentController::class, 'exportExcel'])->name('exportExcel');
+            Route::post('/room-bills/{id}/update-status', [PaymentController::class, 'updateStatus']);
+
         });
     });
 
@@ -232,7 +234,15 @@ Route::get('/status-agreement', [HomeController::class, 'StausAgreement'])->name
 Route::prefix('room-users')->name('room-users.')->group(function () {
     Route::post('/create-user', [HomeController::class, 'create'])->name('create');
     Route::post('/store-user', [HomeController::class, 'store'])->name('store');
+
+    // 👉 Form dừng thuê
+    Route::get('/{room_id}/stop', [HomeController::class, 'stopRentForm'])->name('stopRentForm');
+
+    // 👉 Xử lý POST dừng thuê
+    Route::post('/{id}/stop', [HomeController::class, 'stopUserRental'])->name('stop');
 });
+    
+
 
 // Profile
 Route::middleware(['auth'])->group(function () {
@@ -304,13 +314,16 @@ Route::middleware(['auth'])->group(function () {
      * 🧑‍🔧 Staff (Nhân viên)
      * ====================================
      */
-    Route::prefix('staff')->name('landlords.staff.')->group(function () {
+    Route::prefix('staff')->name('landlord.staff.')->group(function () {
         Route::get('/complaints', [StaffComplaintController::class, 'index'])->name('complaints.index');
+          Route::get('/complaints/history', [StaffComplaintController::class, 'history'])->name('complaints.history');
         Route::get('/complaints/{id}/edit', [StaffComplaintController::class, 'edit'])->name('complaints.edit');
         Route::post('/complaints/{id}/resolve', [StaffComplaintController::class, 'resolve'])->name('complaints.resolve');
         Route::get('/complaints/{id}/reject', [StaffComplaintController::class, 'rejectForm'])->name('complaints.rejectform');
         Route::post('/complaints/{id}/reject', [StaffComplaintController::class, 'reject'])->name('complaints.reject');
-
+       Route::get('/complaints/{id}', [StaffComplaintController::class, 'show'])->name('complaints.show');
+       Route::delete('/complaints/{id}', [StaffComplaintController::class, 'destroy'])->name('complaints.destroy');
+      
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/', [StaffNotificationController::class, 'index'])->name('index');
             Route::post('/{id}/read', [StaffNotificationController::class, 'markAsRead'])->name('read');

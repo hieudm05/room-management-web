@@ -164,6 +164,8 @@ class PaymentController extends Controller
                     || ($bill->water_unit == 'per_person' && $bill->water_occupants > 0 && $bill->water_total > 0)
                 );
             $data[] = [
+                'id_bill' => $bill->id,
+                'bill' => $bill,
                 'room_id' => $room->room_id,
                 'room_name' => $room->room_number ?? $room->room_name ?? 'P101',
                 'tenant_name' => $tenant ? $tenant->name : 'Chưa có',
@@ -278,7 +280,7 @@ class PaymentController extends Controller
                     'month' => $data['month'] . '-01',
                 ],
                 [
-                    'bank_account_id' => $bankAccountId, 
+                    'bank_account_id' => $bankAccountId,
                     'tenant_name' => $data['tenant_name'],
                     'area' => $data['area'],
                     'rent_price' => $data['rent_price'],
@@ -372,75 +374,68 @@ class PaymentController extends Controller
             ->whereYear('month', $yearNum)
             ->first();
 
-        $utility = RoomUtility::where('room_id', $room->room_id)
-            ->whereMonth('start_date', $monthNum)
-            ->whereYear('start_date', $yearNum)
-            ->first();
-
-        if (!$bill || !$utility) {
-            return redirect()->back()->with('error', 'Chưa có hóa đơn hoặc tiện ích để xuất file.');
+        if (!$bill) {
+            return redirect()->back()->with('error', 'Chưa có hóa đơn để xuất file.');
         }
 
         $rentalAgreement = $room->rentalAgreement;
         $tenant = $rentalAgreement ? User::find($rentalAgreement->renter_id) : null;
 
-        $services = [];
-        $serviceTotal = 0;
-        $billServices = RoomBillService::where('room_bill_id', $bill->id)->get();
-        foreach ($billServices as $sv) {
-            $service = \App\Models\Landlord\Service::find($sv->service_id);
-            $services[] = [
-                'name' => $service->name ?? 'Không rõ',
+        // Lấy dịch vụ
+        $services = RoomBillService::where('room_bill_id', $bill->id)->get()->map(function ($sv) {
+            return [
+                'name' => optional($sv->service)->name ?? 'Không rõ',
                 'price' => $sv->price,
                 'qty' => $sv->qty,
                 'total' => $sv->total,
             ];
-            $serviceTotal += $sv->total;
-        }
+        })->toArray();
+        $serviceTotal = array_sum(array_column($services, 'total'));
 
-        $additionalFees = [];
-        $additionalFeesTotal = 0;
-        $billAdditionalFees = RoomBillAdditionalFee::where('room_bill_id', $bill->id)->get();
-        foreach ($billAdditionalFees as $fee) {
-            $additionalFees[] = [
+        // Lấy chi phí phát sinh
+        $additionalFees = RoomBillAdditionalFee::where('room_bill_id', $bill->id)->get()->map(function ($fee) {
+            return [
                 'name' => $fee->name,
                 'price' => $fee->price,
                 'qty' => $fee->qty,
                 'total' => $fee->total,
             ];
-            $additionalFeesTotal += $fee->total;
-        }
+        })->toArray();
+        $additionalFeesTotal = array_sum(array_column($additionalFees, 'total'));
 
-        $electricPhotos = $utility ? RoomUtilityPhoto::where('room_utility_id', $utility->id)
+        // Lấy ảnh điện & nước
+        $electricPhotos = RoomUtilityPhoto::where('room_bill_id', $bill->id)
             ->where('type', 'electric')
-            ->get()
             ->pluck('image_path')
-            ->toArray() : [];
-        $waterPhotos = $utility && $bill->water_unit == 'per_m3' ? RoomUtilityPhoto::where('room_utility_id', $utility->id)
-            ->where('type', 'water')
-            ->get()
-            ->pluck('image_path')
-            ->toArray() : [];
+            ->toArray();
 
+        $waterPhotos = RoomUtilityPhoto::where('room_bill_id', $bill->id)
+            ->where('type', 'water')
+            ->pluck('image_path')
+            ->toArray();
+
+        // Chuẩn bị data truyền vào Excel
         $data = [
             'room_name' => $room->room_number ?? $room->room_name ?? 'P101',
             'tenant_name' => $tenant ? $tenant->name : 'Chưa có',
             'area' => $room->area ?? 0,
             'rent_price' => $bill->rent_price ?? 0,
             'month' => $month,
-            'electric_start' => $utility->electric_start ?? ($bill->electric_start ?? 0),
-            'electric_end' => $utility->electric_end ?? ($bill->electric_end ?? 0),
-            'electric_kwh' => $utility->electric_kwh ?? ($bill->electric_kwh ?? 0),
+            'electric_start' => $bill->electric_start ?? 0,
+            'electric_end' => $bill->electric_end ?? 0,
+            'electric_kwh' => $bill->electric_kwh ?? 0,
             'electric_price' => $bill->electric_unit_price ?? 3000,
-            'electric_total' => $utility->electricity ?? ($bill->electric_total ?? 0),
+            'electric_total' => $bill->electric_total ?? 0,
             'electric_photos' => $electricPhotos,
+
             'water_price' => $bill->water_price ?? 20000,
             'water_unit' => $bill->water_unit ?? 'per_m3',
-            'water_occupants' => $utility->water_occupants ?? ($bill->water_occupants ?? 1),
-            'water_start' => $utility->water_start ?? ($bill->water_start ?? 0),
-            'water_m3' => $utility->water_m3 ?? ($bill->water_m3 ?? 0),
-            'water_total' => $utility->water ?? ($bill->water_total ?? 0),
+            'water_occupants' => $bill->water_occupants ?? 1,
+            'water_start' => $bill->water_start ?? 0,
+            'water_m3' => $bill->water_m3 ?? 0,
+            'water_total' => $bill->water_total ?? 0,
             'water_photos' => $waterPhotos,
+
             'services' => $services,
             'service_total' => $serviceTotal,
             'additional_fees' => $additionalFees,
@@ -450,4 +445,33 @@ class PaymentController extends Controller
 
         return Excel::download(new RoomBillExport($room, $data), 'hoadon_' . $month . '.xlsx');
     }
+
+    // Update trạng thái thanh toán
+ public function updateStatus(Request $request, $id)
+
+{
+    $bill = RoomBill::findOrFail($id);
+    $newStatus = $request->input('status');
+
+    $validStatuses = ['unpaid', 'pending', 'paid'];
+
+    if (!in_array($newStatus, $validStatuses)) {
+        return response()->json(['error' => '❌ Trạng thái không hợp lệ.'], 400);
+    }
+
+    $currentIndex = array_search($bill->status, $validStatuses);
+    $newIndex = array_search($newStatus, $validStatuses);
+
+    if ($newIndex <= $currentIndex) {
+        return response()->json(['error' => '❌ Không thể chuyển về trạng thái trước đó.'], 400);
+    }
+
+    $bill->status = $newStatus;
+    $bill->save();
+
+    return response()->json(['success' => '✅ Đã cập nhật trạng thái!', 'status' => $newStatus]);
+}
+
+
+
 }

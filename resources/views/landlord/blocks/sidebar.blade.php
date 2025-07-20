@@ -55,10 +55,15 @@ $user = Auth::user();
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('landlords.staff.complaints.index') }}" class="nav-link">
+                            <a href="{{ route('landlord.staff.complaints.index') }}" class="nav-link">
                                 Complaints Staff
                             </a>
                         </li>
+                         <li class="nav-item">
+                   <a href="{{ route('landlord.staff.complaints.history') }}" class="nav-link">
+                              Complaint History
+                      </a>
+                  </li>
                     @endif
 
                 </ul>

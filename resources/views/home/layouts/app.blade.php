@@ -5,7 +5,23 @@
 
 	@include('home.blocks.head')
     <body class="yellow-skin">
-	
+	<style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        .wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #main-wrapper {
+            flex: 1;
+        }
+    </style>
+
 		 <!-- ============================================================== -->
         <!-- Preloader - style you can find in spinners.css -->
         <!-- ============================================================== -->

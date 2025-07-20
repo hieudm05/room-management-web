@@ -24,6 +24,7 @@ class Complaint extends Model
         'reject_reason',
         'main_photo',
         'photo_album',
+        'handled_by',
         'status',
     ];
 

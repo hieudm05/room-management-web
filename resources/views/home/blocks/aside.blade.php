@@ -1,6 +1,8 @@
 <nav id="navigation" class="navigation navigation-landscape">
     <div class="nav-header">
-        <a class="nav-brand static-logo" href="#"><img src="{{ asset('assets/client/img/logo.png') }}" class="logo" alt="" /></a>
+        <a class="nav-brand static-logo" href='{{ url('/') }}'><img src="{{ asset('assets/client/img/logo.png') }}" class="logo" alt="" />
+        </a>
+
         <a class="nav-brand fixed-logo" href="#"><img src="{{ asset('assets/client/img/logo.png') }}" class="logo" alt="" /></a>
         <div class="nav-toggle"></div>
     </div>
@@ -95,6 +97,7 @@
 </li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{{ route('tenant.profile.edit') }}">👤 Thông tin cá nhân</a></li>
+                        <li><a class="dropdown-item" href="{{ route('renter.addUserRequest.create') }}">📋 Thêm các thành viên</a></li>
                         <li><a class="dropdown-item" href="{{ route('home.favorites') }}">❤️ Trọ đã yêu thích</a></li>
                         <li><a class="dropdown-item" href="{{ route('home.complaints.create') }}">📝 Đơn khiếu nại</a></li>
                         <li><a class="dropdown-item" href="{{ route('my-room') }}">🏠 Phòng của tôi</a></li>

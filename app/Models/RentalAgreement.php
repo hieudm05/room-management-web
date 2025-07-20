@@ -28,6 +28,8 @@ class RentalAgreement extends Model
         'agreement_terms',
         'price_edit_count',
         'deposit_edit_count',
+        'expected_leave_date',
+        'is_active',
         'created_by'
     ];
 
