@@ -133,5 +133,11 @@ class Room extends Model
     {
         return $this->belongsToMany(User::class, 'room_staff', 'room_id', 'staff_id');
     }
+ // RoomUtilityPhoto.php
+public function roomBill()
+{
+    return $this->belongsTo(RoomBill::class, 'room_bill_id');
+}
+
 
 }
