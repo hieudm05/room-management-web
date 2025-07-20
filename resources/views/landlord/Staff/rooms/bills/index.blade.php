@@ -151,13 +151,13 @@
                                                 <input type="text" class="form-control" value="{{ $item['month'] }}"
                                                     readonly>
                                             </div>
-
+                                           
                                            <div class="col-md-4">
     <label class="form-label">Trạng thái thanh toán</label>
     <div class="input-group">
         @if (!empty($item['bill']))
             <select
-                class="form-control status-select
+                class="form-control status-select 
                     @if ($item['bill']->status == 'unpaid') border-warning shadow-sm @endif"
                 data-id="{{ $item['id_bill'] }}"
                 @if ($item['bill']->status == 'paid' || $item['bill']->status == 'pending') disabled @endif

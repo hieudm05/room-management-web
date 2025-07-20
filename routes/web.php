@@ -32,6 +32,7 @@ use App\Http\Controllers\Renter\AddUserRequestController;
 use App\Http\Controllers\TenantProfileController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\Client\MyRoomController;
+use App\Http\Controllers\Landlord\LandlordBillController;
 use App\Http\Controllers\RoomBillController;
 use App\Http\Controllers\Landlord\OCRController;
 use App\Http\Controllers\Landlord\StaffAccountController;
@@ -163,7 +164,13 @@ Route::get('/{room}', [ContractController::class, 'index']);
             Route::post('/room-bills/{id}/update-status', [PaymentController::class, 'updateStatus']);
 
         });
+
+       
     });
+     // Bill của chủ trọ
+         Route::get('/bills', [LandlordBillController::class, 'index'])->name('bills.index'); 
+        Route::get('/bills/{bill}', [LandlordBillController::class, 'show'])->name('bills.show');
+        Route::get('/bills/export', [LandlordBillController::class, 'export'])->name('bills.export');
 
     // Staff yêu cầu chỉnh sửa phòng
     Route::prefix('staff/rooms')->name('staff.rooms.')->group(function () {

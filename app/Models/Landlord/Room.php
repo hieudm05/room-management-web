@@ -133,10 +133,14 @@ class Room extends Model
     {
         return $this->belongsToMany(User::class, 'room_staff', 'room_id', 'staff_id');
     }
+    public function complaints()
+{
+    return $this->hasMany(\App\Models\Complaint::class, 'room_id', 'room_id');
  // RoomUtilityPhoto.php
 public function roomBill()
 {
     return $this->belongsTo(RoomBill::class, 'room_bill_id');
+
 }
 
 
