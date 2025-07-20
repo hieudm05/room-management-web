@@ -33,6 +33,7 @@ class RoomBill extends Model
         return $this->hasMany(RoomBillService::class, 'room_bill_id');
     }
 
+
     // ✅ 4. Quan hệ với chi phí phát sinh
     public function additionalFees()
     {
