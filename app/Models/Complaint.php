@@ -21,6 +21,10 @@ class Complaint extends Model
         'landlord_cost',
         'note',
         'resolved_at',
+        'reject_reason',
+        'main_photo',
+        'photo_album',
+        'handled_by',
         'status',
     ];
 

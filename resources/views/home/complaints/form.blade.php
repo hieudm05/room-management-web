@@ -69,13 +69,7 @@
                 {{-- Ảnh đính kèm --}}
                 <div class="mb-3">
                     <label class="form-label">Ảnh đính kèm (nếu có):</label>
-                    <input 
-                        type="file" 
-                        name="photos[]" 
-                        multiple 
-                        accept="image/*"
-                        class="form-control"
-                    >
+                  <input type="file" name="photos[]" multiple accept="image/*" class="form-control" width="200px" height="200px">
                     <div class="form-text">Bạn có thể chọn nhiều ảnh cùng lúc. Tối đa 5MB mỗi ảnh.</div>
                 </div>
 
@@ -87,6 +81,8 @@
                 </div>
             </form>
         </div>
+      
+
     </div>
 </div>
 @endsection

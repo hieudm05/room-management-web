@@ -1,8 +1,12 @@
 @extends('home.layouts.app')
 
 @section('content')
-
-<div class="container bg-white p-4 mt-5 rounded shadow">
+<style>
+    .content-wrapper {
+        min-height: 100%; /* Đẩy footer xuống */
+    }
+</style>
+<div class="container bg-white p-4 mt-5 rounded shadow content-wrapper">
     <h2 class="h5 fw-semibold mb-4">Danh sách khiếu nại</h2>
 
     @if (session('success'))

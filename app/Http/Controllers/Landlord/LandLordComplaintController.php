@@ -60,7 +60,7 @@ class LandLordComplaintController extends Controller
             $assignedStaff->id,
             'Bạn được giao xử lý khiếu nại mới',
             'Bạn vừa được giao xử lý một khiếu nại tại phòng ' . $complaint->room->name,
-            route('landlords.staff.complaints.index', $complaint->id)
+            route('landlord.staff.complaints.index', $complaint->id)
         );
 
         // 🔔 Gửi thông báo cho người thuê
@@ -111,7 +111,7 @@ class LandLordComplaintController extends Controller
             $request->staff_id,
             'Bạn được giao xử lý khiếu nại',
             'Chủ trọ vừa giao bạn xử lý khiếu nại tại phòng ' . $complaint->room->name,
-            route('landlords.staff.complaints.index', $complaint->id)
+            route('landlord.staff.complaints.index', $complaint->id)
         );
 
         // 🔔 Gửi thông báo cho người thuê
@@ -149,7 +149,7 @@ class LandLordComplaintController extends Controller
                 $complaint->user_id,
                 'Khiếu nại đã bị huỷ xử lý',
                 'Chủ trọ đã đánh dấu khiếu nại của bạn là huỷ bỏ.',
-                route('landlord.complaints.show', $complaint->id)
+                route('landlord.complaint.show', $complaint->id)
             );
         }
 

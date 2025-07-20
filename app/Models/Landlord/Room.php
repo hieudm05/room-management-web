@@ -9,6 +9,7 @@ use App\Models\User;
 
 use App\Models\RentalAgreement;
 use App\Models\RoomUser;
+use App\Models\UserInfo;
 use Illuminate\Database\Eloquent\Model;
 
 class Room extends Model
@@ -101,10 +102,10 @@ class Room extends Model
         return $this->belongsTo(RentalAgreement::class, 'id_rental_agreements', 'rental_id')
             ->whereIn('status', ['Active', 'Signed']);
     }
-    public function roomUsers()
-    {
-        return $this->hasMany(RoomUser::class, 'room_id', 'room_id');
-    }
+   public function userInfos()
+{
+    return $this->hasMany(UserInfo::class, 'room_id', 'room_id');
+}
 
 
     public function utilities()

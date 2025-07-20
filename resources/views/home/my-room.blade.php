@@ -1,9 +1,14 @@
 @extends('home.layouts.app')
 
 @section('title', 'Phòng của tôi')
-
+<style>
+    .content-wrapper {
+        min-height: 100%; /* Đẩy footer xuống */
+    }
+</style>
 @section('content')
-<div class="container mt-4">
+<div class="container mt-4 content-wrapper">
+
 
     <h3 class="mb-3">🏠 Thông tin phòng của bạn</h3>
 
@@ -15,7 +20,9 @@
             <p><strong>Trạng thái:</strong> {{ $room->status === "Rented" ? 'Đang cho thuê' : 'Ngừng hoạt động' }}</p>
         </div>
     </div>
-
+   <a href="{{ route('room-users.stopRentForm', ['room_id' => $room->room_id]) }}" class="btn btn-outline-primary">
+    👥 Xem thành viên phòng
+</a>
     <h4>📄 Hóa đơn</h4>
 
     @if($bills->isEmpty())
@@ -234,7 +241,10 @@
     @endif
 
 </div>
+
 @endsection
+
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -252,3 +262,4 @@
         });
     });
 </script>
+

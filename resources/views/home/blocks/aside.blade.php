@@ -1,6 +1,8 @@
 <nav id="navigation" class="navigation navigation-landscape">
     <div class="nav-header">
-        <a class="nav-brand static-logo" href="#"><img src="{{ asset('assets/client/img/logo.png') }}" class="logo" alt="" /></a>
+        <a class="nav-brand static-logo" href='{{ url('/') }}'><img src="{{ asset('assets/client/img/logo.png') }}" class="logo" alt="" />
+        </a>
+
         <a class="nav-brand fixed-logo" href="#"><img src="{{ asset('assets/client/img/logo.png') }}" class="logo" alt="" /></a>
         <div class="nav-toggle"></div>
     </div>
@@ -53,8 +55,8 @@
         <ul class="nav-menu nav-menu-social align-to-right">
             @auth
                 @php
-                    $unreadCount = auth()->user()->notifications()->wherePivot('is_read', false)->count();
-                    $latest = auth()->user()->notifications()
+                    $unreadCount = auth()->user()->customNotifications()->wherePivot('is_read', false)->count();
+                    $latest = auth()->user()->customNotifications()
                                            ->orderByDesc('notification_user.received_at')
                                            ->take(5)
                                            ->get();

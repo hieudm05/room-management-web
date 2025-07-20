@@ -5,7 +5,23 @@
 
 	@include('home.blocks.head')
     <body class="yellow-skin">
-	
+	<style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        .wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #main-wrapper {
+            flex: 1;
+        }
+    </style>
+
 		 <!-- ============================================================== -->
         <!-- Preloader - style you can find in spinners.css -->
         <!-- ============================================================== -->
@@ -55,100 +71,7 @@
 			<!-- ============================ Our Partner End ================================== -->
 			
 			<!-- ============================ Price Table Start ================================== -->
-			<section class="min">
-				<div class="container">
-				
-					<div class="row justify-content-center">
-						<div class="col-lg-7 col-md-10 text-center">
-							<div class="sec-heading center">
-								<h2>Select your Package</h2>
-								<p>At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores</p>
-							</div>
-						</div>
-					</div>
-					
-					<div class="row align-items-center">
-					
-						<!-- Single Package -->
-						<div class="col-lg-4 col-md-4">
-							<div class="pricing_wrap">
-								<div class="prt_head">
-									<h4>Basic</h4>
-								</div>
-								<div class="prt_price">
-									<h2><span>$</span>29</h2>
-									<span>per user, per month</span>
-								</div>
-								<div class="prt_body">
-									<ul>
-										<li>99.5% Uptime Guarantee</li>
-										<li>120GB CDN Bandwidth</li>
-										<li>5GB Cloud Storage</li>
-										<li class="none">Personal Help Support</li>
-										<li class="none">Enterprise SLA</li>
-									</ul>
-								</div>
-								<div class="prt_footer">
-									<a href="#" class="btn choose_package">Start Basic</a>
-								</div>
-							</div>
-						</div>
-						
-						<!-- Single Package -->
-						<div class="col-lg-4 col-md-4">
-							<div class="pricing_wrap">
-								<div class="prt_head">
-									<div class="recommended">Best Value</div>
-									<h4>Standard</h4>
-								</div>
-								<div class="prt_price">
-									<h2><span>$</span>49</h2>
-									<span>per user, per month</span>
-								</div>
-								<div class="prt_body">
-									<ul>
-										<li>99.5% Uptime Guarantee</li>
-										<li>150GB CDN Bandwidth</li>
-										<li>10GB Cloud Storage</li>
-										<li>Personal Help Support</li>
-										<li class="none">Enterprise SLA</li>
-									</ul>
-								</div>
-								<div class="prt_footer">
-									<a href="#" class="btn choose_package active">Start Standard</a>
-								</div>
-							</div>
-						</div>
-						
-						<!-- Single Package -->
-						<div class="col-lg-4 col-md-4">
-							<div class="pricing_wrap">
-								<div class="prt_head">
-									<h4>Platinum</h4>
-								</div>
-								<div class="prt_price">
-									<h2><span>$</span>79</h2>
-									<span>2 user, per month</span>
-								</div>
-								<div class="prt_body">
-									<ul>
-										<li>100% Uptime Guarantee</li>
-										<li>200GB CDN Bandwidth</li>
-										<li>20GB Cloud Storage</li>
-										<li>Personal Help Support</li>
-										<li>Enterprise SLA</li>
-									</ul>
-								</div>
-								<div class="prt_footer">
-									<a href="#" class="btn choose_package">Start Platinum</a>
-								</div>
-							</div>
-						</div>
-						
-					</div>
-					
-				</div>	
-			</section>
+			
 			<!-- ============================ Price Table End ================================== -->						
 			
 			<!-- ============================ Call To Action ================================== -->

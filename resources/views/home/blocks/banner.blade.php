@@ -5,6 +5,7 @@
 
 
  <!-- ============================ Hero Banner  Start================================== -->
+ @unless (!Request::is('/'))
  <div class="hero-banner vedio-banner">
      <div class="overlay"></div>
 
@@ -698,4 +699,5 @@
              </div>
          </div>
      </div>
+     @endunless
  </div>

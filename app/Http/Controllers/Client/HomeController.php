@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Room;
 use Illuminate\Support\Facades\Auth;
+use App\Models\UserInfo;
 use Illuminate\Support\Str;
 use App\Models\Landlord\PendingRoomUser;
 use App\Models\RoomUser;
@@ -152,5 +153,53 @@ public function store(Request $request)
     return view('home.my-room', compact('rooms'));
 }
 
+public function stopRentForm()
+{
+    $user = auth()->user();
 
+    // Lấy phòng của user đang thuê
+    $rentalAgreement = RentalAgreement::where('renter_id', $user->id)
+        ->with('room')
+        ->latest()
+        ->first();
+
+    if (!$rentalAgreement || !$rentalAgreement->room) {
+        return view('home.stopRentForm', ['roomUsers' => collect()]);
+    }
+
+    // Lấy tất cả hợp đồng của người trong phòng này
+    $roomUsers = RentalAgreement::with('renter')
+        ->where('room_id', $rentalAgreement->room->room_id)
+        ->where('is_active', true)
+        ->get();
+
+    return view('home.stopRentForm', compact('roomUsers'));
+}
+  public function stopUserRental(Request $request, $id)
+{
+    $request->validate([
+        'leave_date' => 'required|date|after:today',
+    ]);
+
+    $user = auth()->user();
+
+    $agreement = RentalAgreement::with('room')->findOrFail($id);
+
+    // ✅ Chỉ người đang thuê trong phòng mới được phép gửi yêu cầu
+    $currentAgreement = $user->rentalAgreements()->latest()->first();
+    if (!$currentAgreement || $agreement->room_id !== $currentAgreement->room_id) {
+        abort(403, 'Bạn không có quyền gửi yêu cầu cho hợp đồng này.');
+       
+    }
+
+    // ✅ Gán thông tin dừng thuê
+    $agreement->leave_date = $request->leave_date;
+    $agreement->status = 'pending'; // chuyển trạng thái chờ duyệt
+    $agreement->stop_requested = true;
+    $agreement->save();
+
+    // 👉 (Tùy chọn) Gửi thông báo/mail cho staff tại đây nếu cần
+
+//     return redirect()->back()->with('success', '📝 Yêu cầu dừng thuê đã được gửi và đang chờ duyệt.');
+ }
 }

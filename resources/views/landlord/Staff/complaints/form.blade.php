@@ -40,7 +40,7 @@
     </div>
 
     {{-- Form xử lý --}}
-    <form action="{{ route('landlords.staff.complaints.resolve', $complaint->id) }}"
+    <form action="{{ route('landlord.staff.complaints.resolve', $complaint->id) }}"
           method="POST"
           enctype="multipart/form-data"
           class="card">
@@ -80,7 +80,7 @@
         </div>
 
         <div class="card-footer d-flex justify-content-between">
-            <a href="{{ route('landlords.staff.complaints.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('landlord.staff.complaints.index') }}" class="btn btn-outline-secondary">
                 ⬅ Quay lại danh sách
             </a>
             <button type="submit" class="btn btn-success">
