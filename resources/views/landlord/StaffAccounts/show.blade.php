@@ -17,7 +17,9 @@
                 <p><strong>Họ tên:</strong> {{ $staff->name }}</p>
                 <p><strong>Email:</strong> {{ $staff->email }}</p>
                 <p><strong>CCCD:</strong> {{ $staff->identity_number }}</p>
-                <p><strong>Trạng thái:</strong> {{ $staff->is_active ? 'Hoạt động' : 'Không hoạt động' }}</p>
+                <strong class="badge {{ $staff->is_active ? 'bg-success' : 'bg-secondary' }}">
+                    {{ $staff->is_active ? 'Đang hoạt động' : 'Không hoạt động' }}
+                </strong>
             </div>
         </div>
 

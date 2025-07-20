@@ -67,12 +67,13 @@
                     <div class="mb-3">
                         <label class="form-label">Trạng Thái</label>
                         <select name="is_active" class="form-select @error('is_active') is-invalid @enderror">
-                            @foreach ($statuses as $value)
-                                <option value="{{ $value }}" {{ old('is_active') == $value ? 'selected' : '' }}>
-                                    {{ $value }}
+                            @foreach ($statuses as $key => $label)
+                                <option value="{{ $key }}" {{ old('is_active') == $key ? 'selected' : '' }}>
+                                    {{ $label }}
                                 </option>
                             @endforeach
                         </select>
+
                         @error('is_active')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
