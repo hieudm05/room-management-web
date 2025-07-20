@@ -138,5 +138,24 @@ $user = Auth::user();
             </li>
         @endif
 
+         @if ($user->role === 'Landlord')
+            <li class="nav-item">
+                <a class="nav-link menu-link" href="#billsC" data-bs-toggle="collapse" role="button"
+                   aria-expanded="false" aria-controls="bills">
+                    <i class="mdi mdi-bank"></i>
+                    <span data-key="t-bank">Hoá đơn (chủ)</span>
+                </a>
+                <div class="collapse menu-dropdown" id="billsC">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.bills.index') }}" class="nav-link">
+                                Danh sách hoá đơn
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        @endif
+
     </ul>
 </div>

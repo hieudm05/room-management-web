@@ -133,5 +133,10 @@ class Room extends Model
     {
         return $this->belongsToMany(User::class, 'room_staff', 'room_id', 'staff_id');
     }
+    public function complaints()
+{
+    return $this->hasMany(\App\Models\Complaint::class, 'room_id', 'room_id');
+}
+
 
 }

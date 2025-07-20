@@ -58,22 +58,6 @@ class PaymentController extends Controller
             $waterUnit = $waterService ? $waterService->pivot->unit : 'per_m3';
 
             $services = [];
-            // $serviceTotal = 0;
-            // if ($bill) {
-            //     $billServices = RoomBillService::where('room_bill_id', $bill->id)->get();
-            //     foreach ($billServices as $sv) {
-            //         $service = \App\Models\Landlord\Service::find($sv->service_id);
-            //         $services[] = [
-            //             'service_id' => $sv->service_id,
-            //             'name' => $service->name ?? 'Không rõ',
-            //             'price' => $sv->price,
-            //             'qty' => $sv->qty,
-            //             'total' => $sv->total,
-            //         ];
-            //         $serviceTotal += $sv->total;
-            //     }
-            // }
-            $services = [];
             $serviceTotal = 0;
 
             foreach ($room->services as $service) {
@@ -164,8 +148,8 @@ class PaymentController extends Controller
                     || ($bill->water_unit == 'per_person' && $bill->water_occupants > 0 && $bill->water_total > 0)
                 );
             $data[] = [
-                'id_bill' => $bill->id,
-                'bill' => $bill,
+                'id_bill' => $bill ? $bill->id : null,
+                'bill' => $bill ?? null,
                 'room_id' => $room->room_id,
                 'room_name' => $room->room_number ?? $room->room_name ?? 'P101',
                 'tenant_name' => $tenant ? $tenant->name : 'Chưa có',
@@ -305,8 +289,10 @@ class PaymentController extends Controller
 
             // Xử lý upload ảnh
             RoomUtilityPhoto::where('room_bill_id', $bill->id)->delete();
+
+            // Ảnh điện
             if ($request->hasFile('data.electric_photos')) {
-                foreach ($request->file('data.electric_photos') as $photo) {
+                foreach ($request->file('data')['electric_photos'] as $photo) {
                     $path = $photo->store('utilities/electric', 'public');
                     RoomUtilityPhoto::create([
                         'room_bill_id' => $bill->id,
@@ -315,8 +301,10 @@ class PaymentController extends Controller
                     ]);
                 }
             }
+
+            // Ảnh nước (chỉ khi chọn kiểu per_m3)
             if ($data['water_unit'] == 'per_m3' && $request->hasFile('data.water_photos')) {
-                foreach ($request->file('data.water_photos') as $photo) {
+                foreach ($request->file('data')['water_photos'] as $photo) {
                     $path = $photo->store('utilities/water', 'public');
                     RoomUtilityPhoto::create([
                         'room_bill_id' => $bill->id,
@@ -325,6 +313,7 @@ class PaymentController extends Controller
                     ]);
                 }
             }
+
 
             // Xóa và lưu dịch vụ
             RoomBillService::where('room_bill_id', $bill->id)->delete();
@@ -447,30 +436,29 @@ class PaymentController extends Controller
     }
 
     // Update trạng thái thanh toán
- public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, $id)
+    {
+        $bill = RoomBill::findOrFail($id);
+        $newStatus = $request->input('status');
 
-{
-    $bill = RoomBill::findOrFail($id);
-    $newStatus = $request->input('status');
+        $validStatuses = ['unpaid', 'pending', 'paid'];
 
-    $validStatuses = ['unpaid', 'pending', 'paid'];
+        if (!in_array($newStatus, $validStatuses)) {
+            return response()->json(['error' => '❌ Trạng thái không hợp lệ.'], 400);
+        }
 
-    if (!in_array($newStatus, $validStatuses)) {
-        return response()->json(['error' => '❌ Trạng thái không hợp lệ.'], 400);
+        $currentIndex = array_search($bill->status, $validStatuses);
+        $newIndex = array_search($newStatus, $validStatuses);
+
+        if ($newIndex <= $currentIndex) {
+            return response()->json(['error' => '❌ Không thể chuyển về trạng thái trước đó.'], 400);
+        }
+
+        $bill->status = $newStatus;
+        $bill->save();
+
+        return response()->json(['success' => '✅ Đã cập nhật trạng thái!', 'status' => $newStatus]);
     }
-
-    $currentIndex = array_search($bill->status, $validStatuses);
-    $newIndex = array_search($newStatus, $validStatuses);
-
-    if ($newIndex <= $currentIndex) {
-        return response()->json(['error' => '❌ Không thể chuyển về trạng thái trước đó.'], 400);
-    }
-
-    $bill->status = $newStatus;
-    $bill->save();
-
-    return response()->json(['success' => '✅ Đã cập nhật trạng thái!', 'status' => $newStatus]);
-}
 
 
 
