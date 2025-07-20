@@ -25,7 +25,7 @@ $user = Auth::user();
         <!-- Room Management Menu -->
         <li class="nav-item">
             <a class="nav-link menu-link" href="#sidebarRoom" data-bs-toggle="collapse" role="button"
-               aria-expanded="false" aria-controls="sidebarRoom">
+                aria-expanded="false" aria-controls="sidebarRoom">
                 <i class="mdi mdi-view-grid-plus-outline"></i>
                 <span data-key="t-apps">Quản Lý Phòng</span>
             </a>
@@ -34,7 +34,6 @@ $user = Auth::user();
 
                     @if ($user->role === 'Landlord')
                         <li class="nav-item">
-
                             <a href="{{ route('landlords.properties.list') }}" class="nav-link">
                                 Quản Lý Bất Động Sản
                             </a>
@@ -52,22 +51,16 @@ $user = Auth::user();
                         <li class="nav-item">
                             <a href="{{ route('landlords.approvals.users.index') }}" class="nav-link">
                                 Quản Lý Phê Duyệt Người Dùng
-
-                            <a href="{{ route('landlords.properties.list') }}" class="nav-link">Properties Management</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.rooms.index') }}" class="nav-link">Rooms Management</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.approvals.index') }}" class="nav-link">Approval</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.approvals.users.index') }}" class="nav-link">Approval User</a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('landlords.room_edit_requests.index') }}" class="nav-link">
                                 Phê duyệt yêu cầu chuyển phòng
 
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlord.posts.approval.index') }}" class="nav-link">
+                                Approve post
                             </a>
                         </li>
                     @endif
@@ -87,9 +80,14 @@ $user = Auth::user();
 
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('staff.posts.index') }}" class="nav-link">
+                                Đăng bài
+                            </a>
+                        </li>
                          <li class="nav-item">
                    <a href="{{ route('landlord.staff.complaints.history') }}" class="nav-link">
-                              Complaint History
+                             Lịch sử khiếu duyệt khiếu nại
                       </a>
                   </li>
                     @endif
@@ -102,7 +100,7 @@ $user = Auth::user();
         @if ($user->role === 'Landlord')
             <li class="nav-item">
                 <a class="nav-link menu-link" href="#sidebarBank" data-bs-toggle="collapse" role="button"
-                   aria-expanded="false" aria-controls="sidebarBank">
+                    aria-expanded="false" aria-controls="sidebarBank">
                     <i class="mdi mdi-bank"></i>
                     <span data-key="t-bank">Tài khoản ngân hàng</span>
                 </a>
@@ -129,13 +127,11 @@ $user = Auth::user();
                     <span data-key="t-complaints">Khiếu nại</span>
                 </a>
             </li>
-        @endif
 
-        <!-- Staff Accounts (Landlord only) -->
-        @if ($user->role === 'Landlord')
+            <!-- Staff Accounts -->
             <li class="nav-item">
                 <a class="nav-link menu-link" href="#sidebarStaff" data-bs-toggle="collapse" role="button"
-                   aria-expanded="false" aria-controls="sidebarStaff">
+                    aria-expanded="false" aria-controls="sidebarStaff">
                     <i class="mdi mdi-account-group"></i>
                     <span data-key="t-staff">Tài Khoản Nhân Viên</span>
                 </a>
@@ -155,7 +151,7 @@ $user = Auth::user();
         @if ($user->role === 'Staff')
             <li class="nav-item">
                 <a class="nav-link menu-link" href="#bills" data-bs-toggle="collapse" role="button"
-                   aria-expanded="false" aria-controls="bills">
+                    aria-expanded="false" aria-controls="bills">
                     <i class="mdi mdi-bank"></i>
                     <span data-key="t-bank">Hoá đơn</span>
                 </a>
