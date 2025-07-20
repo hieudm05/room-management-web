@@ -26,11 +26,18 @@
                             };
                         @endphp
 
+
                         <div class="col-md-3 col-sm-6">
                             <div class="card shadow-sm h-100">
                                 {{-- Nếu bạn có hình ảnh của property thì đặt vào src, nếu không thì dùng placeholder --}}
                                 <img src="https://via.placeholder.com/400x250?text=Building" class="card-img-top"
                                     alt="Property image">
+
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card shadow-sm h-100">
+                            {{-- Nếu bạn có hình ảnh của property thì đặt vào src, nếu không thì dùng placeholder --}}
+                        <img src="{{ $Property->image_url }}" alt="Ảnh phòng trọ">
+
 
                                 <div class="card-body">
                                     <h5 class="card-title mb-1">{{ $Property->name }}</h5>
@@ -38,12 +45,22 @@
                                     <span class="badge {{ $badgeClass }}">{{ $status }}</span>
                                 </div>
 
+
                                 <div class="card-footer text-center bg-white border-0">
                                     <a href="{{ route('landlords.properties.shows', ['property_id' => $Property->property_id]) }}"
                                         class="btn btn-primary btn-sm w-100">
                                         Xem chi tiết
                                     </a>
                                 </div>
+
+                            <div class="card-footer text-center bg-white border-0">
+                                <a href="{{ route('landlords.properties.shows', ['property_id' => $Property->property_id]) }}" class="btn btn-primary btn-sm w-100">
+                                    Xem chi tiết
+                                </a>
+                                 <a href="{{ route('landlords.properties.edit', ['property_id' => $Property->property_id]) }}" class="btn btn-warning btn-sm w-100">
+                                    edit
+                                </a>
+
                             </div>
                         </div>
                     @empty

@@ -5,7 +5,7 @@
 <head>
 
     <meta charset="utf-8" />
-    <title>Sign In | Velzon - Admin & Dashboard Template</title>
+    <title>Sign In | SevenStay - Quản lý phòng trọ </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesbrand" name="author" />
@@ -38,10 +38,10 @@
                             <div>
                                 <a href="{{ url('/') }}" class="d-inline-block auth-logo">
                                     <img src="{{ asset('assets/admin/images/logo-light.png') }}" alt=""
-                                        height="20">
+                                        width="200">
                                 </a>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p>
+                        <p class="mt-1 fs-15 fw-medium">Webside quản lý phòng trọ</p>
                         </div>
                     </div>
                 </div>
@@ -52,7 +52,7 @@
                             <div class="card-body p-4">
                                 <div class="text-center mt-2">
                                     <h5 class="text-primary">Welcome Back !</h5>
-                                    <p class="text-muted">Sign in to continue to Velzon.</p>
+                                    <p class="text-muted">Sign in to continue to SevenStay.</p>
                                 </div>
                                 @if (session('status'))
                                     <div class="alert alert-success">

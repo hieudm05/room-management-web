@@ -20,6 +20,7 @@ class RoomUtility extends Model
         'electricity',
         'water_unit',
         'water_occupants',
+         'water_start',
         'water_m3',
         'water',
         // 'images'

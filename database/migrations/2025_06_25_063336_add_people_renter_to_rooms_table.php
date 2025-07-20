@@ -14,7 +14,6 @@ return new class extends Migration {
             }
         });
     }
-
     public function down(): void
     {
         Schema::table('rooms', function (Blueprint $table) {

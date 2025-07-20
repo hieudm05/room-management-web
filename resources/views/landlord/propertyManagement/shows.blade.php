@@ -6,15 +6,81 @@
 
         {{-- Thông tin tổng quan tòa nhà --}}
         <div class="card shadow-sm mb-4">
+            <div class="card-header bage-primary text-white d-flex align-items-center justify-content-between">
+                <h3 class="card-title mb-0">{{ $property->name }}</h3>
+                <span
+                    class="badge fs-6 bg-{{ $property->status === 'Approved' ? 'success' : ($property->status === 'Pending' ? 'warning' : 'secondary') }}">
+                    {{ $property->status === 'Approved' ? 'Đã duyệt' : ($property->status === 'Pending' ? 'Chờ duyệt' : 'Tạm dừng') }}
+                </span>
+            </div>
             <div class="card-body">
-                <h3 class="card-title mb-2">{{ $property->name }}</h3>
-                <p class="mb-1"><strong>Địa chỉ:</strong> {{ $property->address }}</p>
-                <p class="mb-0"><strong>Trạng thái:</strong>
-                    <span
-                        class="badge bg-{{ $property->status === 'Approved' ? 'success' : ($property->status === 'Pending' ? 'warning' : 'secondary') }}">
-                        {{ $property->status }}
-                    </span>
-                </p>
+                <div class="row align-items-center">
+                    {{-- Ảnh đại diện --}}
+                    @if ($property->image_url)
+                        <div class="col-md-4 mb-3 mb-md-0 text-center">
+                            <img src="{{ $property->image_url }}" alt="Ảnh bất động sản"
+                                class="img-fluid rounded shadow border" style="max-height: 250px; object-fit:cover;">
+                        </div>
+                    @endif
+                    <div class="col-md-8">
+                        <p class="mb-2"><strong>Địa chỉ:</strong> {{ $property->address }}</p>
+                        <p class="mb-2"><strong>Kinh độ:</strong> {{ $property->longitude }} &nbsp; <strong>Vĩ
+                                độ:</strong> {{ $property->latitude }}</p>
+                        <p class="mb-2"><strong>Mô tả:</strong> {{ $property->description ?? 'Không có mô tả' }}</p>
+                        <p class="mb-2"><strong>Chủ trọ:</strong> {{ $property->landlord_name }} (ID:
+                            {{ $property->landlord_id }})</p>
+                        <p class="mb-2"><strong>Nội quy:</strong></p>
+                        <div class="mb-2"
+                            style="background: #f8f9fa; border-radius: 6px; padding: 12px; max-height: 120px; overflow: hidden; position: relative;">
+                            <div id="rules-preview">
+                                {!! \Illuminate\Support\Str::limit(strip_tags($property->rules, '<ul><ol><li><strong><em><b><i>'), 200, '...') !!}
+                            </div>
+                            <button type="button" class="btn btn-link btn-sm position-absolute end-0 bottom-0"
+                                style="z-index:2; background:rgba(255,255,255,0.8);" data-bs-toggle="modal"
+                                data-bs-target="#rulesModal">
+                                Xem chi tiết
+                            </button>
+                        </div>
+
+                        {{-- Modal hiển thị nội quy đầy đủ --}}
+                        <div class="modal fade" id="rulesModal" tabindex="-1" aria-labelledby="rulesModalLabel"
+                            aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="rulesModalLabel">Nội quy phòng trọ</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Đóng"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {!! $property->rules ?? '<span class="text-muted">Không có nội quy</span>' !!}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Đóng</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Thư viện ảnh khu trọ --}}
+                @if ($property->images && $property->images->count())
+                    <div class="mt-4">
+                        <h5 class="mb-3">Thư viện ảnh khu trọ</h5>
+                        <div class="row g-2">
+                            @foreach ($property->images as $img)
+                                <div class="col-6 col-md-3">
+                                    <div class="border rounded overflow-hidden" style="height: 120px;">
+                                        <img src="{{ $img->image_path }}" alt="Ảnh khu trọ" class="img-fluid w-100 h-100"
+                                            style="object-fit:cover;">
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -104,8 +170,10 @@
                 <div class="card h-100 border-warning">
                     <div class="card-header bg-warning text-dark fw-bold">Giấy tờ & Hợp đồng</div>
                     <div class="card-body d-flex flex-column gap-2">
+
                         <a href="{{ route('landlords.properties.uploadDocument', ['property_id' => $property->property_id]) }}"
                             class="btn btn-outline-warning btn-sm w-100">Tải Lên Tài Liệu</a>
+
                         <a href="{{ route('landlords.properties.show', ['property_id' => $property->property_id]) }}"
                             class="btn btn-outline-warning btn-sm w-100">Danh sách Tài Liệu</a>
                     </div>

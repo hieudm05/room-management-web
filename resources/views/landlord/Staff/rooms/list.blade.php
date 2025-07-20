@@ -3,6 +3,7 @@
 @section('title', 'Danh sách phòng')
 
 @section('content')
+
     @if (session('success'))
         <script>
             window.onload = function() {
@@ -10,6 +11,46 @@
             };
         </script>
     @endif
+
+    @php use Illuminate\Support\Str; @endphp
+
+    @php
+        $unreadNotifications = auth()
+            ->user()
+            ->customNotifications()
+            ->wherePivot('is_read', false)
+            ->orderBy('notifications.created_at', 'desc')
+            ->get();
+    @endphp
+
+    @if ($unreadNotifications->count())
+        <div class="alert alert-info">
+            <h5>🔔 Thông báo mới:</h5>
+            <ul>
+                @foreach ($unreadNotifications as $notification)
+                    <li>
+                        <span class="text-dark">
+                            📌 {!! Str::before($notification->message, 'Lý do:') !!}
+                        </span>
+
+                        @if (Str::contains($notification->message, 'Lý do:'))
+                            @php
+                                $reason = Str::after($notification->message, 'Lý do:');
+                            @endphp
+                            <br><small class="text-danger">📄 Lý do: {{ trim($reason) }}</small>
+                        @endif
+
+                        <br><small class="text-muted">{{ optional($notification->created_at)->diffForHumans() }}</small>
+                    </li>
+                @endforeach
+            </ul>
+            <form action="{{ route('landlords.staff.notifications.markAsRead') }}" method="POST">
+                @csrf
+                <button class="btn btn-sm btn-secondary mt-2">✔️ Đã đọc tất cả</button>
+            </form>
+        </div>
+    @endif
+
 
     <div class="col-xl-12">
         <div class="card mb-3">
@@ -140,10 +181,14 @@
                                             <span class="text-muted">Chưa có ảnh</span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="d-flex gap-1">
                                         <a href="{{ route('landlords.staff.show', $room) }}"
                                             class="btn btn-sm btn-outline-warning">👁️</a>
-                                       
+
+                                        @if ($room->staffs->contains(auth()->user()->id))
+                                            <a href="{{ route('landlords.staff.rooms.edit', $room->room_id) }}"
+                                                class="btn btn-sm btn-outline-primary">✏️</a>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
@@ -165,19 +210,19 @@
         @endif
     </div>
 
-@section('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#select-khu-tro').select2({
-                placeholder: "🔍 Chọn khu trọ",
-                allowClear: true,
-                width: '100%'
+    @section('scripts')
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                $('#select-khu-tro').select2({
+                    placeholder: "🔍 Chọn khu trọ",
+                    allowClear: true,
+                    width: '100%'
+                });
             });
-        });
-    </script>
-@endsection
+        </script>
+    @endsection
 
 
 @endsection

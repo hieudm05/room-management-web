@@ -368,6 +368,11 @@
                 rulesInput.value = DOMPurify.sanitize(quill.root.innerHTML);
                 console.log('Rules value before submit:', rulesInput.value);
 
+                // ✅ LẤY TÂM BẢN ĐỒ HIỆN TẠI TRƯỚC KHI SUBMIT
+                const center = map.getCenter();
+                document.getElementById('latitude').value = center.lat;
+                document.getElementById('longitude').value = center.lng;
+
                 const documentTypes = document.querySelectorAll('select[name="document_types[]"]');
                 const documentFiles = document.querySelectorAll('input[name="document_files[]"]');
                 let valid = true;
@@ -511,7 +516,8 @@
                 if (fullAddress.length < 10) return;
 
                 fetch(
-                        `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${encodeURIComponent(fullAddress)}&format=json`)
+                        `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${encodeURIComponent(fullAddress)}&format=json`
+                        )
                     .then(response => response.json())
                     .then(data => {
                         if (data.length > 0) {
