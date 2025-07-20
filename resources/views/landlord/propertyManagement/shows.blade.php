@@ -170,8 +170,12 @@
                 <div class="card h-100 border-warning">
                     <div class="card-header bg-warning text-dark fw-bold">Giấy tờ & Hợp đồng</div>
                     <div class="card-body d-flex flex-column gap-2">
+
+                        <a href="{{ route('landlords.properties.uploadDocument', ['property_id' => $property->property_id]) }}"
+                            class="btn btn-outline-warning btn-sm w-100">Tải Lên Tài Liệu</a>
+
                         <a href="{{ route('landlords.properties.show', ['property_id' => $property->property_id]) }}"
-                            class="btn btn-outline-warning btn-sm w-100">Danh sách Document</a>
+                            class="btn btn-outline-warning btn-sm w-100">Danh sách Tài Liệu</a>
                     </div>
                 </div>
             </div>

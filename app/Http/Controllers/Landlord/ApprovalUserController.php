@@ -25,6 +25,7 @@ class ApprovalUserController extends Controller
         $landlordId = Auth::id();
         $pendingApprovals = Approval::where('landlord_id', $landlordId)
             ->where('status', 'pending')
+            ->where('type', 'add_user')
             ->with('room')
             ->latest()
             ->get();
@@ -40,13 +41,33 @@ class ApprovalUserController extends Controller
         $approval = Approval::findOrFail($id);
 
         if ($approval->room->property->landlord_id !== Auth::id()) {
-            abort(403, 'Bạn không có quyền từ chối hợp đồng này.');
+            abort(403, 'Bạn không có quyền từ chối yêu cầu này.');
         }
 
+        // 👉 Nếu là yêu cầu thêm người thì xóa luôn user_info tương ứng
+        if ($approval->type === 'add_user') {
+            preg_match('/Email:\s*(.*)/', $approval->note, $matches);
+            $email = trim($matches[1] ?? '');
+
+            if ($email) {
+                $userInfo = UserInfo::where('room_id', $approval->room_id)
+                    ->where('email', $email)
+                    ->whereNull('user_id') // Chỉ xóa nếu chưa được duyệt
+                    ->latest()
+                    ->first();
+
+                if ($userInfo) {
+                    $userInfo->delete();
+                }
+            }
+        }
+
+        // Xóa yêu cầu duyệt
         $approval->delete();
 
-        return redirect()->back()->with('warning', 'Hợp đồng đã bị từ chối và xóa bỏ.');
+        return redirect()->back()->with('warning', '❌ Yêu cầu đã bị từ chối và thông tin người đó đã bị xóa.');
     }
+
 
     public function approveUser($id)
     {
@@ -82,14 +103,16 @@ class ApprovalUserController extends Controller
             $password = Str::random(8);
 
             $user = User::create([
-                'name'     => $userInfo->full_name ?: $fullNameFromNote ,
-                'email'    => $userInfo->email,
+                'name' => $userInfo->full_name ?: $fullNameFromNote,
+                'email' => $userInfo->email,
                 'password' => Hash::make($password),
-                'role'     => 'Renter', // hoặc dùng constant nếu có
+                'role' => 'Renter', // hoặc dùng constant nếu có
             ]);
 
             // 🔄 Gán user_id vào user_info
             $userInfo->update(['user_id' => $user->id]);
+            // 🔼 Tăng số người thuê trong phòng
+            Room::where('room_id', $approval->room_id)->increment('people_renter');
 
             // 📧 Gửi mail thông báo
             Mail::raw(
