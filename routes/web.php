@@ -59,7 +59,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     //Danh sách tài khoản của staff và thêm staff
     Route::get('staff_accounts', [StaffAccountController::class, 'index'])->name('staff_accounts.index');
     Route::get('staff_accounts-create', [StaffAccountController::class, 'create'])->name('staff_accounts.create');
-    Route::get('staff_accounts-create-test', [StaffAccountController::class, 'create'])->name('staff_accounts.create-test');
+    // Route::get('staff_accounts-create-test', [StaffAccountController::class, 'create'])->name('staff_accounts.create-test');
     Route::post('staff-accounts/store', [StaffAccountController::class, 'store'])->name('staff_accounts.store');
     Route::get('staff-accounts/{id}', [StaffAccountController::class, 'show'])->name('staff_accounts.show');
     Route::post('staff/ocr/identity-number', [OCRController::class, 'recognize'])
