@@ -145,6 +145,9 @@ public function roomBill()
     return $this->belongsTo(RoomBill::class, 'room_bill_id');
 
 }
-
+   public function roomUsers()
+    {
+        return $this->hasMany(RoomUser::class, 'room_id', 'room_id');
+    }
 
 }
