@@ -148,7 +148,6 @@ class LandlordBankAccountController extends Controller
     // Lưu tài khoản ngân hàng cho staff
     public function storeForStaff(Request $request)
     {
-        dd($request->all());
         $request->validate([
             'staff_id' => 'required|exists:users,id',
             'bank_name' => 'required|string|max:255',
