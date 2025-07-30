@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\Landlord\OCRController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\Client\MyRoomController;
+use App\Http\Controllers\Landlord\HomeLandlordController;
 use App\Http\Controllers\Landlord\RoomController;
 use App\Http\Controllers\TenantProfileController;
 use App\Http\Controllers\Landlord\ContractRenewal;
@@ -64,8 +65,8 @@ Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
 // LANDLORD
 Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(function () {
 
-    Route::get('/', fn() => view('landlord.dashboard'))->name('dashboard');
-
+    Route::get('/', [HomeLandlordController::class, 'index'])->name('dashboard');
+    Route::get('/filter-stats', [HomeLandLordController::class, 'filterStats'])->name('filter-stats');
     Route::get('/register', [AuthLandlordController::class, 'showForm'])->name('register.form');
     Route::post('/register', [AuthLandlordController::class, 'submit'])->name('register.submit');
 
@@ -183,7 +184,8 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
             // Route::get('api/payment/{room}', [PaymentController::class, 'getBillByMonth'])->name('payment.api');
             // Route::post('/{room}/send-bill', action: [PaymentController::class, 'sendBillmmm'])->name('payment.send_bills');
 
-            Route::get('/', [PaymentController::class, 'index'])->name('index');
+            Route::get('/', [PaymentController::class, 'list'])->name('list');
+            Route::get('/list', [PaymentController::class, 'index'])->name('index');
             Route::post('/{room}', [PaymentController::class, 'store'])->name('store');
             Route::get('/{room}/export', [PaymentController::class, 'exportExcel'])->name('exportExcel');
             Route::post('/room-bills/{id}/update-status', [PaymentController::class, 'updateStatus']);
@@ -430,14 +432,12 @@ Route::prefix('landlords')->middleware(['auth'])->group(function () {
 });
 
 
+
 Route::prefix('landlord/bookings')->middleware(['auth'])->name('landlord.bookings.')->group(function () {
     Route::get('/', [BookingsController::class, 'index'])->name('index');
     Route::post('/{booking}/approve', [BookingsController::class, 'approve'])->name('approve');
     Route::post('/{booking}/reject', [BookingsController::class, 'reject'])->name('reject');
 });
-
-
-
 
 // Route::get('/db', [PostController::class, 'show'])->name('show');
 // // Route::get('/{post}', [PostController::class, 'show'])->name('show');
