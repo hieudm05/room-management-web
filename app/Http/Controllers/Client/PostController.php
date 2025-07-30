@@ -10,6 +10,7 @@ class PostController extends Controller
 {
     public function index()
     {
+
         $posts = StaffPost::with(['category', 'features', 'property'])
             ->where('status', 1)
             ->where('is_public', true)
@@ -22,6 +23,7 @@ class PostController extends Controller
 
     public function show(StaffPost $post)
     {
+
         if ($post->status != 1 || !$post->is_public) {
             abort(404);
         }
