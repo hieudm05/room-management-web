@@ -33,6 +33,7 @@ use App\Http\Controllers\Renter\AddUserRequestController;
 use App\Http\Controllers\TenantProfileController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\Client\MyRoomController;
+use App\Http\Controllers\Landlord\HomeLandlordController;
 use App\Http\Controllers\Landlord\LandlordBillController;
 use App\Http\Controllers\RoomBillController;
 use App\Http\Controllers\Landlord\OCRController;
@@ -59,8 +60,8 @@ Route::post('/login', [AuthUserController::class, 'login'])->name('login.post');
 // LANDLORD
 Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(function () {
 
-    Route::get('/', fn() => view('landlord.dashboard'))->name('dashboard');
-
+    Route::get('/', [HomeLandlordController::class, 'index'])->name('dashboard');
+    Route::get('/filter-stats', [HomeLandLordController::class, 'filterStats'])->name('filter-stats');
     Route::get('/register', [AuthLandlordController::class, 'showForm'])->name('register.form');
     Route::post('/register', [AuthLandlordController::class, 'submit'])->name('register.submit');
 // Duyệt hợp đồng
@@ -164,7 +165,8 @@ Route::get('/{room}', [ContractController::class, 'index']);
             // Route::get('api/payment/{room}', [PaymentController::class, 'getBillByMonth'])->name('payment.api');
             // Route::post('/{room}/send-bill', action: [PaymentController::class, 'sendBillmmm'])->name('payment.send_bills');
 
-            Route::get('/', [PaymentController::class, 'index'])->name('index');
+            Route::get('/', [PaymentController::class, 'list'])->name('list');
+            Route::get('/list', [PaymentController::class, 'index'])->name('index');
             Route::post('/{room}', [PaymentController::class, 'store'])->name('store');
             Route::get('/{room}/export', [PaymentController::class, 'exportExcel'])->name('exportExcel');
             Route::post('/room-bills/{id}/update-status', [PaymentController::class, 'updateStatus']);
@@ -388,7 +390,6 @@ Route::prefix('landlords')->middleware(['auth'])->group(function () {
     Route::post('/posts/{post}/hide', [PostApprovalController::class, 'hide'])->name('landlord.posts.approval.hide');
     Route::post('/posts/{post}/unhide', [PostApprovalController::class, 'unhide'])->name('landlord.posts.approval.unhide');
 });
-
 
 
 // Route::get('/db', [PostController::class, 'show'])->name('show');

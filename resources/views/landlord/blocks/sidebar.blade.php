@@ -12,8 +12,26 @@
                 <span data-key="t-dashboards">Tổng Quan</span>
             </a>
         </li>
-
+        
+        <!-- Quản lý Bất Động Sản -->
+        @if ($user->role === 'Landlord')
+            <li class="nav-item">
+                <a class="nav-link menu-link" href="#sidebarProperty" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarProperty">
+                    <i class="mdi mdi-home-city"></i>
+                    <span data-key="t-properties">Quản lý Bất Động Sản</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarProperty">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.properties.list') }}" class="nav-link">Danh sách Bất Động Sản</a>
+                        </li>
+                        {{-- Bạn có thể thêm các mục con khác nếu cần --}}
+                    </ul>
+                </div>
+            </li>
+        @endif
         <!-- Room Management Menu -->
+        @if ($user->role === 'Landlord')
         <li class="nav-item">
             <a class="nav-link menu-link" href="#sidebarRoom" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarRoom">
                 <i class="mdi mdi-view-grid-plus-outline"></i>
@@ -21,27 +39,72 @@
             </a>
             <div class="collapse menu-dropdown" id="sidebarRoom">
                 <ul class="nav nav-sm flex-column">
-                    @if ($user->role === 'Landlord')
-                        <li class="nav-item"><a href="{{ route('landlords.properties.list') }}" class="nav-link">Quản Lý Bất Động Sản</a></li>
                         <li class="nav-item"><a href="{{ route('landlords.rooms.index') }}" class="nav-link">Danh sách Phòng Tổng Quan</a></li>
                         <li class="nav-item"><a href="{{ route('landlords.approvals.index') }}" class="nav-link">Quản Lý Phê Duyệt Hợp Đồng</a></li>
                         <li class="nav-item"><a href="{{ route('landlords.approvals.users.index') }}" class="nav-link">Quản Lý Phê Duyệt Người Dùng</a></li>
                         <li class="nav-item"><a href="{{ route('landlords.room_edit_requests.index') }}" class="nav-link">Phê duyệt yêu cầu chuyển phòng</a></li>
-                        <li class="nav-item"><a href="{{ route('landlord.posts.approval.index') }}" class="nav-link">Duyệt bài đăng</a></li>
-                    @endif
-
-                    @if ($user->role === 'Staff')
+                    </ul>
+                </div>
+            </li>
+        @endif
+        <!-- Room Management Menu for Staff -->
+        @if ($user->role === 'Staff')
+            <li class="nav-item">
+                <a class="nav-link menu-link" href="#sidebarRoomStaff" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarRoomStaff">
+                    <i class="mdi mdi-view-grid-plus-outline"></i>
+                    <span data-key="t-apps">Quản Lý Phòng</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarRoomStaff">
+                    <ul class="nav nav-sm flex-column">
                         <li class="nav-item"><a href="{{ route('landlords.staff.index') }}" class="nav-link">Quản lý BĐS dành cho nhân viên</a></li>
+                    </ul>
+                </div>
+            </li>
+             <!-- Khiếu nại (Staff) - mục lớn riêng -->
+              <li class="nav-item">
+                <a class="nav-link menu-link" href="#sidebarComplaintsStaff" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarComplaintsStaff">
+                    <i class="mdi mdi-alert-circle-outline"></i>
+                    <span data-key="t-complaints">Khiếu nại</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarComplaintsStaff">
+                    <ul class="nav nav-sm flex-column">
                         <li class="nav-item"><a href="{{ route('landlord.staff.complaints.index') }}" class="nav-link">Tiếp nhận khiếu nại</a></li>
-                        <li class="nav-item"><a href="{{ route('staff.posts.index') }}" class="nav-link">Đăng bài</a></li>
                         <li class="nav-item"><a href="{{ route('landlord.staff.complaints.history') }}" class="nav-link">Lịch sử xử lý khiếu nại</a></li>
-                    @endif
-                </ul>
-            </div>
-        </li>
+                    </ul>
+                </div>
+            </li>
 
+              <!-- Đăng bài (Staff) - mục lớn riêng -->
+            <li class="nav-item">
+                <a class="nav-link menu-link" href="#sidebarPostStaff" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarPostStaff">
+                    <i class="mdi mdi-file-document"></i>
+                    <span data-key="t-posts">Đăng bài</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarPostStaff">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item"><a href="{{ route('staff.posts.index') }}" class="nav-link">Danh sách bài viết của bạn</a></li>
+                        {{-- Thêm các mục con khác nếu cần --}}
+                    </ul>
+                </div>
+            </li>
+
+        @endif
         <!-- Bank Accounts -->
         @if ($user->role === 'Landlord')
+                <!-- Quản lý bài viết -->
+            <li class="nav-item">
+                <a class="nav-link menu-link" href="#sidebarPosts" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarPosts">
+                    <i class="mdi mdi-file-document"></i>
+                    <span data-key="t-posts">Quản lý bài viết</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarPosts">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('landlord.posts.approval.index') }}" class="nav-link">Duyệt bài đăng</a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
             <li class="nav-item">
                 <a class="nav-link menu-link" href="#sidebarBank" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarBank">
                     <i class="mdi mdi-bank"></i>
@@ -56,11 +119,19 @@
             </li>
 
             <!-- Complaints -->
-            <li class="nav-item">
-                <a class="nav-link menu-link" href="{{ route('landlord.complaints.index') }}">
+           <li class="nav-item">
+                <a class="nav-link menu-link" href="#sidebarComplaints" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarComplaints">
                     <i class="mdi mdi-alert-circle-outline"></i>
                     <span data-key="t-complaints">Khiếu nại</span>
                 </a>
+                <div class="collapse menu-dropdown" id="sidebarComplaints">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('landlord.complaints.index') }}" class="nav-link">Danh sách khiếu nại</a>
+                        </li>
+                        {{-- Thêm các mục con khác nếu cần --}}
+                    </ul>
+                </div>
             </li>
 
             <!-- Staff Accounts -->
@@ -86,7 +157,7 @@
                 </a>
                 <div class="collapse menu-dropdown" id="bills">
                     <ul class="nav nav-sm flex-column">
-                        <li class="nav-item"><a href="{{ route('landlords.staff.payment.index') }}" class="nav-link">Danh sách hoá đơn</a></li>
+                        <li class="nav-item"><a href="{{ route('landlords.staff.payment.list') }}" class="nav-link">Danh sách hoá đơn</a></li>
                     </ul>
                 </div>
             </li>
