@@ -69,32 +69,31 @@ class ApprovalController extends Controller
         try {
             $parser = new Parser();
             $pdf = $parser->parseFile($fullPath);
-            // $text = $pdf->getText();
-            $text = mb_convert_encoding($pdf->getText(), 'UTF-8', 'auto');
-            // dd($text);
+            $text = $pdf->getText();
         } catch (\Exception $e) {
             $text = '';
         }
         // 4. Lấy thông tin khách thuê
         $fullName = $cccd = $phone = $tenantEmail = null;
+
         // Trích toàn bộ khối từ "BÊN THUÊ PHÒNG TRỌ" đến "Căn cứ pháp lý"
-        if (preg_match('/BÊN THUÊ PHÒNG TR Ọ\s*\(gọi tắt là Bên B\):\s*(.*?)(?:Căn cứ pháp lý|BÊN CHO THUÊ)/siu', $text, $match)) {
+        if (preg_match('/BÊN THUÊ PHÒNG TRỌ \(gọi tắt là Bên B\):\s*(.*?)Căn cứ pháp lý/su', $text, $match)) {
             $infoBlock = $match[1];
+
             // dd($infoBlock);
-            // dd("Đã vào đây");
+
             preg_match('/- Ông\/Bà:\s*(.+)/u', $infoBlock, $nameMatch);
             preg_match('/- CMND\/CCCD số:\s*([0-9]+)/u', $infoBlock, $cccdMatch);
             preg_match('/- SĐT:\s*([0-9]+)/u', $infoBlock, $phoneMatch);
             preg_match('/- Email:\s*([^\s]+)/iu', $infoBlock, $emailMatch);
 
-            $fullName = $nameMatch[1] ?? '';
-            $cccd = $cccdMatch[1] ?? '';
+            $fullName = trim($nameMatch[1] ?? '');
             $phone = $phoneMatch[1] ?? '';
+            $cccd = $cccdMatch[1] ?? '';
             $tenantEmail = $emailMatch[1] ?? '';
-
         }
 
-        // dd($fullName);
+        // dd($text);
 
         // 5. Kiểm tra user tồn tại
         $user = User::where('email', $tenantEmail)->first();
@@ -117,15 +116,18 @@ class ApprovalController extends Controller
 
         // 6. Cập nhật renter_id trong hợp đồng
         $rental->update(['renter_id' => $user->id]);
+        $rental = $rental->fresh();
         // 7. Lưu thông tin vào user_infos
         UserInfo::updateOrCreate(
             ['user_id' => $user->id],
             [
+                'user_id' => $user->id,
                 'full_name' => $fullName ?: $user->name,
                 'cccd' => $cccd,
                 'phone' => $phone,
                 'email' => $tenantEmail,
                 "room_id" => $approval->room_id,
+                'rental_id' => $rental->rental_id,
             ]
         );
         // 8. Xóa bản ghi chờ phê duyệt
@@ -183,10 +185,10 @@ class ApprovalController extends Controller
             $password = Str::random(8);
 
             $user = User::create([
-                'name' => $userInfo->full_name ?: $fullNameFromNote,
-                'email' => $userInfo->email,
+                'name'     => $userInfo->full_name ?: $fullNameFromNote,
+                'email'    => $userInfo->email,
                 'password' => Hash::make($password),
-                'role' => 'Renter', // hoặc dùng constant nếu có
+                'role'     => 'Renter', // hoặc dùng constant nếu có
             ]);
 
             // 🔄 Gán user_id vào user_info
