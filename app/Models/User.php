@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Room;
 use App\Models\Landlord\Property;
+use App\Models\Landlord\RoomLeaveRequest;
 use App\Models\Landlord\BankAccount;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -127,5 +128,9 @@ class User extends Authenticatable
     return $this->belongsToMany(Notification::class, 'notification_user', 'user_id', 'notification_id')
                 ->withPivot(['is_read', 'read_at', 'received_at'])
                 ->withTimestamps();
+}
+public function roomLeaveRequests()
+{
+    return $this->hasMany(RoomLeaveRequest::class, 'user_id');
 }
 };

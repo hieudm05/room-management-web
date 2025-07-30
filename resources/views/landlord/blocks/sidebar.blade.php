@@ -13,8 +13,10 @@ $user = Auth::user();
         <!-- Dashboard -->
         <li class="nav-item">
             <a class="nav-link menu-link" href="{{ route('landlords.dashboard') }}">
-                <i class="mdi mdi-speedometer"></i>
-                <span data-key="t-dashboards">Dashboards</span>
+
+                <i class="mdi mdi-speedometer"></i> <span data-key="t-dashboards">Tổng Quan</span>
+
+               
             </a>
         </li>
 
@@ -23,47 +25,70 @@ $user = Auth::user();
             <a class="nav-link menu-link" href="#sidebarRoom" data-bs-toggle="collapse" role="button"
                aria-expanded="false" aria-controls="sidebarRoom">
                 <i class="mdi mdi-view-grid-plus-outline"></i>
-                <span data-key="t-apps">Room Management</span>
+                <span data-key="t-apps">Quản Lý Phòng</span>
             </a>
             <div class="collapse menu-dropdown" id="sidebarRoom">
                 <ul class="nav nav-sm flex-column">
 
                     @if ($user->role === 'Landlord')
                         <li class="nav-item">
-                            <a href="{{ route('landlords.properties.list') }}" class="nav-link">Properties Management</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.rooms.index') }}" class="nav-link">Rooms Management</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.approvals.index') }}" class="nav-link">Approval</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.approvals.users.index') }}" class="nav-link">Approval User</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.room_edit_requests.index') }}" class="nav-link">
-                                Approve room change request
+
+                            <a href="{{ route('landlords.properties.list') }}" class="nav-link">
+                                Quản Lý Bất Động Sản
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.rooms.index') }}" class="nav-link">
+                                Danh sách Phòng Tổng Quan
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.approvals.index') }}" class="nav-link">
+                                Quản Lý Phê Duyệt Hợp Đồng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.approvals.users.index') }}" class="nav-link">
+                                Quản Lý Phê Duyệt Người Dùng
+        
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.room_edit_requests.index') }}" class="nav-link">
+                                Phê duyệt yêu cầu chỉnh sửa  phòng
+
+                            </a>
+                        </li>
+                         <li class="nav-item">
+                      <a href="{{ route('landlord.roomleave.index') }}" class="nav-link">
+                          Quản lý yêu cầu rời phòng
+                      </a>
+                  </li>
                     @endif
 
                     @if ($user->role === 'Staff')
                         <li class="nav-item">
                             <a href="{{ route('landlords.staff.index') }}" class="nav-link">
-                                Properties Management for Staff
+                                Quản lý bất động sản dành cho nhân viên
                             </a>
                         </li>
                         <li class="nav-item">
+
                             <a href="{{ route('landlord.staff.complaints.index') }}" class="nav-link">
-                                Complaints Staff
+                                Nhân viên tiếp nhận khiếu nại
+
                             </a>
                         </li>
                          <li class="nav-item">
                    <a href="{{ route('landlord.staff.complaints.history') }}" class="nav-link">
-                              Complaint History
+                                Lịch sử khiếu nại
+                      </a>
+                      
+                  </li>
+                  <li class="nav-item">
+                      <a href="{{ route('landlord.staff.roomleave.index') }}" class="nav-link">
+                          Quản lý yêu cầu chỉnh sửa phòng
                       </a>
                   </li>
+                   
                     @endif
 
                 </ul>
@@ -76,18 +101,18 @@ $user = Auth::user();
                 <a class="nav-link menu-link" href="#sidebarBank" data-bs-toggle="collapse" role="button"
                    aria-expanded="false" aria-controls="sidebarBank">
                     <i class="mdi mdi-bank"></i>
-                    <span data-key="t-bank">Bank Accounts</span>
+                    <span data-key="t-bank">Tài khoản ngân hàng</span>
                 </a>
                 <div class="collapse menu-dropdown" id="sidebarBank">
                     <ul class="nav nav-sm flex-column">
                         <li class="nav-item">
                             <a href="{{ route('landlords.bank_accounts.index') }}" class="nav-link">
-                                All Bank Accounts
+                                Tất Cả Tài Khoản Ngân Hàng
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('landlords.bank_accounts.assign') }}" class="nav-link">
-                                Assign Bank Accounts to Properties
+                                Phân công tài khoản ngân hàng cho tài sản
                             </a>
                         </li>
                     </ul>
@@ -98,7 +123,7 @@ $user = Auth::user();
             <li class="nav-item">
                 <a class="nav-link menu-link" href="{{ route('landlord.complaints.index') }}">
                     <i class="mdi mdi-alert-circle-outline"></i>
-                    <span data-key="t-complaints">Complaints</span>
+                    <span data-key="t-complaints">Khiếu nại</span>
                 </a>
             </li>
         @endif
@@ -109,13 +134,13 @@ $user = Auth::user();
                 <a class="nav-link menu-link" href="#sidebarStaff" data-bs-toggle="collapse" role="button"
                    aria-expanded="false" aria-controls="sidebarStaff">
                     <i class="mdi mdi-account-group"></i>
-                    <span data-key="t-staff">Staff Accounts</span>
+                    <span data-key="t-staff">Tài Khoản Nhân Viên</span>
                 </a>
                 <div class="collapse menu-dropdown" id="sidebarStaff">
                     <ul class="nav nav-sm flex-column">
                         <li class="nav-item">
                             <a href="{{ route('landlords.staff_accounts.index') }}" class="nav-link">
-                                All Staff Accounts
+                                Tất cả tài khoản nhân viên
                             </a>
                         </li>
                     </ul>
@@ -135,6 +160,25 @@ $user = Auth::user();
                     <ul class="nav nav-sm flex-column">
                         <li class="nav-item">
                             <a href="{{ route('landlords.staff.payment.index') }}" class="nav-link">
+                                Danh sách hoá đơn
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        @endif
+
+         @if ($user->role === 'Landlord')
+            <li class="nav-item">
+                <a class="nav-link menu-link" href="#billsC" data-bs-toggle="collapse" role="button"
+                   aria-expanded="false" aria-controls="bills">
+                    <i class="mdi mdi-bank"></i>
+                    <span data-key="t-bank">Hoá đơn (chủ)</span>
+                </a>
+                <div class="collapse menu-dropdown" id="billsC">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.bills.index') }}" class="nav-link">
                                 Danh sách hoá đơn
                             </a>
                         </li>

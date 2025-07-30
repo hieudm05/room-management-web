@@ -16,4 +16,9 @@ class RoomUtilityPhoto extends Model
     // {
     //     return $this->belongsTo(RoomUtility::class, 'room_utility_id');
     // }
+    public function roomBill()
+{
+    return $this->belongsTo(RoomBill::class, 'room_bill_id');
 }
+}
+

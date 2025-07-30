@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Landlord\Approval;
 use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Room;
+use App\Models\Landlord\RoomUsers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -70,9 +71,9 @@ class ApprovalUserController extends Controller
 
 
     public function approveUser($id)
-    {
+    {   
         $approval = Approval::findOrFail($id);
-
+        
         if ($approval->type !== 'add_user') {
             return back()->withErrors('❌ Loại yêu cầu không hợp lệ.');
         }
@@ -113,7 +114,21 @@ class ApprovalUserController extends Controller
             $userInfo->update(['user_id' => $user->id]);
             // 🔼 Tăng số người thuê trong phòng
             Room::where('room_id', $approval->room_id)->increment('people_renter');
-
+            $activeRentals = RentalAgreement::where('room_id', $approval->room_id)
+                ->where('status', 'Active')
+                ->first();
+            RoomUsers::create([
+                'room_id' => $approval->room_id,
+                'user_id' => $user->id,
+                'rental_id' =>  $activeRentals->rental_id,
+                'name' => $userInfo->full_name ?: $fullNameFromNote,
+                'email' => $userInfo->email,
+                'phone' => $userInfo->phone,
+                'cccd' => $userInfo->cccd,
+                'started_at' => Carbon::now(),
+                'stopped_at' => null, // Hoặc ngày kết thúc nếu có
+                'is_active' => 1, // Hoặc trạng thái phù hợp
+            ]);
             // 📧 Gửi mail thông báo
             Mail::raw(
                 "🎉 Chào {$userInfo->full_name},\n\nTài khoản của bạn đã được tạo thành công!\n\n📧 Email: {$user->email}\n🔑 Mật khẩu: {$password}\n\nVui lòng đăng nhập và đổi mật khẩu ngay khi có thể.\n\nTrân trọng.",
