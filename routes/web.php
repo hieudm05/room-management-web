@@ -65,15 +65,28 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
 
     Route::get('/register', [AuthLandlordController::class, 'showForm'])->name('register.form');
     Route::post('/register', [AuthLandlordController::class, 'submit'])->name('register.submit');
-    // Duyệt hợp đồng
-    Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
-    Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
-    Route::delete('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
 
     // Duyệt thêm người
     Route::get('/approvals/users', [ApprovalUserController::class, 'index'])->name('approvals.users.index');
-    Route::post('/approvals/users/{id}/approve', [ApprovalUserController::class, 'approveUser'])->name('approvals.users.approve');
-    Route::delete('/approvals/users/{id}/reject', [ApprovalUserController::class, 'reject'])->name('approvals.users.reject');
+
+    Route::post('/approvals/users/{id}/approve', [ApprovalUserController::class, 'approveUser'])
+        ->whereNumber('id')
+        ->name('approvals.users.approve');
+
+    Route::delete('/approvals/users/{id}/reject', [ApprovalUserController::class, 'reject'])
+        ->whereNumber('id')
+        ->name('approvals.users.reject');
+
+    // Duyệt hợp đồng
+    Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
+
+    Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])
+        ->whereNumber('id')
+        ->name('approvals.approve');
+
+    Route::delete('/approvals/{id}/reject', [ApprovalController::class, 'reject'])
+        ->whereNumber('id')
+        ->name('approvals.reject');
 
     // Danh sách tài khoản của staff và thêm staff
     Route::get('staff_accounts', [StaffAccountController::class, 'index'])->name('staff_accounts.index');

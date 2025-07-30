@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Renter;
 use App\Http\Controllers\Controller;
 use App\Models\UserInfo;
 use App\Models\Landlord\Approval;
+use App\Models\Landlord\RentalAgreement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,21 +13,51 @@ class AddUserRequestController extends Controller
 {
     public function create()
     {
-        return view('renter.storeuser');
+        $renter = Auth::user();
+
+        // Lấy thông tin phòng người thuê đang ở
+        $renterInfo = UserInfo::where('user_id', $renter->id)
+            ->with('room.property') // nếu muốn lấy thông tin property luôn
+            ->first();
+
+        if (!$renterInfo || !$renterInfo->room) {
+            return back()->with('error', 'Không tìm thấy phòng trọ của bạn.');
+        }
+
+        $room = $renterInfo->room;
+        $roomId = $room->room_id ?? $room->id;
+
+        // Lấy hợp đồng gần nhất của người thuê với phòng đó
+        $rental = RentalAgreement::where('room_id', $roomId)
+            ->where('renter_id', $renter->id)
+            ->latest()
+            ->first();
+
+        $rentalId = $rental?->rental_id ?? null;
+        // dd($rentalId);
+        return view('renter.storeuser', [
+            'roomId'   => $roomId,
+            'rooms'    => $room,
+            'rental'   => $rental,
+            'rentalId' => $rentalId,
+        ]);
     }
+
+
 
     public function store(Request $request)
     {
         $request->validate([
-            'full_name'  => 'required|array',
-            'cccd'       => 'required|array',
-            'phone'      => 'required|array',
-            'email'      => 'required|array',
+            'rental_id'   => 'required|exists:rental_agreements,rental_id',
+            'full_name'   => 'required|array',
+            'cccd'        => 'required|array',
+            'phone'       => 'required|array',
+            'email'       => 'required|array',
 
-            'full_name.*'  => 'required|string|max:100',
-            'cccd.*'       => 'required|string|max:20|distinct|unique:user_infos,cccd',
-            'phone.*'      => 'required|string|max:20',
-            'email.*'      => 'required|email|distinct|unique:user_infos,email',
+            'full_name.*' => 'required|string|max:100',
+            'cccd.*'      => 'required|string|max:20|distinct|unique:user_infos,cccd',
+            'phone.*'     => 'required|string|max:20',
+            'email.*'     => 'required|email|distinct|unique:user_infos,email',
         ]);
 
         $renter = Auth::user();
@@ -47,20 +78,17 @@ class AddUserRequestController extends Controller
             return back()->with('error', 'Không xác định được chủ trọ.');
         }
 
-        // 🔍 Số người hiện tại đã ở trong phòng (đã có tài khoản user)
+        $rentalId = $request->rental_id;
+
         $currentUsers = UserInfo::where('room_id', $roomId)
             ->whereNotNull('user_id')
             ->count();
 
-        // 🔍 Số người đang chờ duyệt (chưa có user_id)
         $pendingUsers = UserInfo::where('room_id', $roomId)
             ->whereNull('user_id')
             ->count();
 
-        // 🔍 Số người đang gửi trong form
         $newRequestCount = count($request->full_name);
-
-        // 🔍 Tổng số người nếu thêm vào
         $totalAfter = $currentUsers + $pendingUsers + $newRequestCount;
 
         if ($totalAfter > $room->occupants) {
@@ -68,13 +96,11 @@ class AddUserRequestController extends Controller
             return back()->withErrors("❌ Phòng chỉ còn có thể thêm tối đa {$remaining} người.");
         }
 
-        // Lặp qua từng người được gửi từ form
         foreach ($request->full_name as $index => $name) {
-            $cccd = $request->cccd[$index];
+            $cccd  = $request->cccd[$index];
             $phone = $request->phone[$index];
             $email = $request->email[$index];
 
-            // Lưu vào user_infos
             UserInfo::create([
                 'room_id'   => $roomId,
                 'cccd'      => $cccd,
@@ -82,14 +108,16 @@ class AddUserRequestController extends Controller
                 'email'     => $email,
                 'user_id'   => null,
                 'full_name' => $name,
+                'rental_id' => $rentalId,
             ]);
 
-            // Lưu vào approvals
             Approval::create([
                 'room_id'     => $roomId,
                 'landlord_id' => $landlordId,
+                'user_id'     => $renter->id,
+                'rental_id'   => $rentalId,
                 'type'        => 'add_user',
-                'note'        => "Tên: {$name} | Email: {$email}",
+                'note'        => "Tên: {$name} | Email: {$email} | CCCD: {$cccd} | SĐT: {$phone}",
                 'status'      => 'pending',
                 'file_path'   => null,
             ]);
