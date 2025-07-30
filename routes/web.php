@@ -32,6 +32,7 @@ use App\Http\Controllers\Landlord\Staff\StaffRoomEditController;
 use App\Http\Controllers\Renter\AddUserRequestController;
 use App\Http\Controllers\TenantProfileController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\Client\MyRoomController;
 use App\Http\Controllers\Landlord\LandlordBillController;
 use App\Http\Controllers\RoomBillController;
@@ -46,7 +47,8 @@ use App\Http\Controllers\Landlord\landLordNotificationController;
 use App\Http\Controllers\Landlord\Staff\StaffNotificationController;
 
 use App\Http\Controllers\Landlord\Staff\StaffPostController;
-
+use App\Http\Controllers\Landlord\BookingsController;
+use App\Http\Controllers\Landlord\StaffBookingController;
 
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
@@ -150,6 +152,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::prefix('staff')->name('staff.')->group(function () {
         Route::get('/', [StaffRoomController::class, 'index'])->name('index');
         Route::get('/{room}/show', [StaffRoomController::class, 'show'])->name('show');
+
 
         Route::prefix('contract')->name('contract.')->group(function () {
             Route::get('/{room}', [ContractController::class, 'index']);
@@ -375,11 +378,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/mark-all-read', [StaffNotificationController::class, 'markAllAsRead'])->name('markAllRead');
     });
 });
-
+Route::post('/bookings', [BookingController::class, 'store'])->name('bookings');
 Route::middleware(['auth'])->prefix('staff/posts')->name('staff.posts.')->group(function () {
     Route::get('/', [StaffPostController::class, 'index'])->name('index');
     Route::get('/create', [StaffPostController::class, 'create'])->name('create');
     Route::post('/', [StaffPostController::class, 'store'])->name('store');
+
 
     // 🔧 Sửa lại ở đây
     Route::get('/{post}', [StaffPostController::class, 'show'])->name('show');
@@ -399,9 +403,24 @@ Route::prefix('landlords')->middleware(['auth'])->group(function () {
 });
 
 
+Route::prefix('landlord/bookings')->middleware(['auth'])->name('landlord.bookings.')->group(function () {
+    Route::get('/', [BookingsController::class, 'index'])->name('index');
+    Route::post('/{booking}/approve', [BookingsController::class, 'approve'])->name('approve');
+    Route::post('/{booking}/reject', [BookingsController::class, 'reject'])->name('reject');
+});
+
+
+
 
 // Route::get('/db', [PostController::class, 'show'])->name('show');
 // // Route::get('/{post}', [PostController::class, 'show'])->name('show');
 
 
 Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
+Route::get('/staff_booking', [StaffBookingController::class, 'index'])->name('booking.index');
+Route::prefix('staff/bookings')->group(function () {
+    Route::post('{id}/wait', [StaffBookingController::class, 'wait']);
+    Route::post('{id}/done', [StaffBookingController::class, 'done']);
+    Route::post('{id}/no-cancel', [StaffBookingController::class, 'noShow']);
+    Route::post('{id}/done-with-image', [StaffBookingController::class, 'doneWithImage']);
+});
