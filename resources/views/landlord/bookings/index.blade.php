@@ -1,7 +1,6 @@
 @extends('landlord.layouts.app')
 
 @push('styles')
-    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         @media (max-width: 768px) {
@@ -46,9 +45,6 @@
             <i class="bi bi-journal-check me-2"></i>📋 Danh sách đặt phòng
         </h2>
 
-
-
-        {{-- Bảng --}}
         <div class="table-responsive shadow-sm rounded-4 overflow-hidden">
             <table class="table table-bordered table-hover align-middle text-center bg-white">
                 <thead class="table-primary text-dark">
@@ -142,51 +138,15 @@
             </table>
         </div>
     </div>
-
-    {{-- Modal xác nhận --}}
-    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="bi bi-question-circle-fill me-2"></i> Xác nhận</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body fw-semibold" id="confirmMessage">
-                    Bạn chắc chắn muốn thực hiện thao tác này?
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button class="btn btn-danger" id="confirmAction">Xác nhận</button>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
+
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = '{{ csrf_token() }}';
-            let actionType = null;
-            let currentId = null;
 
-            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
-            const confirmBtn = document.getElementById('confirmAction');
-            const confirmMessage = document.getElementById('confirmMessage');
-
-            document.querySelectorAll('.btn-approve, .btn-reject').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    actionType = this.classList.contains('btn-approve') ? 'approve' : 'reject';
-                    currentId = this.dataset.id;
-                    confirmMessage.innerHTML = actionType === 'approve' ?
-                        'Bạn có chắc chắn muốn <strong class="text-success">DUYỆT</strong> đơn này không?' :
-                        'Bạn có chắc chắn muốn <strong class="text-danger">TỪ CHỐI</strong> đơn này không?';
-                    modal.show();
-                });
-            });
-
-            confirmBtn.addEventListener('click', function() {
-                if (!currentId || !actionType) return;
-                fetch(`/landlord/bookings/${currentId}/${actionType}`, {
+            function handleBookingAction(id, action) {
+                fetch(`/landlord/bookings/${id}/${action}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -195,14 +155,27 @@
                         },
                         body: JSON.stringify({})
                     })
-                    .then(res => res.json())
+                    .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            location.reload();
+                            const row = document.getElementById(`booking-row-${id}`);
+                            row.classList.add('table-success');
+                            setTimeout(() => location.reload(), 800);
+                        } else {
+                            alert(data.message || 'Có lỗi xảy ra.');
                         }
                     })
-                    .catch(console.error);
-                modal.hide();
+                    .catch(() => {
+                        alert('Không thể kết nối đến máy chủ.');
+                    });
+            }
+
+            document.querySelectorAll('.btn-approve, .btn-reject').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const action = this.classList.contains('btn-approve') ? 'approve' : 'reject';
+                    handleBookingAction(id, action);
+                });
             });
         });
     </script>
