@@ -35,6 +35,12 @@ $user = Auth::user(); ?>
                                 class="nav-link">Phê duyệt yêu cầu chuyển phòng</a></li>
                         <li class="nav-item"><a href="{{ route('landlord.posts.approval.index') }}"
                                 class="nav-link">Duyệt bài đăng</a></li>
+
+
+                        <li class="nav-item"><a href="{{ route('landlord.bookings.index') }}" class="nav-link">Quản
+                                lí đặt
+                                lịch</a></li>
+
                     @endif
 
                     @if ($user->role === 'Staff')
@@ -46,8 +52,14 @@ $user = Auth::user(); ?>
                         </li>
                         <li class="nav-item"><a href="{{ route('landlord.staff.complaints.history') }}"
                                 class="nav-link">Lịch sử xử lý khiếu nại</a></li>
+
                         <li class="nav-item"><a href="{{ route('staff.contract.renewals.index') }}"
                                 class="nav-link">Tiếp Nhận Tái Ký</a></li>
+
+                        <li class="nav-item"><a href="{{ route('booking.index') }}" class="nav-link">Quản
+                                lý đặt
+                                lịch</a></li>
+
                     @endif
                 </ul>
             </div>
