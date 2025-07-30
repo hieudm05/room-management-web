@@ -52,9 +52,11 @@
 
                             </div>
                         </div>
+                    </div>
+
                     @empty
                         <div class="col-12">
-                            <p class="text-center text-danger">No properties have been listed.</p>
+                            <p class="text-center text-danger">Chưa có phòng nào được tạo.</p>
                         </div>
                     @endforelse
                 </div>

@@ -3,1432 +3,582 @@
 @section('title', 'Dashboard')
 
 @section('content')
- 
-        <div class="col">
-            <div class="h-100">
-                <div class="row mb-3 pb-1">
-                    <div class="col-12">
-                        <div class="d-flex align-items-lg-center flex-lg-row flex-column">
-                            <div class="flex-grow-1">
-                                <h4 class="fs-16 mb-1">Good Morning, Anna!</h4>
-                                <p class="text-muted mb-0">Here's what's happening with your store today.</p>
-                            </div>
-                            <div class="mt-3 mt-lg-0">
-                                <form action="javascript:void(0);">
-                                    <div class="row g-3 mb-0 align-items-center">
-                                        <div class="col-sm-auto">
-                                            <div class="input-group">
-                                                <input type="text"
-                                                    class="form-control border-0 dash-filter-picker shadow"
-                                                    data-provider="flatpickr" data-range-date="true"
-                                                    data-date-format="d M, Y"
-                                                    data-deafult-date="01 Jan 2022 to 31 Jan 2022">
-                                                <div class="input-group-text bg-primary border-primary text-white">
-                                                    <i class="ri-calendar-2-line"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--end col-->
-                                        <div class="col-auto">
-                                            <button type="button" class="btn btn-soft-success shadow-none"><i
-                                                    class="ri-add-circle-line align-middle me-1"></i> Add Product</button>
-                                        </div>
-                                        <!--end col-->
-                                        <div class="col-auto">
-                                            <button type="button"
-                                                class="btn btn-soft-info btn-icon waves-effect waves-light layout-rightside-btn shadow-none"><i
-                                                    class="ri-pulse-line"></i></button>
-                                        </div>
-                                        <!--end col-->
-                                    </div>
-                                    <!--end row-->
-                                </form>
-                            </div>
-                        </div><!-- end card header -->
-                    </div>
-                    <!--end col-->
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold mb-3">Tổng quan bất động sản</h2>
+            <p class="text-muted">Thông kê tổng hợp các tòa nhà bên đang quản lý. Mỗi biểu đồ và thông kê đều có thể lọc theo tháng, quý hoặc so sánh giữa các tòa nhà.</p>
+        </div>
+    </div>
+
+    <!-- Thống kê tổng hợp -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <span>Thống kê tổng hợp</span>
+            <form class="row g-2 align-items-center filter-form" data-target="summary" style="--bs-gutter-x: 0.5rem;">
+                <div class="col-auto">
+                    <input type="month" class="form-control form-control-sm" name="summary_month" value="{{ request('summary_month') }}">
                 </div>
-                <!--end row-->
-
-                <div class="row">
-                    <div class="col-xl-3 col-md-6">
-                        <!-- card -->
-                        <div class="card card-animate">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-grow-1 overflow-hidden">
-                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Total Earnings
-                                        </p>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <h5 class="text-success fs-14 mb-0">
-                                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> +16.24 %
-                                        </h5>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                    <div>
-                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span class="counter-value"
-                                                data-target="559.25">0</span>k </h4>
-                                        <a href="#" class="text-decoration-underline">View net earnings</a>
-                                    </div>
-                                    <div class="avatar-sm flex-shrink-0">
-                                        <span class="avatar-title bg-success rounded fs-3">
-                                            <i class="bx bx-dollar-circle"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div><!-- end card body -->
-                        </div><!-- end card -->
-                    </div><!-- end col -->
-
-                    <div class="col-xl-3 col-md-6">
-                        <!-- card -->
-                        <div class="card card-animate">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-grow-1 overflow-hidden">
-                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Orders</p>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <h5 class="text-danger fs-14 mb-0">
-                                            <i class="ri-arrow-right-down-line fs-13 align-middle"></i> -3.57 %
-                                        </h5>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                    <div>
-                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value"
-                                                data-target="36894">0</span></h4>
-                                        <a href="#" class="text-decoration-underline">View all orders</a>
-                                    </div>
-                                    <div class="avatar-sm flex-shrink-0">
-                                        <span class="avatar-title bg-info rounded fs-3">
-                                            <i class="bx bx-shopping-bag"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div><!-- end card body -->
-                        </div><!-- end card -->
-                    </div><!-- end col -->
-
-                    <div class="col-xl-3 col-md-6">
-                        <!-- card -->
-                        <div class="card card-animate">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-grow-1 overflow-hidden">
-                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Customers</p>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <h5 class="text-success fs-14 mb-0">
-                                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> +29.08 %
-                                        </h5>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                    <div>
-                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value"
-                                                data-target="183.35">0</span>M </h4>
-                                        <a href="#" class="text-decoration-underline">See details</a>
-                                    </div>
-                                    <div class="avatar-sm flex-shrink-0">
-                                        <span class="avatar-title bg-warning rounded fs-3">
-                                            <i class="bx bx-user-circle"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div><!-- end card body -->
-                        </div><!-- end card -->
-                    </div><!-- end col -->
-
-                    <div class="col-xl-3 col-md-6">
-                        <!-- card -->
-                        <div class="card card-animate">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-grow-1 overflow-hidden">
-                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> My Balance</p>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <h5 class="text-muted fs-14 mb-0">
-                                            +0.00 %
-                                        </h5>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                    <div>
-                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span class="counter-value"
-                                                data-target="165.89">0</span>k </h4>
-                                        <a href="#" class="text-decoration-underline">Withdraw money</a>
-                                    </div>
-                                    <div class="avatar-sm flex-shrink-0">
-                                        <span class="avatar-title bg-danger rounded fs-3">
-                                            <i class="bx bx-wallet"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div><!-- end card body -->
-                        </div><!-- end card -->
-                    </div><!-- end col -->
-                </div> <!-- end row-->
-
-                <div class="row">
-                    <div class="col-xl-8">
-                        <div class="card">
-                            <div class="card-header border-0 align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Revenue</h4>
-                                <div>
-                                    <button type="button" class="btn btn-soft-secondary btn-sm shadow-none">
-                                        ALL
-                                    </button>
-                                    <button type="button" class="btn btn-soft-secondary btn-sm shadow-none">
-                                        1M
-                                    </button>
-                                    <button type="button" class="btn btn-soft-secondary btn-sm shadow-none">
-                                        6M
-                                    </button>
-                                    <button type="button" class="btn btn-soft-primary btn-sm shadow-none">
-                                        1Y
-                                    </button>
-                                </div>
-                            </div><!-- end card header -->
-
-                            <div class="card-header p-0 border-0 bg-light-subtle">
-                                <div class="row g-0 text-center">
-                                    <div class="col-6 col-sm-3">
-                                        <div class="p-3 border border-dashed border-start-0">
-                                            <h5 class="mb-1"><span class="counter-value" data-target="7585">0</span>
-                                            </h5>
-                                            <p class="text-muted mb-0">Orders</p>
-                                        </div>
-                                    </div>
-                                    <!--end col-->
-                                    <div class="col-6 col-sm-3">
-                                        <div class="p-3 border border-dashed border-start-0">
-                                            <h5 class="mb-1">$<span class="counter-value" data-target="22.89">0</span>k
-                                            </h5>
-                                            <p class="text-muted mb-0">Earnings</p>
-                                        </div>
-                                    </div>
-                                    <!--end col-->
-                                    <div class="col-6 col-sm-3">
-                                        <div class="p-3 border border-dashed border-start-0">
-                                            <h5 class="mb-1"><span class="counter-value" data-target="367">0</span>
-                                            </h5>
-                                            <p class="text-muted mb-0">Refunds</p>
-                                        </div>
-                                    </div>
-                                    <!--end col-->
-                                    <div class="col-6 col-sm-3">
-                                        <div class="p-3 border border-dashed border-start-0 border-end-0">
-                                            <h5 class="mb-1 text-success"><span class="counter-value"
-                                                    data-target="18.92">0</span>%</h5>
-                                            <p class="text-muted mb-0">Conversation Ratio</p>
-                                        </div>
-                                    </div>
-                                    <!--end col-->
-                                </div>
-                            </div><!-- end card header -->
-
-                            <div class="card-body p-0 pb-2">
-                                <div class="w-100">
-                                    <div id="customer_impression_charts"
-                                        data-colors='["--vz-success", "--vz-primary", "--vz-danger"]' class="apex-charts"
-                                        dir="ltr"></div>
-                                </div>
-                            </div><!-- end card body -->
-                        </div><!-- end card -->
-                    </div><!-- end col -->
-
-                    <div class="col-xl-4">
-                        <!-- card -->
-                        <div class="card card-height-100">
-                            <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Sales by Locations</h4>
-                                <div class="flex-shrink-0">
-                                    <button type="button" class="btn btn-soft-primary btn-sm shadow-none">
-                                        Export Report
-                                    </button>
-                                </div>
-                            </div><!-- end card header -->
-
-                            <!-- card body -->
-                            <div class="card-body">
-
-                                <div id="sales-by-locations" data-colors='["--vz-light", "--vz-success", "--vz-primary"]'
-                                    style="height: 269px" dir="ltr"></div>
-
-                                <div class="px-2 py-2 mt-1">
-                                    <p class="mb-1">Canada <span class="float-end">75%</span></p>
-                                    <div class="progress bg-primary-subtle mt-2" style="height: 6px;">
-                                        <div class="progress-bar progress-bar-striped bg-primary" role="progressbar"
-                                            style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="75">
-                                        </div>
-                                    </div>
-
-                                    <p class="mt-3 mb-1">Greenland <span class="float-end">47%</span>
-                                    </p>
-                                    <div class="progress bg-primary-subtle mt-2" style="height: 6px;">
-                                        <div class="progress-bar progress-bar-striped bg-primary" role="progressbar"
-                                            style="width: 47%" aria-valuenow="47" aria-valuemin="0" aria-valuemax="47">
-                                        </div>
-                                    </div>
-
-                                    <p class="mt-3 mb-1">Russia <span class="float-end">82%</span></p>
-                                    <div class="progress bg-primary-subtle mt-2" style="height: 6px;">
-                                        <div class="progress-bar progress-bar-striped bg-primary" role="progressbar"
-                                            style="width: 82%" aria-valuenow="82" aria-valuemin="0" aria-valuemax="82">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end card body -->
-                        </div>
-                        <!-- end card -->
-                    </div>
-                    <!-- end col -->
+                <div class="col-auto">
+                    <select class="form-select form-select-sm" name="summary_quarter">
+                        <option value="">-- Quý --</option>
+                        <option value="1">Quý 1</option>
+                        <option value="2">Quý 2</option>
+                        <option value="3">Quý 3</option>
+                        <option value="4">Quý 4</option>
+                    </select>
                 </div>
+                <div class="col-auto">
+                    <input type="number" min="2000" max="2100" class="form-control form-control-sm" name="summary_year" value="{{ request('summary_year', now()->format('Y')) }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-light btn-sm">Lọc</button>
+                </div>
+            </form>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-2 mb-3">
+                    <div class="fs-2 fw-bold text-primary summary-total-rooms">{{ $total_rooms }}</div>
+                    <div class="text-muted">Tổng số Phòng</div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="fs-2 fw-bold text-success summary-total-rented">{{ $total_rented }}</div>
+                    <div class="text-muted">Đã thuê</div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="fs-2 fw-bold text-warning summary-total-empty">{{ $total_empty }}</div>
+                    <div class="text-muted">Phòng trống</div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="fs-2 fw-bold summary-total-revenue">{{ number_format($total_revenue) }}</div>
+                    <div class="text-muted">Doanh thu</div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="fs-2 fw-bold summary-total-profit">{{ number_format($total_profit) }}</div>
+                    <div class="text-muted">Lợi nhuận</div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="fs-2 fw-bold text-danger summary-total-complaints">{{ $total_complaints }}</div>
+                    <div class="text-muted">Khiếu nại</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                <div class="row">
-                    <div class="col-xl-6">
-                        <div class="card">
-                            <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Best Selling Products</h4>
-                                <div class="flex-shrink-0">
-                                    <div class="dropdown card-header-dropdown">
-                                        <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
-                                            aria-haspopup="true" aria-expanded="false">
-                                            <span class="fw-semibold text-uppercase fs-12">Sort by:
-                                            </span><span class="text-muted">Today<i
-                                                    class="mdi mdi-chevron-down ms-1"></i></span>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-end">
-                                            <a class="dropdown-item" href="#">Today</a>
-                                            <a class="dropdown-item" href="#">Yesterday</a>
-                                            <a class="dropdown-item" href="#">Last 7 Days</a>
-                                            <a class="dropdown-item" href="#">Last 30 Days</a>
-                                            <a class="dropdown-item" href="#">This Month</a>
-                                            <a class="dropdown-item" href="#">Last Month</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div><!-- end card header -->
+    <!-- So sánh các tòa nhà -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <span>So sánh các tòa nhà</span>
+            <form class="row g-2 align-items-center filter-form" data-target="compare" style="--bs-gutter-x: 0.5rem;">
+                <div class="col-auto">
+                    <select class="form-select form-select-sm" name="compareA">
+                        <option value="">Tòa nhà A</option>
+                        @foreach ($propertyStats as $property)
+                            <option value="{{ $property['name'] }}">{{ $property['name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <select class="form-select form-select-sm" name="compareB">
+                        <option value="">Tòa nhà B</option>
+                        @foreach ($propertyStats as $property)
+                            <option value="{{ $property['name'] }}">{{ $property['name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <input type="month" class="form-control form-control-sm" name="compare_month" value="{{ request('compare_month', now()->format('Y-m')) }}">
+                </div>
+                <div class="col-auto">
+                    <select class="form-select form-select-sm" name="compare_quarter">
+                        <option value="">-- Quý --</option>
+                        <option value="1">Quý 1</option>
+                        <option value="2">Quý 2</option>
+                        <option value="3">Quý 3</option>
+                        <option value="4">Quý 4</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <input type="number" min="2000" max="2100" class="form-control form-control-sm" name="compare_year" value="{{ request('compare_year', now()->format('Y')) }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-light btn-sm">So sánh</button>
+                </div>
+            </form>
+        </div>
+        <div class="card-body">
+            <div id="compare-results"></div>
+        </div>
+    </div>
 
-                            <div class="card-body">
-                                <div class="table-responsive table-card">
-                                    <table class="table table-hover table-centered align-middle table-nowrap mb-0">
-                                        <tbody>
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar-sm bg-light rounded p-1 me-2">
-                                                            <img src="assets/images/products/img-1.png" alt=""
-                                                                class="img-fluid d-block" />
-                                                        </div>
-                                                        <div>
-                                                            <h5 class="fs-14 my-1"><a
-                                                                    href="apps-ecommerce-product-details.html"
-                                                                    class="text-reset">Branded T-Shirts</a></h5>
-                                                            <span class="text-muted">24 Apr 2021</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">$29.00</h5>
-                                                    <span class="text-muted">Price</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">62</h5>
-                                                    <span class="text-muted">Orders</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">510</h5>
-                                                    <span class="text-muted">Stock</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">$1,798</h5>
-                                                    <span class="text-muted">Amount</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar-sm bg-light rounded p-1 me-2">
-                                                            <img src="assets/images/products/img-2.png" alt=""
-                                                                class="img-fluid d-block" />
-                                                        </div>
-                                                        <div>
-                                                            <h5 class="fs-14 my-1"><a
-                                                                    href="apps-ecommerce-product-details.html"
-                                                                    class="text-reset">Bentwood Chair</a></h5>
-                                                            <span class="text-muted">19 Mar 2021</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">$85.20</h5>
-                                                    <span class="text-muted">Price</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">35</h5>
-                                                    <span class="text-muted">Orders</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal"><span
-                                                            class="badge bg-danger-subtle text-danger">Out of stock</span>
-                                                    </h5>
-                                                    <span class="text-muted">Stock</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">$2982</h5>
-                                                    <span class="text-muted">Amount</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar-sm bg-light rounded p-1 me-2">
-                                                            <img src="assets/images/products/img-3.png" alt=""
-                                                                class="img-fluid d-block" />
-                                                        </div>
-                                                        <div>
-                                                            <h5 class="fs-14 my-1"><a
-                                                                    href="apps-ecommerce-product-details.html"
-                                                                    class="text-reset">Borosil Paper Cup</a></h5>
-                                                            <span class="text-muted">01 Mar 2021</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">$14.00</h5>
-                                                    <span class="text-muted">Price</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">80</h5>
-                                                    <span class="text-muted">Orders</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">749</h5>
-                                                    <span class="text-muted">Stock</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">$1120</h5>
-                                                    <span class="text-muted">Amount</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar-sm bg-light rounded p-1 me-2">
-                                                            <img src="assets/images/products/img-4.png" alt=""
-                                                                class="img-fluid d-block" />
-                                                        </div>
-                                                        <div>
-                                                            <h5 class="fs-14 my-1"><a
-                                                                    href="apps-ecommerce-product-details.html"
-                                                                    class="text-reset">One Seater Sofa</a></h5>
-                                                            <span class="text-muted">11 Feb 2021</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">$127.50</h5>
-                                                    <span class="text-muted">Price</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">56</h5>
-                                                    <span class="text-muted">Orders</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal"><span
-                                                            class="badge bg-danger-subtle text-danger">Out of stock</span>
-                                                    </h5>
-                                                    <span class="text-muted">Stock</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">$7140</h5>
-                                                    <span class="text-muted">Amount</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar-sm bg-light rounded p-1 me-2">
-                                                            <img src="assets/images/products/img-5.png" alt=""
-                                                                class="img-fluid d-block" />
-                                                        </div>
-                                                        <div>
-                                                            <h5 class="fs-14 my-1"><a
-                                                                    href="apps-ecommerce-product-details.html"
-                                                                    class="text-reset">Stillbird Helmet</a></h5>
-                                                            <span class="text-muted">17 Jan 2021</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">$54</h5>
-                                                    <span class="text-muted">Price</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">74</h5>
-                                                    <span class="text-muted">Orders</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">805</h5>
-                                                    <span class="text-muted">Stock</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 my-1 fw-normal">$3996</h5>
-                                                    <span class="text-muted">Amount</span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+    <!-- Biểu đồ doanh thu & lợi nhuận -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white text-center">
+            <span>Biểu đồ doanh thu & lợi nhuận các tòa nhà</span>
+        </div>
+        <div class="card-body">
+            <form class="row g-2 align-items-center filter-form" data-target="revenue-chart" style="--bs-gutter-x: 0.5rem;">
+                <div class="col-auto">
+                    <input type="month" class="form-control form-control-sm" name="revenue_chart_month" value="{{ request('revenue_chart_month', now()->format('Y-m')) }}">
+                </div>
+                <div class="col-auto">
+                    <select class="form-select form-select-sm" name="revenue_chart_quarter">
+                        <option value="">-- Quý --</option>
+                        <option value="1">Quý 1</option>
+                        <option value="2">Quý 2</option>
+                        <option value="3">Quý 3</option>
+                        <option value="4">Quý 4</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <input type="number" min="2000" max="2100" class="form-control form-control-sm" name="revenue_chart_year" value="{{ request('revenue_chart_year', now()->format('Y')) }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-light btn-sm">Lọc</button>
+                </div>
+            </form>
+            <canvas id="incomeExpenseChart"></canvas>
+        </div>
+    </div>
 
-                                <div
-                                    class="align-items-center mt-4 pt-2 justify-content-between row text-center text-sm-start">
-                                    <div class="col-sm">
-                                        <div class="text-muted">
-                                            Showing <span class="fw-semibold">5</span> of <span
-                                                class="fw-semibold">25</span> Results
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-auto  mt-3 mt-sm-0">
-                                        <ul
-                                            class="pagination pagination-separated pagination-sm mb-0 justify-content-center">
-                                            <li class="page-item disabled">
-                                                <a href="#" class="page-link">←</a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a href="#" class="page-link">1</a>
-                                            </li>
-                                            <li class="page-item active">
-                                                <a href="#" class="page-link">2</a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a href="#" class="page-link">3</a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a href="#" class="page-link">→</a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
+   
 
-                            </div>
-                        </div>
+   <!-- Biểu đồ tổng quan phòng + Biểu đồ khiếu nại (cùng một dòng) -->
+<div class="row g-3">
+    <!-- Biểu đồ tổng quan phòng (Pie Chart) -->
+    <div class="col-12 col-lg-6">
+        <div class="card mb-4 shadow-sm h-100">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <span>Biểu đồ tổng quan phòng</span>
+                <form class="row g-2 align-items-center filter-form" data-target="room-overview-chart" style="--bs-gutter-x: 0.5rem;">
+                    <div class="col-auto">
+                        <input type="month" class="form-control form-control-sm" name="room_overview_month" value="{{ request('room_overview_month') }}">
                     </div>
-
-                    <div class="col-xl-6">
-                        <div class="card card-height-100">
-                            <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Top Sellers</h4>
-                                <div class="flex-shrink-0">
-                                    <div class="dropdown card-header-dropdown">
-                                        <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
-                                            aria-haspopup="true" aria-expanded="false">
-                                            <span class="text-muted">Report<i
-                                                    class="mdi mdi-chevron-down ms-1"></i></span>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-end">
-                                            <a class="dropdown-item" href="#">Download Report</a>
-                                            <a class="dropdown-item" href="#">Export</a>
-                                            <a class="dropdown-item" href="#">Import</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div><!-- end card header -->
-
-                            <div class="card-body">
-                                <div class="table-responsive table-card">
-                                    <table class="table table-centered table-hover align-middle table-nowrap mb-0">
-                                        <tbody>
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="flex-shrink-0 me-2">
-                                                            <img src="assets/images/companies/img-1.png" alt=""
-                                                                class="avatar-sm p-2" />
-                                                        </div>
-                                                        <div>
-                                                            <h5 class="fs-14 my-1 fw-medium">
-                                                                <a href="apps-ecommerce-seller-details.html"
-                                                                    class="text-reset">iTest Factory</a>
-                                                            </h5>
-                                                            <span class="text-muted">Oliver Tyler</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="text-muted">Bags and Wallets</span>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0">8547</p>
-                                                    <span class="text-muted">Stock</span>
-                                                </td>
-                                                <td>
-                                                    <span class="text-muted">$541200</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 mb-0">32%<i
-                                                            class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                                                    </h5>
-                                                </td>
-                                            </tr><!-- end -->
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="flex-shrink-0 me-2">
-                                                            <img src="assets/images/companies/img-2.png" alt=""
-                                                                class="avatar-sm p-2" />
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <h5 class="fs-14 my-1 fw-medium"><a
-                                                                    href="apps-ecommerce-seller-details.html"
-                                                                    class="text-reset">Digitech Galaxy</a></h5>
-                                                            <span class="text-muted">John Roberts</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="text-muted">Watches</span>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0">895</p>
-                                                    <span class="text-muted">Stock</span>
-                                                </td>
-                                                <td>
-                                                    <span class="text-muted">$75030</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 mb-0">79%<i
-                                                            class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                                                    </h5>
-                                                </td>
-                                            </tr><!-- end -->
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="flex-shrink-0 me-2">
-                                                            <img src="assets/images/companies/img-3.png" alt=""
-                                                                class="avatar-sm p-2" />
-                                                        </div>
-                                                        <div class="flex-gow-1">
-                                                            <h5 class="fs-14 my-1 fw-medium"><a
-                                                                    href="apps-ecommerce-seller-details.html"
-                                                                    class="text-reset">Nesta Technologies</a></h5>
-                                                            <span class="text-muted">Harley Fuller</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="text-muted">Bike Accessories</span>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0">3470</p>
-                                                    <span class="text-muted">Stock</span>
-                                                </td>
-                                                <td>
-                                                    <span class="text-muted">$45600</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 mb-0">90%<i
-                                                            class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                                                    </h5>
-                                                </td>
-                                            </tr><!-- end -->
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="flex-shrink-0 me-2">
-                                                            <img src="assets/images/companies/img-8.png" alt=""
-                                                                class="avatar-sm p-2" />
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <h5 class="fs-14 my-1 fw-medium"><a
-                                                                    href="apps-ecommerce-seller-details.html"
-                                                                    class="text-reset">Zoetic Fashion</a></h5>
-                                                            <span class="text-muted">James Bowen</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="text-muted">Clothes</span>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0">5488</p>
-                                                    <span class="text-muted">Stock</span>
-                                                </td>
-                                                <td>
-                                                    <span class="text-muted">$29456</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 mb-0">40%<i
-                                                            class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                                                    </h5>
-                                                </td>
-                                            </tr><!-- end -->
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="flex-shrink-0 me-2">
-                                                            <img src="assets/images/companies/img-5.png" alt=""
-                                                                class="avatar-sm p-2" />
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <h5 class="fs-14 my-1 fw-medium">
-                                                                <a href="apps-ecommerce-seller-details.html"
-                                                                    class="text-reset">Meta4Systems</a>
-                                                            </h5>
-                                                            <span class="text-muted">Zoe Dennis</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="text-muted">Furniture</span>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0">4100</p>
-                                                    <span class="text-muted">Stock</span>
-                                                </td>
-                                                <td>
-                                                    <span class="text-muted">$11260</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 mb-0">57%<i
-                                                            class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                                                    </h5>
-                                                </td>
-                                            </tr><!-- end -->
-                                        </tbody>
-                                    </table><!-- end table -->
-                                </div>
-
-                                <div
-                                    class="align-items-center mt-4 pt-2 justify-content-between row text-center text-sm-start">
-                                    <div class="col-sm">
-                                        <div class="text-muted">
-                                            Showing <span class="fw-semibold">5</span> of <span
-                                                class="fw-semibold">25</span> Results
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-auto  mt-3 mt-sm-0">
-                                        <ul
-                                            class="pagination pagination-separated pagination-sm mb-0 justify-content-center">
-                                            <li class="page-item disabled">
-                                                <a href="#" class="page-link">←</a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a href="#" class="page-link">1</a>
-                                            </li>
-                                            <li class="page-item active">
-                                                <a href="#" class="page-link">2</a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a href="#" class="page-link">3</a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a href="#" class="page-link">→</a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                            </div> <!-- .card-body-->
-                        </div> <!-- .card-->
-                    </div> <!-- .col-->
-                </div> <!-- end row-->
-
-                <div class="row">
-                    <div class="col-xl-4">
-                        <div class="card card-height-100">
-                            <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Store Visits by Source</h4>
-                                <div class="flex-shrink-0">
-                                    <div class="dropdown card-header-dropdown">
-                                        <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
-                                            aria-haspopup="true" aria-expanded="false">
-                                            <span class="text-muted">Report<i
-                                                    class="mdi mdi-chevron-down ms-1"></i></span>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-end">
-                                            <a class="dropdown-item" href="#">Download Report</a>
-                                            <a class="dropdown-item" href="#">Export</a>
-                                            <a class="dropdown-item" href="#">Import</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div><!-- end card header -->
-
-                            <div class="card-body">
-                                <div id="store-visits-source"
-                                    data-colors='["--vz-primary", "--vz-success", "--vz-warning", "--vz-danger", "--vz-info"]'
-                                    class="apex-charts" dir="ltr"></div>
-                            </div>
-                        </div> <!-- .card-->
-                    </div> <!-- .col-->
-
-                    <div class="col-xl-8">
-                        <div class="card">
-                            <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Recent Orders</h4>
-                                <div class="flex-shrink-0">
-                                    <button type="button" class="btn btn-soft-info btn-sm shadow-none">
-                                        <i class="ri-file-list-3-line align-middle"></i> Generate Report
-                                    </button>
-                                </div>
-                            </div><!-- end card header -->
-
-                            <div class="card-body">
-                                <div class="table-responsive table-card">
-                                    <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
-                                        <thead class="text-muted table-light">
-                                            <tr>
-                                                <th scope="col">Order ID</th>
-                                                <th scope="col">Customer</th>
-                                                <th scope="col">Product</th>
-                                                <th scope="col">Amount</th>
-                                                <th scope="col">Vendor</th>
-                                                <th scope="col">Status</th>
-                                                <th scope="col">Rating</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>
-                                                    <a href="apps-ecommerce-order-details.html"
-                                                        class="fw-medium link-primary">#VZ2112</a>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="flex-shrink-0 me-2">
-                                                            <img src="assets/images/users/avatar-1.jpg" alt=""
-                                                                class="avatar-xs rounded-circle shadow" />
-                                                        </div>
-                                                        <div class="flex-grow-1">Alex Smith</div>
-                                                    </div>
-                                                </td>
-                                                <td>Clothes</td>
-                                                <td>
-                                                    <span class="text-success">$109.00</span>
-                                                </td>
-                                                <td>Zoetic Fashion</td>
-                                                <td>
-                                                    <span class="badge bg-success-subtle text-success">Paid</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 fw-medium mb-0">5.0<span
-                                                            class="text-muted fs-11 ms-1">(61 votes)</span></h5>
-                                                </td>
-                                            </tr><!-- end tr -->
-                                            <tr>
-                                                <td>
-                                                    <a href="apps-ecommerce-order-details.html"
-                                                        class="fw-medium link-primary">#VZ2111</a>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="flex-shrink-0 me-2">
-                                                            <img src="assets/images/users/avatar-2.jpg" alt=""
-                                                                class="avatar-xs rounded-circle shadow" />
-                                                        </div>
-                                                        <div class="flex-grow-1">Jansh Brown</div>
-                                                    </div>
-                                                </td>
-                                                <td>Kitchen Storage</td>
-                                                <td>
-                                                    <span class="text-success">$149.00</span>
-                                                </td>
-                                                <td>Micro Design</td>
-                                                <td>
-                                                    <span class="badge bg-warning-subtle text-warning">Pending</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 fw-medium mb-0">4.5<span
-                                                            class="text-muted fs-11 ms-1">(61 votes)</span></h5>
-                                                </td>
-                                            </tr><!-- end tr -->
-                                            <tr>
-                                                <td>
-                                                    <a href="apps-ecommerce-order-details.html"
-                                                        class="fw-medium link-primary">#VZ2109</a>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="flex-shrink-0 me-2">
-                                                            <img src="assets/images/users/avatar-3.jpg" alt=""
-                                                                class="avatar-xs rounded-circle shadow" />
-                                                        </div>
-                                                        <div class="flex-grow-1">Ayaan Bowen</div>
-                                                    </div>
-                                                </td>
-                                                <td>Bike Accessories</td>
-                                                <td>
-                                                    <span class="text-success">$215.00</span>
-                                                </td>
-                                                <td>Nesta Technologies</td>
-                                                <td>
-                                                    <span class="badge bg-success-subtle text-success">Paid</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 fw-medium mb-0">4.9<span
-                                                            class="text-muted fs-11 ms-1">(89 votes)</span></h5>
-                                                </td>
-                                            </tr><!-- end tr -->
-                                            <tr>
-                                                <td>
-                                                    <a href="apps-ecommerce-order-details.html"
-                                                        class="fw-medium link-primary">#VZ2108</a>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="flex-shrink-0 me-2">
-                                                            <img src="assets/images/users/avatar-4.jpg" alt=""
-                                                                class="avatar-xs rounded-circle shadow" />
-                                                        </div>
-                                                        <div class="flex-grow-1">Prezy Mark</div>
-                                                    </div>
-                                                </td>
-                                                <td>Furniture</td>
-                                                <td>
-                                                    <span class="text-success">$199.00</span>
-                                                </td>
-                                                <td>Syntyce Solutions</td>
-                                                <td>
-                                                    <span class="badge bg-danger-subtle text-danger">Unpaid</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 fw-medium mb-0">4.3<span
-                                                            class="text-muted fs-11 ms-1">(47 votes)</span></h5>
-                                                </td>
-                                            </tr><!-- end tr -->
-                                            <tr>
-                                                <td>
-                                                    <a href="apps-ecommerce-order-details.html"
-                                                        class="fw-medium link-primary">#VZ2107</a>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="flex-shrink-0 me-2">
-                                                            <img src="assets/images/users/avatar-6.jpg" alt=""
-                                                                class="avatar-xs rounded-circle shadow" />
-                                                        </div>
-                                                        <div class="flex-grow-1">Vihan Hudda</div>
-                                                    </div>
-                                                </td>
-                                                <td>Bags and Wallets</td>
-                                                <td>
-                                                    <span class="text-success">$330.00</span>
-                                                </td>
-                                                <td>iTest Factory</td>
-                                                <td>
-                                                    <span class="badge bg-success-subtle text-success">Paid</span>
-                                                </td>
-                                                <td>
-                                                    <h5 class="fs-14 fw-medium mb-0">4.7<span
-                                                            class="text-muted fs-11 ms-1">(161 votes)</span></h5>
-                                                </td>
-                                            </tr><!-- end tr -->
-                                        </tbody><!-- end tbody -->
-                                    </table><!-- end table -->
-                                </div>
-                            </div>
-                        </div> <!-- .card-->
-                    </div> <!-- .col-->
-                </div> <!-- end row-->
-
-            </div> <!-- end .h-100-->
-
-        </div> <!-- end col -->
-
-        <div class="col-auto layout-rightside-col">
-            <div class="overlay"></div>
-            <div class="layout-rightside">
-                <div class="card h-100 rounded-0">
-                    <div class="card-body p-0">
-                        <div class="p-3">
-                            <h6 class="text-muted mb-0 text-uppercase fw-semibold">Recent Activity</h6>
-                        </div>
-                        <div data-simplebar style="max-height: 410px;" class="p-3 pt-0">
-                            <div class="acitivity-timeline acitivity-main">
-                                <div class="acitivity-item d-flex">
-                                    <div class="flex-shrink-0 avatar-xs acitivity-avatar">
-                                        <div class="avatar-title bg-success-subtle text-success rounded-circle shadow">
-                                            <i class="ri-shopping-cart-2-line"></i>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6 class="mb-1 lh-base">Purchase by James Price</h6>
-                                        <p class="text-muted mb-1">Product noise evolve smartwatch </p>
-                                        <small class="mb-0 text-muted">02:14 PM Today</small>
-                                    </div>
-                                </div>
-                                <div class="acitivity-item py-3 d-flex">
-                                    <div class="flex-shrink-0 avatar-xs acitivity-avatar">
-                                        <div class="avatar-title bg-danger-subtle text-danger rounded-circle shadow">
-                                            <i class="ri-stack-fill"></i>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6 class="mb-1 lh-base">Added new <span class="fw-semibold">style
-                                                collection</span></h6>
-                                        <p class="text-muted mb-1">By Nesta Technologies</p>
-                                        <div class="d-inline-flex gap-2 border border-dashed p-2 mb-2">
-                                            <a href="apps-ecommerce-product-details.html" class="bg-light rounded p-1">
-                                                <img src="assets/images/products/img-8.png" alt=""
-                                                    class="img-fluid d-block" />
-                                            </a>
-                                            <a href="apps-ecommerce-product-details.html" class="bg-light rounded p-1">
-                                                <img src="assets/images/products/img-2.png" alt=""
-                                                    class="img-fluid d-block" />
-                                            </a>
-                                            <a href="apps-ecommerce-product-details.html" class="bg-light rounded p-1">
-                                                <img src="assets/images/products/img-10.png" alt=""
-                                                    class="img-fluid d-block" />
-                                            </a>
-                                        </div>
-                                        <p class="mb-0 text-muted"><small>9:47 PM Yesterday</small></p>
-                                    </div>
-                                </div>
-                                <div class="acitivity-item py-3 d-flex">
-                                    <div class="flex-shrink-0">
-                                        <img src="assets/images/users/avatar-2.jpg" alt=""
-                                            class="avatar-xs rounded-circle acitivity-avatar shadow">
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6 class="mb-1 lh-base">Natasha Carey have liked the products</h6>
-                                        <p class="text-muted mb-1">Allow users to like products in your WooCommerce store.
-                                        </p>
-                                        <small class="mb-0 text-muted">25 Dec, 2021</small>
-                                    </div>
-                                </div>
-                                <div class="acitivity-item py-3 d-flex">
-                                    <div class="flex-shrink-0">
-                                        <div class="avatar-xs acitivity-avatar">
-                                            <div class="avatar-title rounded-circle bg-secondary shadow">
-                                                <i class="mdi mdi-sale fs-14"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6 class="mb-1 lh-base">Today offers by <a
-                                                href="apps-ecommerce-seller-details.html" class="link-secondary">Digitech
-                                                Galaxy</a></h6>
-                                        <p class="text-muted mb-2">Offer is valid on orders of Rs.500 Or above for selected
-                                            products only.</p>
-                                        <small class="mb-0 text-muted">12 Dec, 2021</small>
-                                    </div>
-                                </div>
-                                <div class="acitivity-item py-3 d-flex">
-                                    <div class="flex-shrink-0">
-                                        <div class="avatar-xs acitivity-avatar">
-                                            <div class="avatar-title rounded-circle bg-danger-subtle text-danger shadow">
-                                                <i class="ri-bookmark-fill"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6 class="mb-1 lh-base">Favorite Product</h6>
-                                        <p class="text-muted mb-2">Esther James have Favorite product.</p>
-                                        <small class="mb-0 text-muted">25 Nov, 2021</small>
-                                    </div>
-                                </div>
-                                <div class="acitivity-item py-3 d-flex">
-                                    <div class="flex-shrink-0">
-                                        <div class="avatar-xs acitivity-avatar">
-                                            <div class="avatar-title rounded-circle bg-secondary shadow">
-                                                <i class="mdi mdi-sale fs-14"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6 class="mb-1 lh-base">Flash sale starting <span
-                                                class="text-primary">Tomorrow.</span></h6>
-                                        <p class="text-muted mb-0">Flash sale by <a href="javascript:void(0);"
-                                                class="link-secondary fw-medium">Zoetic Fashion</a></p>
-                                        <small class="mb-0 text-muted">22 Oct, 2021</small>
-                                    </div>
-                                </div>
-                                <div class="acitivity-item py-3 d-flex">
-                                    <div class="flex-shrink-0">
-                                        <div class="avatar-xs acitivity-avatar">
-                                            <div class="avatar-title rounded-circle bg-info-subtle text-info shadow">
-                                                <i class="ri-line-chart-line"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6 class="mb-1 lh-base">Monthly sales report</h6>
-                                        <p class="text-muted mb-2"><span class="text-danger">2 days left</span>
-                                            notification to submit the monthly sales report. <a href="javascript:void(0);"
-                                                class="link-warning text-decoration-underline">Reports Builder</a></p>
-                                        <small class="mb-0 text-muted">15 Oct</small>
-                                    </div>
-                                </div>
-                                <div class="acitivity-item d-flex">
-                                    <div class="flex-shrink-0">
-                                        <img src="assets/images/users/avatar-3.jpg" alt=""
-                                            class="avatar-xs rounded-circle acitivity-avatar shadow" />
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6 class="mb-1 lh-base">Frank Hook Commented</h6>
-                                        <p class="text-muted mb-2 fst-italic">" A product that has reviews is more likable
-                                            to be sold than a product. "</p>
-                                        <small class="mb-0 text-muted">26 Aug, 2021</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="p-3 mt-2">
-                            <h6 class="text-muted mb-3 text-uppercase fw-semibold">Top 10 Categories
-                            </h6>
-
-                            <ol class="ps-3 text-muted">
-                                <li class="py-1">
-                                    <a href="#" class="text-muted">Mobile & Accessories <span
-                                            class="float-end">(10,294)</span></a>
-                                </li>
-                                <li class="py-1">
-                                    <a href="#" class="text-muted">Desktop <span
-                                            class="float-end">(6,256)</span></a>
-                                </li>
-                                <li class="py-1">
-                                    <a href="#" class="text-muted">Electronics <span
-                                            class="float-end">(3,479)</span></a>
-                                </li>
-                                <li class="py-1">
-                                    <a href="#" class="text-muted">Home & Furniture <span
-                                            class="float-end">(2,275)</span></a>
-                                </li>
-                                <li class="py-1">
-                                    <a href="#" class="text-muted">Grocery <span
-                                            class="float-end">(1,950)</span></a>
-                                </li>
-                                <li class="py-1">
-                                    <a href="#" class="text-muted">Fashion <span
-                                            class="float-end">(1,582)</span></a>
-                                </li>
-                                <li class="py-1">
-                                    <a href="#" class="text-muted">Appliances <span
-                                            class="float-end">(1,037)</span></a>
-                                </li>
-                                <li class="py-1">
-                                    <a href="#" class="text-muted">Beauty, Toys & More <span
-                                            class="float-end">(924)</span></a>
-                                </li>
-                                <li class="py-1">
-                                    <a href="#" class="text-muted">Food & Drinks <span
-                                            class="float-end">(701)</span></a>
-                                </li>
-                                <li class="py-1">
-                                    <a href="#" class="text-muted">Toys & Games <span
-                                            class="float-end">(239)</span></a>
-                                </li>
-                            </ol>
-                            <div class="mt-3 text-center">
-                                <a href="javascript:void(0);" class="text-muted text-decoration-underline">View all
-                                    Categories</a>
-                            </div>
-                        </div>
-                        <div class="p-3">
-                            <h6 class="text-muted mb-3 text-uppercase fw-semibold">Products Reviews</h6>
-                            <!-- Swiper -->
-                            <div class="swiper vertical-swiper" style="height: 250px;">
-                                <div class="swiper-wrapper">
-                                    <div class="swiper-slide">
-                                        <div class="card border border-dashed shadow-none">
-                                            <div class="card-body">
-                                                <div class="d-flex">
-                                                    <div class="flex-shrink-0 avatar-sm">
-                                                        <div class="avatar-title bg-light rounded shadow">
-                                                            <img src="assets/images/companies/img-1.png" alt=""
-                                                                height="30">
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <div>
-                                                            <p class="text-muted mb-1 fst-italic text-truncate-two-lines">
-                                                                " Great product and looks great, lots of features. "</p>
-                                                            <div class="fs-11 align-middle text-warning">
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-fill"></i>
-                                                            </div>
-                                                        </div>
-                                                        <div class="text-end mb-0 text-muted">
-                                                            - by <cite title="Source Title">Force Medicines</cite>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="card border border-dashed shadow-none">
-                                            <div class="card-body">
-                                                <div class="d-flex">
-                                                    <div class="flex-shrink-0">
-                                                        <img src="assets/images/users/avatar-3.jpg" alt=""
-                                                            class="avatar-sm rounded shadow">
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <div>
-                                                            <p class="text-muted mb-1 fst-italic text-truncate-two-lines">
-                                                                " Amazing template, very easy to understand and manipulate.
-                                                                "</p>
-                                                            <div class="fs-11 align-middle text-warning">
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-half-fill"></i>
-                                                            </div>
-                                                        </div>
-                                                        <div class="text-end mb-0 text-muted">
-                                                            - by <cite title="Source Title">Henry Baird</cite>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="card border border-dashed shadow-none">
-                                            <div class="card-body">
-                                                <div class="d-flex">
-                                                    <div class="flex-shrink-0 avatar-sm">
-                                                        <div class="avatar-title bg-light rounded shadow">
-                                                            <img src="assets/images/companies/img-8.png" alt=""
-                                                                height="30">
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <div>
-                                                            <p class="text-muted mb-1 fst-italic text-truncate-two-lines">
-                                                                "Very beautiful product and Very helpful customer service."
-                                                            </p>
-                                                            <div class="fs-11 align-middle text-warning">
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-line"></i>
-                                                                <i class="ri-star-line"></i>
-                                                            </div>
-                                                        </div>
-                                                        <div class="text-end mb-0 text-muted">
-                                                            - by <cite title="Source Title">Zoetic Fashion</cite>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="card border border-dashed shadow-none">
-                                            <div class="card-body">
-                                                <div class="d-flex">
-                                                    <div class="flex-shrink-0">
-                                                        <img src="assets/images/users/avatar-2.jpg" alt=""
-                                                            class="avatar-sm rounded shadow">
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <div>
-                                                            <p class="text-muted mb-1 fst-italic text-truncate-two-lines">"
-                                                                The product is very beautiful. I like it. "</p>
-                                                            <div class="fs-11 align-middle text-warning">
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-fill"></i>
-                                                                <i class="ri-star-half-fill"></i>
-                                                                <i class="ri-star-line"></i>
-                                                            </div>
-                                                        </div>
-                                                        <div class="text-end mb-0 text-muted">
-                                                            - by <cite title="Source Title">Nancy Martino</cite>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="p-3">
-                            <h6 class="text-muted mb-3 text-uppercase fw-semibold">Customer Reviews</h6>
-                            <div class="bg-light px-3 py-2 rounded-2 mb-2">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-grow-1">
-                                        <div class="fs-16 align-middle text-warning">
-                                            <i class="ri-star-fill"></i>
-                                            <i class="ri-star-fill"></i>
-                                            <i class="ri-star-fill"></i>
-                                            <i class="ri-star-fill"></i>
-                                            <i class="ri-star-half-fill"></i>
-                                        </div>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <h6 class="mb-0">4.5 out of 5</h6>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-muted">Total <span class="fw-medium">5.50k</span> reviews</div>
-                            </div>
-
-                            <div class="mt-3">
-                                <div class="row align-items-center g-2">
-                                    <div class="col-auto">
-                                        <div class="p-1">
-                                            <h6 class="mb-0">5 star</h6>
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="p-1">
-                                            <div class="progress bg-success-subtle animated-progress progress-sm">
-                                                <div class="progress-bar bg-success" role="progressbar"
-                                                    style="width: 50.16%" aria-valuenow="50.16" aria-valuemin="0"
-                                                    aria-valuemax="100"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="p-1">
-                                            <h6 class="mb-0 text-muted">2758</h6>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- end row -->
-
-                                <div class="row align-items-center g-2">
-                                    <div class="col-auto">
-                                        <div class="p-1">
-                                            <h6 class="mb-0">4 star</h6>
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="p-1">
-                                            <div class="progress bg-success-subtle animated-progress progress-sm">
-                                                <div class="progress-bar bg-success" role="progressbar"
-                                                    style="width: 29.32%" aria-valuenow="29.32" aria-valuemin="0"
-                                                    aria-valuemax="100"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="p-1">
-                                            <h6 class="mb-0 text-muted">1063</h6>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- end row -->
-
-                                <div class="row align-items-center g-2">
-                                    <div class="col-auto">
-                                        <div class="p-1">
-                                            <h6 class="mb-0">3 star</h6>
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="p-1">
-                                            <div class="progress bg-warning-subtle animated-progress progress-sm">
-                                                <div class="progress-bar bg-warning" role="progressbar"
-                                                    style="width: 18.12%" aria-valuenow="18.12" aria-valuemin="0"
-                                                    aria-valuemax="100"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="p-1">
-                                            <h6 class="mb-0 text-muted">997</h6>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- end row -->
-
-                                <div class="row align-items-center g-2">
-                                    <div class="col-auto">
-                                        <div class="p-1">
-                                            <h6 class="mb-0">2 star</h6>
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="p-1">
-                                            <div class="progress bg-success-subtle animated-progress progress-sm">
-                                                <div class="progress-bar bg-success" role="progressbar"
-                                                    style="width: 4.98%" aria-valuenow="4.98" aria-valuemin="0"
-                                                    aria-valuemax="100"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-auto">
-                                        <div class="p-1">
-                                            <h6 class="mb-0 text-muted">227</h6>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- end row -->
-
-                                <div class="row align-items-center g-2">
-                                    <div class="col-auto">
-                                        <div class="p-1">
-                                            <h6 class="mb-0">1 star</h6>
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="p-1">
-                                            <div class="progress bg-danger-subtle animated-progress progress-sm">
-                                                <div class="progress-bar bg-danger" role="progressbar"
-                                                    style="width: 7.42%" aria-valuenow="7.42" aria-valuemin="0"
-                                                    aria-valuemax="100"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="p-1">
-                                            <h6 class="mb-0 text-muted">408</h6>
-                                        </div>
-                                    </div>
-                                </div><!-- end row -->
-                            </div>
-                        </div>
-
-                        <div class="card sidebar-alert bg-light border-0 text-center mx-4 mb-0 mt-3">
-                            <div class="card-body">
-                                <img src="assets/images/giftbox.png" alt="">
-                                <div class="mt-4">
-                                    <h5>Invite New Seller</h5>
-                                    <p class="text-muted lh-base">Refer a new seller to us and earn $100 per refer.</p>
-                                    <button type="button" class="btn btn-primary btn-label rounded-pill"><i
-                                            class="ri-mail-fill label-icon align-middle rounded-pill fs-16 me-2"></i>
-                                        Invite Now</button>
-                                </div>
-                            </div>
-                        </div>
-
+                    <div class="col-auto">
+                        <select class="form-select form-select-sm" name="room_overview_quarter">
+                            <option value="">-- Quý --</option>
+                            <option value="1">Quý 1</option>
+                            <option value="2">Quý 2</option>
+                            <option value="3">Quý 3</option>
+                            <option value="4">Quý 4</option>
+                        </select>
                     </div>
-                </div> <!-- end card-->
-            </div> <!-- end .rightbar-->
+                    <div class="col-auto">
+                        <input type="number" min="2000" max="2100" class="form-control form-control-sm" name="room_overview_year" value="{{ request('room_overview_year', now()->format('Y')) }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-light btn-sm">Lọc</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-body">
+                <canvas id="roomOverviewChart"></canvas>
+            </div>
+        </div>
+    </div>
 
-        </div> <!-- end col -->
+    <!-- Biểu đồ khiếu nại -->
+    <div class="col-12 col-lg-6">
+        <div class="card mb-4 shadow-sm h-100">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <span>Biểu đồ khiếu nại</span>
+                <form class="row g-2 align-items-center filter-form" data-target="complaint-chart" style="--bs-gutter-x: 0.5rem;">
+                    <div class="col-auto">
+                        <input type="number" min="2000" max="2100" class="form-control form-control-sm" name="complain_chart_year" value="{{ request('complain_chart_year', now()->format('Y')) }}">
+                    </div>
+                    <div class="col-auto">
+                        <input type="month" class="form-control form-control-sm" name="complain_chart_month" value="{{ request('complain_chart_month', now()->format('Y-m')) }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-light btn-sm">Lọc</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-body">
+                <canvas id="roomChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 
 
-
-
- 
- 
-
-                   
-
-
-
-
-
+    <!-- Biểu đồ tỉ lệ lấp đầy -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <span>Biểu đồ tỉ lệ lấp đầy các tòa nhà</span>
+            <form class="row g-2 align-items-center filter-form" data-target="occupancy-chart" style="--bs-gutter-x: 0.5rem;">
+                <div class="col-auto">
+                    <input type="month" class="form-control form-control-sm" name="occupancy_chart_month" value="{{ request('occupancy_chart_month', now()->format('Y-m')) }}">
+                </div>
+                <div class="col-auto">
+                    <select class="form-select form-select-sm" name="occupancy_chart_quarter">
+                        <option value="">-- Quý --</option>
+                        <option value="1">Quý 1</option>
+                        <option value="2">Quý 2</option>
+                        <option value="3">Quý 3</option>
+                        <option value="4">Quý 4</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <input type="number" min="2000" max="2100" class="form-control form-control-sm" name="occupancy_chart_year" value="{{ request('occupancy_chart_year', now()->format('Y')) }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-light btn-sm">Lọc</button>
+                </div>
+            </form>
+        </div>
+        <div class="card-body">
+            <canvas id="occupancyChart"></canvas>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        let incomeExpenseChart, occupancyChart, roomChart, roomOverviewChart;
+
+        // Khởi tạo biểu đồ doanh thu & chi phí
+        function initIncomeExpenseChart(labels, incomeData, expenseData) {
+            const ctxIncomeExpense = document.getElementById('incomeExpenseChart').getContext('2d');
+            if (incomeExpenseChart) incomeExpenseChart.destroy();
+            incomeExpenseChart = new Chart(ctxIncomeExpense, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Doanh thu',
+                            data: incomeData,
+                            backgroundColor: '#0d6efd'
+                        },
+                        {
+                            label: 'Tổng chi phí',
+                            data: expenseData,
+                            backgroundColor: '#fd7e14'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.formattedValue;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Khởi tạo biểu đồ tỉ lệ lấp đầy
+        function initOccupancyChart(labels, data) {
+            const ctxOccupancy = document.getElementById('occupancyChart').getContext('2d');
+            if (occupancyChart) occupancyChart.destroy();
+            occupancyChart = new Chart(ctxOccupancy, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Tỉ lệ lấp đầy',
+                        data: data,
+                        backgroundColor: '#ffca07'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.formattedValue + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Khởi tạo biểu đồ khiếu nại
+        function initRoomChart(labels, data) {
+            const ctxRoom = document.getElementById('roomChart').getContext('2d');
+            if (roomChart) roomChart.destroy();
+            roomChart = new Chart(ctxRoom, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Khiếu nại',
+                        data: data,
+                        backgroundColor: '#dc3545'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.formattedValue;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Khởi tạo biểu đồ tròn tổng quan phòng
+        function initRoomOverviewChart(rented, empty) {
+            const ctxRoomOverview = document.getElementById('roomOverviewChart').getContext('2d');
+            if (roomOverviewChart) roomOverviewChart.destroy();
+            roomOverviewChart = new Chart(ctxRoomOverview, {
+                type: 'pie',
+                data: {
+                    labels: ['Phòng đã thuê', 'Phòng trống'],
+                    datasets: [{
+                        data: [rented, empty],
+                        backgroundColor: ['#28a745', '#ffc107']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.formattedValue;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Xử lý sự kiện lọc
+        $('.filter-form').on('submit', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            const target = form.data('target');
+            const data = {
+                month: form.find('input[name$="_month"]').val(),
+                quarter: form.find('select[name$="_quarter"]').val(),
+                year: form.find('input[name$="_year"]').val(),
+                compareA: form.find('select[name="compareA"]').val(),
+                compareB: form.find('select[name="compareB"]').val()
+            };
+
+            $.ajax({
+                url: '{{ route("landlords.filter-stats") }}',
+                method: 'GET',
+                data: data,
+                success: function(response) {
+                    if (target === 'summary') {
+                        $('.summary-total-rooms').text(response.summary.total_rooms || 0);
+                        $('.summary-total-rented').text(response.summary.total_rented || 0);
+                        $('.summary-total-empty').text(response.summary.total_empty || 0);
+                        $('.summary-total-revenue').text(new Intl.NumberFormat().format(response.summary.total_revenue || 0));
+                        $('.summary-total-profit').text(new Intl.NumberFormat().format(response.summary.total_profit || 0));
+                        $('.summary-total-complaints').text(response.summary.total_complaints || 0);
+                    } else if (target === 'revenue-chart') {
+                        const labels = response.propertyStats.map(stat => stat.name);
+                        const incomeData = response.propertyStats.map(stat => stat.revenue || 0);
+                        const expenseData = response.propertyStats.map(stat => (stat.electric_cost || 0) + (stat.water_cost || 0) + (stat.other_cost || 0));
+                        initIncomeExpenseChart(labels, incomeData, expenseData);
+                    } else if (target === 'occupancy-chart') {
+                        const labels = response.propertyStats.map(stat => stat.name);
+                        const occupancyData = response.propertyStats.map(stat => {
+                            return stat.total_rooms > 0 ? (stat.rented_rooms / stat.total_rooms * 100).toFixed(2) : 0;
+                        });
+                        initOccupancyChart(labels, occupancyData);
+                    } else if (target === 'complaint-chart') {
+                        const labels = response.propertyStats.map(stat => stat.name);
+                        const complaintData = response.propertyStats.map(stat => stat.complaints || 0);
+                        initRoomChart(labels, complaintData);
+                    } else if (target === 'compare') {
+                         const leftName  = data.compareA;  // cột trái
+  const rightName = data.compareB;  // cột phải
+
+  // Map theo tên
+  const statsByName = {};
+  response.propertyStats.forEach(s => { statsByName[s.name] = s; });
+
+  const left  = statsByName[leftName]  || {};
+  const right = statsByName[rightName] || {};
+
+  // Danh sách chỉ số + quy tắc lợi thế
+  const metrics = [
+    { key: 'total_rooms',   label: 'Tổng phòng',         mode: 'neutral' }, // trung tính
+    { key: 'rented_rooms',  label: 'Đã thuê',             mode: 'higher'  }, // lớn hơn có lợi
+    { key: 'empty_rooms',   label: 'Phòng trống',         mode: 'lower'   }, // nhỏ hơn có lợi
+    { key: 'revenue',       label: 'Doanh thu',           mode: 'higher', money: true },
+    { key: 'profit',        label: 'Lợi nhuận',           mode: 'higher', money: true },
+    { key: 'electric_cost', label: 'Tiền điện',           mode: 'lower',  money: true },
+    { key: 'water_cost',    label: 'Tiền nước',           mode: 'lower',  money: true },
+    { key: 'other_cost',    label: 'Chi phí phát sinh',   mode: 'lower',  money: true },
+    { key: 'complaints',    label: 'Khiếu nại',           mode: 'lower'   },
+  ];
+
+  const fmt   = n => new Intl.NumberFormat('vi-VN').format(Number(n) || 0);
+  const money = n => fmt(n) + ' đ';
+
+  // So sánh “có lợi hơn” theo mode
+  function result(a, b, mode) {
+    if (mode === 'neutral') return 0;
+    a = Number(a) || 0; b = Number(b) || 0;
+    if (mode === 'higher') return a > b ? -1 : (a < b ? 1 : 0); // -1: trái có lợi, 1: phải có lợi
+    if (mode === 'lower')  return a < b ? -1 : (a > b ? 1 : 0);
+    return 0;
+  }
+
+  function cell(value, side, r, isMoney) {
+    // side L/R; r = -1 trái lợi, 1 phải lợi, 0 trung tính
+    const base = side === 'L' ? 'text-end' : 'text-start';
+    let cls = 'cmp-neutral';
+    if (r === -1) cls = (side === 'L') ? 'cmp-better' : 'cmp-worse';
+    if (r ===  1) cls = (side === 'R') ? 'cmp-better' : 'cmp-worse';
+    const text = isMoney ? money(value) : fmt(value);
+    return `<td class="${base} ${cls}"><span>${text}</span></td>`;
+  }
+
+  const rows = metrics.map(m => {
+    const a = left[m.key]  ?? 0;
+    const b = right[m.key] ?? 0;
+    const r = result(a, b, m.mode);
+    return `
+      <tr>
+        ${cell(a, 'L', r, !!m.money)}
+        <th class="text-center align-middle cmp-label">${m.label}</th>
+        ${cell(b, 'R', r, !!m.money)}
+      </tr>
+    `;
+  }).join('');
+
+  const html = `
+    <style>
+      /* Màu lợi thế/không lợi/trung tính */
+      #compare-results .cmp-better  { background: rgba(25,135,84,.12);  color:#198754; font-weight:600; } /* có lợi hơn */
+      #compare-results .cmp-worse   { background: rgba(220,53,69,.12);  color:#dc3545; font-weight:500; } /* không có lợi */
+      #compare-results .cmp-neutral { background: rgba(108,117,125,.08); color:#6c757d; }
+      #compare-results .cmp-label   { background:#f8f9fa; white-space:nowrap; }
+      #compare-results table { border-collapse: separate; border-spacing: 0 6px; }
+      #compare-results td, #compare-results th { border:1px solid #dee2e6; }
+    </style>
+
+    <!-- Badge tên tòa (nếu không muốn hiện, xoá 2 dòng <span> dưới) -->
+    <div class="d-flex justify-content-between mb-2">
+      <span class="badge bg-secondary-subtle text-secondary">${leftName}</span>
+      <span class="badge bg-secondary-subtle text-secondary">${rightName}</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table align-middle text-nowrap">
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  $('#compare-results').html(html);
+                    } else if (target === 'room-overview-chart') {
+                        initRoomOverviewChart(response.summary.total_rented || 0, response.summary.total_empty || 0);
+                    }
+                },
+                error: function(xhr) {
+                    alert('Có lỗi xảy ra khi lọc dữ liệu: ' + xhr.responseText);
+                }
+            });
+        });
+
+        // Khởi tạo biểu đồ ban đầu
+        const initialLabels = @json($propertyStats->pluck('name')->toArray());
+        const initialIncomeData = @json($propertyStats->map(function($p) {
+            return $p['revenue'] || 0;
+        })->toArray());
+        const initialExpenseData = @json($propertyStats->map(function($p) {
+            return ($p['electric_cost'] || 0) + ($p['water_cost'] || 0) + ($p['other_cost'] || 0);
+        })->toArray());
+       const initialOccupancyData = @json($propertyStats->map(function($p) {
+    return $p['total_rooms'] > 0
+        ? round($p['rented_rooms'] / $p['total_rooms'] * 100, 2)  // ✅ PHP: làm tròn 2 số lẻ
+        : 0;
+})->toArray());
+        const initialComplaintData = @json($propertyStats->map(function($p) {
+            return $p['complaints'] || 0;
+        })->toArray());
+        const initialRentedRooms = @json($total_rented);
+        const initialEmptyRooms = @json($total_empty);
+
+        if (initialLabels.length > 0) {
+            initIncomeExpenseChart(initialLabels, initialIncomeData, initialExpenseData);
+            initOccupancyChart(initialLabels, initialOccupancyData);
+            initRoomChart(initialLabels, initialComplaintData);
+            initRoomOverviewChart(initialRentedRooms, initialEmptyRooms);
+        }
+        // --- TỰ ĐỘNG TẢI DỮ LIỆU MẶC ĐỊNH KHI MỞ TRANG ---
+(function autoLoadDefaultSections() {
+  // Helper: YYYY-MM theo chuẩn để gửi/đặt vào <input type="month">
+  const now = new Date();
+  const ym  = now.toLocaleDateString('sv-SE', { year: 'numeric', month: '2-digit' }); // "YYYY-MM"
+  const yyyy = String(now.getFullYear());
+
+  // 1) Doanh thu & lợi nhuận (revenue-chart) — quan trọng nhất theo yêu cầu của bạn
+  const $rev = $('.filter-form[data-target="revenue-chart"]');
+  if ($rev.length) {
+    const $m = $rev.find('input[name="revenue_chart_month"]');
+    const $y = $rev.find('input[name="revenue_chart_year"]');
+    if (!$m.val()) $m.val(ym);
+    if (!$y.val()) $y.val(yyyy);
+    // Tự submit để gọi AJAX fill chart
+    if (typeof $rev[0].requestSubmit === 'function') $rev[0].requestSubmit();
+    else $rev.trigger('submit');
+  }
+
+  // (Tuỳ chọn) Auto-load các phần khác nếu bạn muốn có dữ liệu ngay khi mở trang:
+  const targets = ['summary','occupancy-chart','complaint-chart','room-overview-chart'];
+  targets.forEach(t => {
+    const $f = $(`.filter-form[data-target="${t}"]`);
+    if (!$f.length) return;
+
+    // Gán mặc định cho input nếu để trống
+    const $m = $f.find('input[name$="_month"]');
+    const $y = $f.find('input[name$="_year"]');
+    if ($m.length && !$m.val()) $m.val(ym);
+    if ($y.length && !$y.val()) $y.val(yyyy);
+
+    if (typeof $f[0].requestSubmit === 'function') $f[0].requestSubmit();
+    else $f.trigger('submit');
+  });
+})();
+
+    });
+</script>
+@endpush
