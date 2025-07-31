@@ -156,7 +156,6 @@ class ApprovalController extends Controller
         if ($approval->type !== 'add_user') {
             return back()->withErrors('❌ Loại yêu cầu không hợp lệ.');
         }
-
         // 🔍 Tách họ tên và email từ note: "Tên: Nguyễn Văn A | Email: abc@example.com"
         preg_match('/Tên:\s*(.*?)\s*\|\s*Email:\s*(.*)/', $approval->note, $matches);
         $fullNameFromNote = trim($matches[1] ?? '');

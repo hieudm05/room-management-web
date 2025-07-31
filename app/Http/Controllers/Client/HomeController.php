@@ -125,9 +125,9 @@ class HomeController extends Controller
     {
 
         $roomId = $request->input('room_id');
-        $retalId = $request->input('rental_id');
+        $rentalId = $request->input('rental_id');
         $rooms = Room::where('room_id', $roomId)->first();
-        return view('home.create-user', compact('roomId', 'retalId', 'rooms'));
+        return view('home.create-user', compact('roomId', 'rentalId', 'rooms'));
     }
     public function store(Request $request)
     {
@@ -198,7 +198,7 @@ public function stopRentForm()
     $currentAgreement = $user->rentalAgreements()->latest()->first();
     if (!$currentAgreement || $agreement->room_id !== $currentAgreement->room_id) {
         abort(403, 'Bạn không có quyền gửi yêu cầu cho hợp đồng này.');
-       
+
     }
 
     // ✅ Gán thông tin dừng thuê
