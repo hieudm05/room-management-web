@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Renter;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -27,32 +28,31 @@ class RenterNotificationController extends Controller
         $user = $request->user();
 
         $user->notifications()
-             ->updateExistingPivot($id, [
-                 'is_read' => true,
-                 'read_at' => now(),
-             ]);
+            ->updateExistingPivot($id, [
+                'is_read' => true,
+                'read_at' => now(),
+            ]);
 
         return back();
     }
     public function destroy($id)
-{
-    $user = auth()->user();
+    {
+        $user = auth()->user();
 
-    // Nếu bạn dùng bảng trung gian như notification_user
-    $user->notifications()->detach($id);
+        // Nếu bạn dùng bảng trung gian như notification_user
+        $user->notifications()->detach($id);
 
-    return redirect()->back()->with('success', 'Đã xoá thông báo.');
-}
-public function bulkDelete(Request $request)
-{
-    $ids = $request->input('ids', []);
-
-    if (!empty($ids)) {
-        auth()->user()->notifications()->detach($ids);
-        return back()->with('success', 'Đã xoá các thông báo đã chọn.');
+        return redirect()->back()->with('success', 'Đã xoá thông báo.');
     }
+    public function bulkDelete(Request $request)
+    {
+        $ids = $request->input('ids', []);
 
-    return back()->with('error', 'Bạn chưa chọn thông báo nào để xoá.');
-}
+        if (!empty($ids)) {
+            auth()->user()->notifications()->detach($ids);
+            return back()->with('success', 'Đã xoá các thông báo đã chọn.');
+        }
 
+        return back()->with('error', 'Bạn chưa chọn thông báo nào để xoá.');
+    }
 }

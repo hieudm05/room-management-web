@@ -40,7 +40,7 @@
     </div>
 
     {{-- Form xử lý --}}
-    <form action="{{ route('landlords.staff.complaints.resolve', $complaint->id) }}"
+    <form action="{{ route('landlord.staff.complaints.resolve', $complaint->id) }}"
           method="POST"
           enctype="multipart/form-data"
           class="card">
@@ -51,13 +51,17 @@
             <div class="mb-3">
                 <label for="user_cost" class="form-label">💰 Chi phí người thuê chịu (VNĐ):</label>
                 <input type="number" name="user_cost" id="user_cost"
-                       class="form-control" min="0" step="1000" value="0" required>
+                  class="form-control" min="0" step="1000"
+                 value="{{ old('user_cost') }}"
+                   placeholder="Không nhập nếu không tính phí">
             </div>
 
             <div class="mb-3">
                 <label for="landlord_cost" class="form-label">💼 Chi phí chủ trọ chịu (VNĐ):</label>
-                <input type="number" name="landlord_cost" id="landlord_cost"
-                       class="form-control" min="0" step="1000" value="0" required>
+               <input type="number" name="landlord_cost" id="landlord_cost"
+                 class="form-control" min="0" step="1000"
+                 value="{{ old('landlord_cost') }}"
+                 placeholder="Không nhập nếu không tính phí">
             </div>
 
             <div class="mb-3">
@@ -76,7 +80,7 @@
         </div>
 
         <div class="card-footer d-flex justify-content-between">
-            <a href="{{ route('landlords.staff.complaints.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('landlord.staff.complaints.index') }}" class="btn btn-outline-secondary">
                 ⬅ Quay lại danh sách
             </a>
             <button type="submit" class="btn btn-success">

@@ -28,6 +28,8 @@ class RentalAgreement extends Model
         'agreement_terms',
         'price_edit_count',
         'deposit_edit_count',
+        'expected_leave_date',
+        'is_active',
         'created_by'
     ];
 
@@ -45,5 +47,13 @@ class RentalAgreement extends Model
     public function landlord()
     {
         return $this->belongsTo(User::class, 'landlord_id');
+    }
+    public function userInfos()
+    {
+        return $this->hasMany(UserInfo::class, 'rental_id');
+    }
+    public function roomUser()
+    {
+        return $this->hasMany(RoomUser::class, 'rental_id');
     }
 }

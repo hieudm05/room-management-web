@@ -14,7 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory;
+    use HasFactory,Notifiable;
 
     // Define role constants
     const ROLE_ADMIN = 'Admin';
@@ -122,4 +122,10 @@ class User extends Authenticatable
             ->withPivot(['is_read', 'read_at', 'received_at'])
             ->withTimestamps();
     }
+    public function notifications() // nó cũng có tác dụng như dòng trên
+{
+    return $this->belongsToMany(Notification::class, 'notification_user', 'user_id', 'notification_id')
+                ->withPivot(['is_read', 'read_at', 'received_at'])
+                ->withTimestamps();
+}
 };

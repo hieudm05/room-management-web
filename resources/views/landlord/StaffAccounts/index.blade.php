@@ -19,9 +19,6 @@
                 <h4 class="card-title mb-0">Danh sách nhân viên</h4>
                 <a href="{{ route('landlords.staff_accounts.create') }}" class="btn btn-success btn-sm">+ Tạo Tài Khoản Cho
                     Nhân Viên</a>
-                <a href="{{ route('landlords.staff_accounts.create-test') }}" class="btn btn-success btn-sm">+ Tạo Tài Khoản
-                    Cho
-                    Nhân Viên test</a>
             </div>
 
             <div class="card-body">

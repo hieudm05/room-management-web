@@ -25,6 +25,7 @@ class ApprovalController extends Controller
         $landlordId = Auth::id();
         $pendingApprovals = Approval::where('landlord_id', $landlordId)
             ->where('status', 'pending')
+            ->where('type', 'contract')
             ->with('room')
             ->latest()
             ->get();
@@ -79,7 +80,7 @@ class ApprovalController extends Controller
         if (preg_match('/BÊN THUÊ PHÒNG TRỌ \(gọi tắt là Bên B\):\s*(.*?)Căn cứ pháp lý/su', $text, $match)) {
             $infoBlock = $match[1];
 
-            // dd($infoBlock); 
+            // dd($infoBlock);
 
             preg_match('/- Ông\/Bà:\s*(.+)/u', $infoBlock, $nameMatch);
             preg_match('/- CMND\/CCCD số:\s*([0-9]+)/u', $infoBlock, $cccdMatch);
@@ -115,15 +116,18 @@ class ApprovalController extends Controller
 
         // 6. Cập nhật renter_id trong hợp đồng
         $rental->update(['renter_id' => $user->id]);
+        $rental = $rental->fresh();
         // 7. Lưu thông tin vào user_infos
         UserInfo::updateOrCreate(
             ['user_id' => $user->id],
             [
+                'user_id' => $user->id,
                 'full_name' => $fullName ?: $user->name,
                 'cccd' => $cccd,
                 'phone' => $phone,
                 'email' => $tenantEmail,
                 "room_id" => $approval->room_id,
+                'rental_id' => $rental->rental_id,
             ]
         );
         // 8. Xóa bản ghi chờ phê duyệt

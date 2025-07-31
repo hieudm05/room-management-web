@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Landlord\Staff;
-
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
 use App\Models\Notification;
@@ -36,24 +36,26 @@ class StaffComplaintController extends Controller
     public function resolve(Request $request, $id)
 {
     $request->validate([
-        'user_cost' => 'required|numeric|min:0',
-        'landlord_cost' => 'required|numeric|min:0',
+        'user_cost' => 'nullable|numeric|min:0',
+        'landlord_cost' => 'nullable|numeric|min:0',
         'note' => 'nullable|string|max:1000',
-        'photos.*' => 'nullable|image|max:5120', // ảnh tối đa 5MB
+        'photos.*' => 'nullable|image|max:5120',
     ]);
 
     $complaint = Complaint::findOrFail($id);
     $this->authorizeComplaint($complaint);
 
+    $userCost = $request->filled('user_cost') ? (float) $request->input('user_cost') : 0;
+    $landlordCost = $request->filled('landlord_cost') ? (float) $request->input('landlord_cost') : 0;
+
     $complaint->update([
-        'user_cost' => $request->user_cost,
-        'landlord_cost' => $request->landlord_cost,
+        'user_cost' => $userCost,
+        'landlord_cost' => $landlordCost,
         'note' => $request->note,
         'status' => 'resolved',
         'resolved_at' => now(),
+        'handled_by' => auth()->id(), // Lưu ID nhân viên xử lý
     ]);
-  
-
     // ✅ Upload ảnh xử lý nếu có
     if ($request->hasFile('photos')) {
         foreach ($request->file('photos') as $file) {
@@ -70,7 +72,7 @@ class StaffComplaintController extends Controller
     // ✅ Gửi thông báo cho chủ trọ và người thuê
     $this->notifyUsers($complaint, 'resolved');
 
-    return redirect()->route('landlords.staff.complaints.index')
+    return redirect()->route('landlord.staff.complaints.index')
                      ->with('success', 'Đã xử lý khiếu nại và cập nhật ảnh.');
 }
 
@@ -93,7 +95,7 @@ class StaffComplaintController extends Controller
         $this->authorizeComplaint($complaint);
 
         if ($complaint->status !== 'in_progress') {
-            return redirect()->route('landlords.staff.complaints.index')
+            return redirect()->route('landlord.staff.complaints.index')
                              ->with('error', 'Chỉ được từ chối khi đang xử lý.');
         }
 
@@ -105,9 +107,47 @@ class StaffComplaintController extends Controller
         // Gửi thông báo
         $this->notifyUsers($complaint, 'rejected');
 
-        return redirect()->route('landlords.staff.complaints.index')
+        return redirect()->route('landlord.staff.complaints.index')
                          ->with('success', 'Đã từ chối xử lý khiếu nại.');
     }
+    public function history()
+{
+    $staffId = auth()->id();
+
+    $complaints = Complaint::whereIn('status', ['resolved', 'cancelled'])
+        ->where('handled_by', $staffId)
+        ->latest()
+        ->paginate(10);
+
+    return view('landlord.staff.complaints.history', compact('complaints'));
+}
+    public function show($id)
+{
+    $complaint = Complaint::with(['room', 'property', 'commonIssue', 'photos'])->findOrFail($id);
+
+    $this->authorizeComplaint($complaint); // Nếu có kiểm tra quyền
+
+    return view('landlord.staff.complaints.show', compact('complaint'));
+}
+   public function destroy($id)
+{
+    $complaint = Complaint::findOrFail($id);
+
+    $this->authorizeComplaint($complaint); // nếu có kiểm tra quyền
+
+    // Xóa ảnh liên quan (nếu có)
+    foreach ($complaint->photos as $photo) {
+        if (\Storage::disk('public')->exists($photo->photo_path)) {
+            \Storage::disk('public')->delete($photo->photo_path);
+        }
+        $photo->delete();
+    }
+
+    $complaint->delete();
+
+    return redirect()->route('landlord.staff.complaints.history')
+                     ->with('success', 'Đã xóa khiếu nại thành công.');
+}
 
     /**
      * Kiểm tra quyền xử lý khiếu nại.
@@ -172,6 +212,7 @@ class StaffComplaintController extends Controller
             }
         }
     }
+
 
     /**
      * Gửi thông báo cho một người dùng.
