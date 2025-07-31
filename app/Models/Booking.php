@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Landlord\Room;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Booking extends Model
 {
@@ -20,6 +21,7 @@ class Booking extends Model
         'guest_name',
         'phone',
         'room_id',
+        'created_at',
     ];
 
     protected $casts = [
@@ -30,6 +32,13 @@ class Booking extends Model
     {
         return $this->belongsTo(StaffPost::class, 'post_id', 'post_id');
     }
+
+    public function room()
+{
+    return $this->belongsTo(Room::class, 'room_id');
+}
+
+
 
 
 

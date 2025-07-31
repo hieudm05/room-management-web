@@ -3,20 +3,22 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\RoomBillController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\PostController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\Landlord\BookingsChart;
 use App\Http\Controllers\Landlord\OCRController;
-use App\Http\Controllers\BookingController;
 use App\Http\Controllers\Client\MyRoomController;
 use App\Http\Controllers\Landlord\HomeLandlordController;
 use App\Http\Controllers\Landlord\RoomController;
 use App\Http\Controllers\TenantProfileController;
+use App\Http\Controllers\Landlord\ChartController;
+use App\Http\Controllers\Landlord\ComplaintsChart;
 use App\Http\Controllers\Landlord\ContractRenewal;
 use App\Http\Controllers\Client\AuthUserController;
-use App\Http\Controllers\Landlord\ContractRenewall;
 use App\Http\Controllers\Landlord\ApprovalController;
 use App\Http\Controllers\Landlord\PropertyController;
 use App\Http\Controllers\Landlord\RoomStaffController;
@@ -34,24 +36,39 @@ use App\Http\Controllers\Landlord\Staff\ServiceController;
 use App\Http\Controllers\Renter\RenterComplaintController;
 use App\Http\Controllers\Landlord\Staff\ContractController;
 use App\Http\Controllers\Landlord\Staff\DocumentController;
+use App\Http\Controllers\Landlord\ComplaintsChartController;
+
+// Địa chỉ
+use App\Http\Controllers\Landlord\ContractRenewalController;
+
 use App\Http\Controllers\Landlord\RoomEditRequestController;
 use App\Http\Controllers\Landlord\Staff\StaffPostController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomController;
-use App\Http\Controllers\Renter\RenterNotificationController;
+
+
 use App\Http\Controllers\Landlord\LandLordComplaintController;
+
+use App\Http\Controllers\Renter\RenterNotificationController;
 // Địa chỉ
+
 use App\Http\Controllers\Landlord\LandlordBankAccountController;
 use App\Http\Controllers\Landlord\PropertyBankAccountController;
+
+
+
+
 use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomEditController;
 use App\Http\Controllers\Landlord\landLordNotificationController;
 use App\Http\Controllers\Landlord\Staff\StaffComplaintController;
 use App\Http\Controllers\Landlord\PropertyRoomBankAccountController;
 use App\Http\Controllers\Landlord\Staff\StaffNotificationController;
-use App\Http\Controllers\Landlord\ContractRenewalController;
-use App\Http\Controllers\Landlord\Staff\StaffPostController;
+
+
+
 use App\Http\Controllers\Landlord\BookingsController;
 use App\Http\Controllers\Landlord\StaffBookingController;
+
 
 
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
@@ -199,7 +216,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
 
 
 
-    });
+
      // Bill của chủ trọ
          Route::get('/bills', [LandlordBillController::class, 'index'])->name('bills.index');
         Route::get('/bills/{bill}', [LandlordBillController::class, 'show'])->name('bills.show');
@@ -210,6 +227,22 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::get('/bills', [LandlordBillController::class, 'index'])->name('bills.index');
     Route::get('/bills/{bill}', [LandlordBillController::class, 'show'])->name('bills.show');
     Route::get('/bills/export', [LandlordBillController::class, 'export'])->name('bills.export');
+
+
+
+
+
+    });
+     // Bill của chủ trọ
+         Route::get('/bills', [LandlordBillController::class, 'index'])->name('bills.index');
+        Route::get('/bills/{bill}', [LandlordBillController::class, 'show'])->name('bills.show');
+        Route::get('/bills/export', [LandlordBillController::class, 'export'])->name('bills.export');
+
+    // Bill của chủ trọ
+    Route::get('/bills', [LandlordBillController::class, 'index'])->name('bills.index');
+    Route::get('/bills/{bill}', [LandlordBillController::class, 'show'])->name('bills.show');
+    Route::get('/bills/export', [LandlordBillController::class, 'export'])->name('bills.export');
+
 
 
     // Staff yêu cầu chỉnh sửa phòng
@@ -235,21 +268,9 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
                 $user->customNotifications()->pluck('notifications.id')->toArray(),
                 ['is_read' => true, 'read_at' => now()]
             );
-
         return back()->with('success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
     })->name('staff.notifications.markAsRead');
-    Route::post('/staff/notifications/mark-as-read', function () {
-        $user = auth()->user();
 
-        $user->customNotifications()
-            ->wherePivot('is_read', false)
-            ->updateExistingPivot(
-                $user->customNotifications()->pluck('notifications.id')->toArray(),
-                ['is_read' => true, 'read_at' => now()]
-            );
-        return back()->with('success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
-    })->name('staff.notifications.markAsRead');
-});
 
 // Các route ngoài landlords
 Route::prefix('rooms')->group(function () {
@@ -386,10 +407,18 @@ Route::middleware(['auth'])->group(function () {
        Route::get('/complaints/{id}', [StaffComplaintController::class, 'show'])->name('complaints.show');
        Route::delete('/complaints/{id}', [StaffComplaintController::class, 'destroy'])->name('complaints.destroy');
 
+
+
         Route::get('/complaints/{id}', [StaffComplaintController::class, 'show'])->name('complaints.show');
         Route::delete('/complaints/{id}', [StaffComplaintController::class, 'destroy'])->name('complaints.destroy');
 
 
+
+        Route::get('/complaints/{id}', [StaffComplaintController::class, 'show'])->name('complaints.show');
+        Route::delete('/complaints/{id}', [StaffComplaintController::class, 'destroy'])->name('complaints.destroy');
+        Route::get('/chart', [ChartController::class, 'index'])->name('chart.index');
+    Route::get('/complaint', [ChartController::class, 'complaintChart'])->name('landlord.staff.chart.complaint');
+    Route::get('/booking', [ChartController::class, 'bookingChart'])->name('landlord.staff.chart.booking');
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/', [StaffNotificationController::class, 'index'])->name('index');
             Route::post('/{id}/read', [StaffNotificationController::class, 'markAsRead'])->name('read');
@@ -408,6 +437,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bulk-delete', [RenterNotificationController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('/mark-all-read', [StaffNotificationController::class, 'markAllAsRead'])->name('markAllRead');
     });
+
+
+
 
 
 
