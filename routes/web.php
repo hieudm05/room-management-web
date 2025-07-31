@@ -136,7 +136,13 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/create', [RoomController::class, 'create'])->name('create');
         Route::post('/store', [RoomController::class, 'store'])->name('store');
         Route::post('/{room}/lock', [RoomController::class, 'lockContract'])->name('lockContract');
-        Route::get('/{room}/stats', [RoomController::class, 'showStats'])->name('stats');
+        // thống kê biểu đồ phòng
+        Route::get('/{room}/statistics', [RoomBillController::class, 'showRoomStatistics'])->name('statistics');
+        Route::get('/{room}/compare-months', [RoomBillController::class, 'compareMonths'])->name('compareMonths');
+        Route::get('/{room}/month-detail', [RoomBillController::class, 'monthDetail'])->name('monthDetail');
+        Route::get('/{room}/quarter-detail', [RoomBillController::class, 'quarterDetail'])->name('quarterDetail');
+        Route::get('/{room}/compare-quarters', [RoomBillController::class, 'compareQuarters'])->name('compareQuarters');
+        //
         Route::get('/{room}/edit', [RoomController::class, 'edit'])->name('edit');
         Route::put('/{room}', [RoomController::class, 'update'])->name('update');
         Route::put('/{room}/hide', [RoomController::class, 'hide'])->name('hide');
