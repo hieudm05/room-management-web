@@ -849,4 +849,10 @@ class RoomController extends Controller
 
         return view('landlord.rooms.statistics', compact('room', 'contracts'));
     }
+
+    public function getRoomsByProperty($property_id)
+    {
+        $rooms = Room::where('property_id', $property_id)->get(['room_id']);
+        return response()->json(['rooms' => $rooms]);
+    }
 }
