@@ -30,12 +30,18 @@ class Booking extends Model
 
     public function post()
     {
-        return $this->belongsTo(StaffPost::class);
+        return $this->belongsTo(StaffPost::class, 'post_id', 'post_id');
     }
+
     public function room()
 {
     return $this->belongsTo(Room::class, 'room_id');
 }
+
+
+
+
+
     public function user()
     {
         return $this->belongsTo(User::class);

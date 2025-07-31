@@ -5,15 +5,22 @@ namespace App\Http\Controllers\Landlord;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class StaffBookingController extends Controller
 {
     public function index()
     {
+        $staffId = Auth::id();
+
         $bookings = Booking::with(['user', 'post'])
+            ->whereHas('post', function ($query) use ($staffId) {
+                $query->where('staff_id', $staffId);
+            })
             ->orderByDesc('created_at')
             ->get();
+
         return view('landlord.Staff.staff_bookings.index', compact('bookings'));
     }
     public function wait($id)
