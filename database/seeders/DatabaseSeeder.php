@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             RentalAgreementSeeder::class,
             BankAccountsTableSeeder::class,
             CommonIssueSeeder::class,
+            RoomBillSeeder::class,
 
 
         ]);
