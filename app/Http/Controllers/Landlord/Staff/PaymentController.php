@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
 use App\Models\Landlord\BankAccount;
+use App\Models\Landlord\Property;
 use App\Models\Landlord\Room;
 use App\Models\Landlord\Staff\Rooms\RoomBill;
 use App\Models\Landlord\Staff\Rooms\RoomBillService;
@@ -24,14 +25,44 @@ use Illuminate\Support\Facades\Storage;
 
 class PaymentController extends Controller
 {
+    public function list()
+    {
+        $staffId = Auth::id();
+
+        // Lấy tất cả room_id mà nhân viên quản lý
+        $roomIds = RoomStaff::where('staff_id', $staffId)
+            ->where('status', 'active')
+            ->pluck('room_id');
+
+        if ($roomIds->isEmpty()) {
+            // Không quản lý phòng nào
+            return view('landlord.Staff.rooms.bills.listBill', compact('roomIds'))->with('properties', collect());
+        }
+
+        // Lấy property_id từ các phòng này
+        $propertyIds = Room::whereIn('room_id', $roomIds)
+            ->pluck('property_id')
+            ->unique();
+
+        if ($propertyIds->isEmpty()) {
+            // Không có tòa nhà nào
+            return view('landlord.Staff.rooms.bills.listBill', compact('propertyIds'))->with('properties', collect());
+        }
+
+        // Lấy danh sách tòa nhà
+        $properties = Property::whereIn('property_id', $propertyIds)->get();
+
+        return view('landlord.Staff.rooms.bills.listBill', compact('properties', 'propertyIds', 'roomIds'));
+    }
     public function index(Request $request)
     {
         $staffId = Auth::id();
+        $propertyId = $request->input('property_id'); // Lấy property_id từ query string
         $month = $request->input('month', now()->format('Y-m'));
-
         $roomIds = RoomStaff::where('staff_id', $staffId)->where('status', 'active')->pluck('room_id');
 
         $rooms = Room::whereIn('room_id', $roomIds)
+            ->where('property_id', $propertyId)
             ->with([
                 'rentalAgreement.renter',
                 'bills' => fn($q) => $q->where('month', 'like', $month . '%'),

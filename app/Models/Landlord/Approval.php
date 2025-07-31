@@ -16,6 +16,8 @@ class Approval extends Model
         'room_id',
         'staff_id',
         'landlord_id',
+        'user_id',
+        'rental_id',
         'rental_price',
         'deposit',
         'type',
@@ -31,12 +33,21 @@ class Approval extends Model
     {
         return $this->belongsTo(User::class, 'staff_id');
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
 
     /**
      * Phòng trọ liên quan đến yêu cầu.
      */
     public function room()
     {
-        return $this->belongsTo(\App\Models\Landlord\Room::class, 'room_id', 'room_id');
+        return $this->belongsTo(Room::class, 'room_id', 'room_id');
+    }
+    public function rental()
+    {
+        return $this->belongsTo(RentalAgreement::class, 'rental_id');
     }
 }

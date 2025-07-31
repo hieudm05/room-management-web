@@ -240,6 +240,7 @@
                             <h4 class="mb-0">{{ number_format($post->price, 2) }} VND/tháng</h4>
                         </div>
                         <div class="card-body">
+<<<<<<< HEAD
                             <div class="row g-3">
                                 <div class="col-12">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -290,14 +291,131 @@
                                                 {{ $similar->city }}</p>
                                             <span class="badge bg-primary">For Rent</span>
                                             <h6 class="mt-1">{{ number_format($similar->price, 2) }} VND</h6>
+=======
+                            <form action="{{ route('bookings') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="post_id" value="{{ $post->post_id }}">
+                                <div class="row g-3">
+
+                                    <!-- Check In Date -->
+                                    <div class="col-12">
+                                        <label for="checkIn" class="form-label">Check In</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text" id="calendarTrigger" style="cursor: pointer;">
+                                                <i class="fas fa-calendar-alt"></i>
+                                            </span>
+                                            <input type="text" id="checkIn" name="check_in" class="form-control"
+                                                value="{{ \Carbon\Carbon::today()->format('d/m/Y') }}"
+                                                placeholder="Chọn ngày nhận phòng" required>
+>>>>>>> e2482cc2cfc16f873fd9383124bd4f905d479c6c
                                         </div>
                                     </div>
-                                @endforeach
-                            </div>
+
+                                    <!-- Ghi chú -->
+                                    <div class="col-12">
+                                        <label for="checkInNote" class="form-label">Chú thích</label>
+                                        <input type="text" id="checkInNote" name="note" class="form-control"
+                                            placeholder="Nhập ghi chú cho ngày nhận phòng (nếu có)">
+                                    </div>
+
+                                    <!-- THÊM PHẦN NÀY nếu chưa đăng nhập -->
+                                    @guest
+                                        <div class="col-12">
+                                            <label for="guestName" class="form-label">Tên của bạn</label>
+                                            <input type="text" id="guestName" name="guest_name" class="form-control"
+                                                required>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="guestPhone" class="form-label">Số điện thoại</label>
+                                            <input type="text" id="guestPhone" name="phone" class="form-control"
+                                                required>
+                                        </div>
+                                    @endguest
+
+                                    <!-- Tổng thanh toán -->
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>Total Payment</span>
+                                            <h4 class="text-primary mb-0">${{ number_format($post->price, 2) }}</h4>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary rounded-pill w-100">Book
+                                            Now</button>
+                                    </div>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Agent Contact -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body text-center">
+                        <a href="#" class="btn btn-outline-primary rounded-pill" data-bs-toggle="modal"
+                            data-bs-target="#agentMessage">
+                            <i class="fas fa-comment-alt me-2"></i> Contact Agent
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Similar Properties -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h4 class="mb-0">Similar Properties</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="property-list">
+                            @foreach ($post->category->posts()->where('post_id', '!=', $post->post_id)->where('status', 1)->where('is_public', 1)->take(4)->get() as $similar)
+                                <div class="property-item d-flex mb-3">
+                                    <a href="{{ route('posts.show', $similar->slug) }}">
+                                        <img src="{{ asset('storage/' . $similar->thumbnail) }}"
+                                            class="img-fluid rounded me-3"
+                                            style="width: 100px; max-height: 100px; object-fit: cover;"
+                                            alt="{{ $similar->title }}" loading="lazy">
+                                    </a>
+                                    <div>
+                                        <h5>
+                                            <a href="{{ route('posts.show', $similar->slug) }}"
+                                                class="text-decoration-none">
+                                                {{ $similar->title }}
+                                            </a>
+                                        </h5>
+                                        <p class="mb-1"><i class="fas fa-map-marker-alt me-1"></i>
+                                            {{ $similar->city }}</p>
+                                        <span class="badge bg-primary">For Rent</span>
+                                        <h6 class="mt-1">${{ number_format($similar->price, 2) }}</h6>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        </div>
     </section>
 @endsection
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkInInput = document.getElementById('checkIn');
+        const calendarIcon = document.getElementById('calendarTrigger');
+
+        const picker = flatpickr(checkInInput, {
+            dateFormat: "d/m/Y",
+            minDate: "today",
+            defaultDate: "{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
+        });
+
+        calendarIcon.addEventListener('click', function() {
+            picker.open();
+        });
+    });
+</script>

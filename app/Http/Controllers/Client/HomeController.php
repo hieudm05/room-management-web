@@ -22,31 +22,23 @@ class HomeController extends Controller
 {
     public function renter()
     {
-        // ✅ Lấy danh sách phòng trọ mới nhất có phân trang
         $rooms = Room::latest()->paginate(6);
 
-        // ✅ Lấy tất cả bài viết đã duyệt và public
         $allPosts = StaffPost::with(['category', 'features', 'property'])
             ->where('status', 1)
             ->where('is_public', true)
             ->orderByDesc('approved_at')
             ->get();
 
-        // ✅ Group theo property_id
         $grouped = $allPosts->groupBy('property_id');
 
-        // ✅ Lấy top 2 mỗi property lên đầu
         $topPosts = $grouped->flatMap(function ($group) {
             return $group->take(2);
         });
 
-        // ✅ Lấy phần còn lại (bài dư bị đẩy xuống dưới)
         $remainingPosts = $allPosts->diff($topPosts);
-
-        // ✅ Kết hợp lại: topPosts nằm trước, remaining nằm sau
         $orderedPosts = $topPosts->merge($remainingPosts);
 
-        // ✅ Phân trang
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $perPage = 6;
         $pagedPosts = new LengthAwarePaginator(
@@ -63,7 +55,6 @@ class HomeController extends Controller
         ]);
     }
 
-
     public function favorites()
     {
         $favorites = Auth::user()->favorites()->get();
@@ -74,7 +65,6 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        // ✅ So sánh rõ bảng: favorites.property_id
         $isFavorited = DB::table('favorites')
             ->where('user_id', $user->id)
             ->where('property_id', $property->property_id)
@@ -88,6 +78,7 @@ class HomeController extends Controller
             return redirect()->route('home.favorites')->with('success', 'Đã thêm vào danh sách yêu thích!');
         }
     }
+
     public function StausAgreement()
     {
         $user = Auth::user();
@@ -146,23 +137,18 @@ class HomeController extends Controller
             'renter_id' => $renter_id,
             'room' => $rentalAgreement->room ?? null
         ]);
-        // Lấy danh sách phòng trọ mới nhất có phân trang
-
-
-        return view('home.statusAgreement');
     }
+
     public function create(Request $request)
     {
-
         $roomId = $request->input('room_id');
-        $retalId = $request->input('rental_id');
+        $rentalId = $request->input('rental_id');
         $rooms = Room::where('room_id', $roomId)->first();
-        return view('home.create-user', compact('roomId', 'retalId', 'rooms'));
+        return view('home.create-user', compact('roomId', 'rentalId', 'rooms'));
     }
+
     public function store(Request $request)
     {
-
-
         $validated = $request->validate([
             'room_id' => 'required|exists:rooms,room_id',
             'name' => 'required|string|max:255',
@@ -178,25 +164,23 @@ class HomeController extends Controller
             'phone' => $validated['phone'],
             'cccd' => $validated['cccd'],
             'email' => $validated['email'],
-            'rental_id' => $validated['rental_id'], // map đúng tên cột
+            'rental_id' => $validated['rental_id'],
         ]);
 
         return redirect()->back()->with('success', 'Đăng ký thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất có thể.');
     }
+
     public function myRoom()
     {
         $user = Auth::user();
-
-        // Ví dụ: lấy danh sách các phòng mà user đang thuê
         $rooms = $user->rentedRooms()->with('property', 'photos')->paginate(6);
-
         return view('home.my-room', compact('rooms'));
     }
+
     public function stopRentForm()
     {
         $user = auth()->user();
 
-        // Lấy phòng của user đang thuê
         $rentalAgreement = RentalAgreement::where('renter_id', $user->id)
             ->with('room')
             ->latest()
@@ -206,7 +190,6 @@ class HomeController extends Controller
             return view('home.stopRentForm', ['roomUsers' => collect()]);
         }
 
-        // Lấy tất cả hợp đồng của người trong phòng này
         $roomUsers = RentalAgreement::with('renter')
             ->where('room_id', $rentalAgreement->room->room_id)
             ->where('is_active', true)
@@ -214,6 +197,7 @@ class HomeController extends Controller
 
         return view('home.stopRentForm', compact('roomUsers'));
     }
+
     public function stopUserRental(Request $request, $id)
     {
         $request->validate([
@@ -221,23 +205,18 @@ class HomeController extends Controller
         ]);
 
         $user = auth()->user();
-
         $agreement = RentalAgreement::with('room')->findOrFail($id);
 
-        // ✅ Chỉ người đang thuê trong phòng mới được phép gửi yêu cầu
         $currentAgreement = $user->rentalAgreements()->latest()->first();
         if (!$currentAgreement || $agreement->room_id !== $currentAgreement->room_id) {
             abort(403, 'Bạn không có quyền gửi yêu cầu cho hợp đồng này.');
         }
 
-        // ✅ Gán thông tin dừng thuê
         $agreement->leave_date = $request->leave_date;
-        $agreement->status = 'pending'; // chuyển trạng thái chờ duyệt
+        $agreement->status = 'pending';
         $agreement->stop_requested = true;
         $agreement->save();
 
-        // 👉 (Tùy chọn) Gửi thông báo/mail cho staff tại đây nếu cần
-
-        //     return redirect()->back()->with('success', '📝 Yêu cầu dừng thuê đã được gửi và đang chờ duyệt.');
+        return redirect()->back()->with('success', '📝 Yêu cầu dừng thuê đã được gửi và đang chờ duyệt.');
     }
 }
