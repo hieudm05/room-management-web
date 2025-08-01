@@ -126,7 +126,6 @@ class ApprovalController extends Controller
                 'phone' => $phone,
                 'email' => $tenantEmail,
                 "room_id" => $approval->room_id,
-                'rental_id' => $rental->rental_id,  
             ]
         );
         // 8. Xóa bản ghi chờ phê duyệt

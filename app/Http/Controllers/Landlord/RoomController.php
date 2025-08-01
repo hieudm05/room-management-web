@@ -25,6 +25,7 @@ use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\TemplateProcessor;
 use PhpOffice\PhpWord\Writer\HTML;
 use Smalot\PdfParser\Parser;
+use App\Mail\RoomUpdatedNotification;
 
 
 
@@ -221,119 +222,137 @@ class RoomController extends Controller
     }
 
     public function update(Request $request, Room $room)
-    {
-        $request->validate([
-            'area' => 'required|numeric|min:1',
-            'rental_price' => 'required|numeric|min:0',
-            'status' => 'required|in:Available,Rented,Hidden,Suspended,Confirmed',
-            'facilities' => 'array',
-            'photos.*' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
-            'delete_photos' => 'array',
-            'delete_photos.*' => 'integer|exists:room_photos,photo_id',
-            'occupants' => 'required|integer|min:0',
-            'deposit_price' => 'nullable|numeric|min:0',
+{
+    $request->validate([
+        'area' => 'required|numeric|min:1',
+        'rental_price' => 'required|numeric|min:0',
+        'status' => 'required|in:Available,Rented,Hidden,Suspended,Confirmed',
+        'facilities' => 'array',
+        'photos.*' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+        'delete_photos' => 'array',
+        'delete_photos.*' => 'integer|exists:room_photos,photo_id',
+        'occupants' => 'required|integer|min:0',
+        'deposit_price' => 'nullable|numeric|min:0',
+    ]);
+
+    // Nếu là nhân viên thì gửi yêu cầu
+    if (auth()->user()->role === 'Staff') {
+        $original = $room->only(['area', 'rental_price', 'status', 'occupants', 'deposit_price']);
+        $requested = $request->only(['area', 'rental_price', 'status', 'occupants', 'deposit_price']);
+
+        $diff = array_diff_assoc($requested, $original);
+        if (empty($diff)) {
+            return back()->with('info', 'Bạn chưa thay đổi thông tin nào.');
+        }
+
+        RoomEditRequest::create([
+            'room_id' => $room->room_id,
+            'staff_id' => auth()->id(),
+            'original_data' => json_encode($original),
+            'requested_data' => json_encode($requested),
+            'status' => 'pending',
         ]);
 
-        if (auth()->user()->role === 'Staff') {
-            $original = $room->only(['area', 'rental_price', 'status', 'occupants', 'deposit_price']);
-            $requested = $request->only(['area', 'rental_price', 'status', 'occupants', 'deposit_price']);
+        $room->increment('edit_count');
 
-            $diff = array_diff_assoc($requested, $original);
-            if (empty($diff)) {
-                return back()->with('info', 'Bạn chưa thay đổi thông tin nào.');
-            }
-
-            RoomEditRequest::create([
-                'room_id' => $room->room_id,
-                'staff_id' => auth()->id(),
-                'original_data' => json_encode($original),
-                'requested_data' => json_encode($requested),
-                'status' => 'pending',
-            ]);
-
-            $room->increment('edit_count');
-
-            return redirect()->route('staff.index')->with('success', 'Yêu cầu sửa đã được gửi, chờ chủ trọ duyệt.');
-        }
-
-        // ✅ Ghi lại giá cũ
-        $oldRentalPrice = $room->rental_price;
-        $oldDepositPrice = $room->deposit_price;
-
-        // ✅ Cập nhật chính thức
-        $room->update($request->only(['area', 'rental_price', 'status', 'occupants', 'deposit_price']));
-
-        // ✅ Tăng số lần sửa nếu có thay đổi
-        if ($oldRentalPrice != $request->rental_price) {
-            $room->increment('price_edit_count');
-        }
-
-        if ($oldDepositPrice != $request->deposit_price) {
-            $room->increment('deposit_edit_count');
-        }
-
-        $room->facilities()->sync($request->facilities ?? []);
-
-        // Xử lý ảnh xoá
-        if ($request->has('delete_photos')) {
-            $photosToDelete = RoomPhoto::whereIn('photo_id', $request->delete_photos)->get();
-            foreach ($photosToDelete as $photo) {
-                $path = str_replace('/storage/', '', $photo->image_url);
-                if (Storage::disk('public')->exists($path)) {
-                    Storage::disk('public')->delete($path);
-                }
-                $photo->delete();
-            }
-        }
-
-        // Xử lý ảnh mới
-        if ($request->hasFile('photos')) {
-            foreach ($request->file('photos') as $photo) {
-                try {
-                    if ($photo->isValid()) {
-                        $path = $photo->store('uploads/rooms', 'public');
-                        RoomPhoto::create([
-                            'room_id' => $room->room_id,
-                            'image_url' => '/storage/' . $path,
-                        ]);
-                    } else {
-                        Log::warning('File ảnh không hợp lệ:', ['name' => $photo->getClientOriginalName()]);
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Lỗi khi lưu ảnh phòng:', ['message' => $e->getMessage()]);
-                }
-            }
-        }
-
-        // Dịch vụ
-        $services = $request->input('services', []);
-        if (!empty($services)) {
-            $serviceData = [];
-            foreach ($services as $serviceId => $data) {
-                if (isset($data['enabled'])) {
-                    $serviceData[$serviceId] = [
-                        'is_free' => empty($data['price']),
-                        'price' => $data['price'] ?? null,
-                        'unit' => $data['unit'] ?? null,
-                    ];
-                }
-            }
-            $room->services()->sync($serviceData);
-        } else {
-            $room->services()->detach();
-        }
-
-        $room->load('property', 'facilities', 'services');
-        $landlord = $this->getCurrentUserAsLandlord();
-        $agreement = $room->rentalAgreements()->latest()->first();
-        $tenant = $agreement?->renter;
-
-        $this->generateContractPDF($room, $landlord);
-        $this->generateContractWord($room, $landlord, $tenant);
-
-        return redirect()->route('landlords.rooms.index', ['property_id' => $room->property_id])
-            ->with('success', 'Cập nhật phòng thành công!');
+        return redirect()->route('staff.index')->with('success', 'Yêu cầu sửa đã được gửi, chờ chủ trọ duyệt.');
     }
+
+    // 🔁 Lưu lại dữ liệu gốc trước khi cập nhật
+    $originalValues = $room->getOriginal();
+
+    // ✅ Cập nhật dữ liệu
+    $room->update($request->only(['area', 'rental_price', 'status', 'occupants', 'deposit_price']));
+
+    // Đếm số lần thay đổi giá
+    if ($originalValues['rental_price'] != $room->rental_price) {
+        $room->increment('price_edit_count');
+    }
+    if ($originalValues['deposit_price'] != $room->deposit_price) {
+        $room->increment('deposit_edit_count');
+    }
+
+    $room->facilities()->sync($request->facilities ?? []);
+
+    // Xoá ảnh
+    if ($request->has('delete_photos')) {
+        $photosToDelete = RoomPhoto::whereIn('photo_id', $request->delete_photos)->get();
+        foreach ($photosToDelete as $photo) {
+            $path = str_replace('/storage/', '', $photo->image_url);
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+            $photo->delete();
+        }
+    }
+
+    // Thêm ảnh mới
+    if ($request->hasFile('photos')) {
+        foreach ($request->file('photos') as $photo) {
+            if ($photo->isValid()) {
+                $path = $photo->store('uploads/rooms', 'public');
+                RoomPhoto::create([
+                    'room_id' => $room->room_id,
+                    'image_url' => '/storage/' . $path,
+                ]);
+            }
+        }
+    }
+
+    // Dịch vụ
+    $services = $request->input('services', []);
+    if (!empty($services)) {
+        $serviceData = [];
+        foreach ($services as $serviceId => $data) {
+            if (isset($data['enabled'])) {
+                $serviceData[$serviceId] = [
+                    'is_free' => empty($data['price']),
+                    'price' => $data['price'] ?? null,
+                    'unit' => $data['unit'] ?? null,
+                ];
+            }
+        }
+        $room->services()->sync($serviceData);
+    } else {
+        $room->services()->detach();
+    }
+
+    // Load lại quan hệ
+    $room->load('property', 'facilities', 'services');
+    $room->refresh();
+
+    $landlord = $this->getCurrentUserAsLandlord();
+    $agreement = $room->rentalAgreements()->latest()->first();
+    $tenant = $agreement?->renter;
+
+    $this->generateContractPDF($room, $landlord);
+    $this->generateContractWord($room, $landlord, $tenant);
+
+    // 📨 So sánh thay đổi và gửi mail
+    $changes = [];
+    foreach (['area', 'rental_price', 'deposit_price', 'status', 'occupants'] as $field) {
+        if ($originalValues[$field] != $room->$field) {
+            $changes[$field] = [
+                'old' => $originalValues[$field],
+                'new' => $room->$field,
+            ];
+        }
+    }
+
+    // Gửi mail nếu có thay đổi và có người thuê
+    if (!empty($changes) && $tenant && filter_var($tenant->email, FILTER_VALIDATE_EMAIL)) {
+        try {
+            Mail::to($tenant->email)->queue(new RoomUpdatedNotification($room, $changes));
+        } catch (\Exception $e) {
+            Log::error('Không gửi được mail cập nhật phòng: ' . $e->getMessage());
+        }
+    }
+
+    return redirect()->route('landlords.rooms.index', ['property_id' => $room->property_id])
+        ->with('success', 'Cập nhật phòng thành công!');
+}
+
+
 
 
     public function downloadContractWord(Room $room)
@@ -848,5 +867,11 @@ class RoomController extends Controller
         }
 
         return view('landlord.rooms.statistics', compact('room', 'contracts'));
+    }
+
+    public function getRoomsByProperty($property_id)
+    {
+        $rooms = Room::where('property_id', $property_id)->get(['room_id']);
+        return response()->json(['rooms' => $rooms]);
     }
 }

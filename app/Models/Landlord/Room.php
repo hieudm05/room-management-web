@@ -3,10 +3,11 @@
 namespace App\Models\Landlord;
 
 use App\Models\User;
+use App\Models\Booking;
 use App\Models\RoomUser;
 use App\Models\UserInfo;
-use App\Models\RentalAgreement;
 
+use App\Models\RentalAgreement;
 use App\Models\Landlord\Facility;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Landlord\ContractRenewal;
@@ -165,6 +166,10 @@ public function leaveRequests()
     public function contractRenewals()
 {
     return $this->hasMany(ContractRenewal::class, 'room_id', 'room_id');
+}
+public function bookings()
+{
+    return $this->hasMany(Booking::class, 'room_id');
 }
 
 }
