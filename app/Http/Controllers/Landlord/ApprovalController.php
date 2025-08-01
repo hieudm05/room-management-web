@@ -91,6 +91,7 @@ class ApprovalController extends Controller
             $cccd = $cccdMatch[1] ?? '';
             $phone = $phoneMatch[1] ?? '';
             $tenantEmail = $emailMatch[1] ?? '';
+
         }
 
         // dd($fullName);

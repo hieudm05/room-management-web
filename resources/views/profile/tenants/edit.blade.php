@@ -45,6 +45,9 @@
                     </a>
                      <a href="{{ route('home.complaints.index') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
                         <i class="bi bi-receipt-cutoff fs-5"></i> Lịch sử khiếu nại
+                     </a>
+                     <a href="{{ route('home.profile.tenants.dashboard') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                        <i class="bi bi-receipt-cutoff fs-5"></i> Thống kê chi tiết
                     </a>
                 </ul>
             </div>
