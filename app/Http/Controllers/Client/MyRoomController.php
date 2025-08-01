@@ -43,6 +43,7 @@ $alert = null;
 $monthsRemaining = null;
 $endDateFormatted = null;
 $showRenewButtons = false;
+$alertType = null;
 
 if ($contract) {
     $today = Carbon::today();
@@ -67,8 +68,8 @@ $hasRenewalPending = $room->contractRenewals()
     // cảnh báo chưa đóng tiền khi đã có hóa đơn từ mùng 1-5 của tháng
     $showBillReminder = false;
 $billReminderType = null;
-// $today = Carbon::today();
-$today = Carbon::create(2025,8,5);
+$today = Carbon::today();
+// $today = Carbon::create(2025,8,5);
 $day = $today->day;
 
 // Kiểm tra nếu đã có hóa đơn tháng này nhưng chưa thanh toán
