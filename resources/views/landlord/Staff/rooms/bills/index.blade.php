@@ -80,6 +80,21 @@
                 @if (empty($data))
                     <div class="alert alert-info">Không có phòng nào để hiển thị.</div>
                 @else
+                 @php $countTenant = 0; @endphp
+
+                        @foreach ($data as $index => $item)
+                            @if ($item['tenant_name'] !== "Chưa có")
+                                @php $countTenant++; @endphp
+                                {{-- Hiển thị form hoá đơn --}}
+                              
+                            @endif
+                        @endforeach
+
+                        @if ($countTenant === 0)
+                            <div class="alert alert-info">
+                                Hiện không có phòng nào có người thuê để lập hóa đơn.
+                            </div>
+                        @else
                     <ul class="nav nav-tabs" id="roomTabs" role="tablist">
                         @foreach ($data as $index => $item)
                             <li class="nav-item" role="presentation">
@@ -336,30 +351,6 @@
                                     <div class="form-section">
                                         <h5>Dịch vụ phụ</h5>
                                         @if (!empty($item['services']))
-                                            {{-- <table class="table table-bordered table-services">
-                                            <thead>
-                                                <tr>
-                                                    <th>Tên dịch vụ</th>
-                                                    <th>Giá (VND)</th>
-                                                    <th>Số lượng</th>
-                                                    <th>Tổng (VND)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($item['services'] as $index => $service)
-                                                    <tr>
-                                                        <td>{{ $service['name'] }}</td>
-                                                        <td>{{ number_format($service['price']) }}</td>
-                                                        <td>{{ $service['qty'] }}</td>
-                                                        <td>{{ number_format($service['total']) }}</td>
-                                                        <input type="hidden" name="data[services][{{ $index }}][service_id]" value="{{ $service['service_id'] }}">
-                                                        <input type="hidden" name="data[services][{{ $index }}][price]" value="{{ $service['price'] }}">
-                                                        <input type="hidden" name="data[services][{{ $index }}][qty]" value="{{ $service['qty'] }}">
-                                                        <input type="hidden" name="data[services][{{ $index }}][total]" value="{{ $service['total'] }}">
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table> --}}
                                             <table class="table">
                                                 <thead>
                                                     <tr>
@@ -443,7 +434,7 @@
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label">Giá (VND)</label>
-                                                        <input type="number" class="form-control additional-fee-price"
+                                                        <input type="number" class="form-control additional-fee-price" 
                                                             name="data[additional_fees][{{ $index }}][price]"
                                                             value="{{ $fee['price'] ?? '' }}" placeholder="0"
                                                             min="0"
@@ -461,9 +452,11 @@
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label">Tổng (VND)</label>
-                                                        <input type="text" class="form-control additional-fee-total"
-                                                            name="data[additional_fees][{{ $index }}][total]"
-                                                            value="{{ $fee['total'] ?? 0 }}" readonly>
+                                                       
+                                                <input type="text" class="form-control additional-fee-total"
+                                                    name="data[additional_fees][{{ $index }}][total]"
+                                                    value="{{ $fee['total'] ?? '' }}"
+                                                    readonly>
                                                     </div>
                                                     <div class="col-md-1">
                                                         <label class="form-label"> </label>
@@ -509,6 +502,7 @@
                         @endforeach
                     </div>
                 @endif
+                 @endif
             </div>
         </div>
     </div>
@@ -748,7 +742,7 @@
                     row.querySelector('.additional-fee-qty-error').textContent = '';
 
                     const name = nameInput.value.trim();
-                    const price = parseFloat(priceInput.value) || 0;
+                   const price = parseFloat(priceInput.value) || 0;
                     const qty = parseInt(qtyInput.value) || 1;
 
                     if (!name && !row.closest('form').querySelector('button.btn-success').disabled) {

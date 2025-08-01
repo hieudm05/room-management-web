@@ -8,7 +8,8 @@
     <div class="card shadow-sm border border-secondary-subtle">
         <div class="card-body">
             <p><strong>🧍 Người gửi:</strong> {{ $request->user->name }}</p>
-            <p><strong>🏠 Phòng:</strong> {{ $request->room->name }}</p>
+            <p><strong>🏠 Phòng:</strong> {{ $request->room->room_number }}</p>
+            <p><strong>🏢 Tòa nhà:</strong> {{ $request->room->property?->name ?? 'Không xác định' }}</p>
             <p><strong>📅 Ngày áp dụng:</strong> {{ $request->leave_date }}</p>
             <p><strong>📎 Loại yêu cầu:</strong> 
                 <span class="badge bg-{{ $request->action_type === 'transfer' ? 'info' : 'secondary' }}">
@@ -20,7 +21,7 @@
                 <p><strong>🔄 Người được nhượng:</strong> {{ $request->newRenter?->name ?? '(Chưa chỉ định)' }}</p>
             @endif
 
-            <p><strong>📝 Ghi chú:</strong> {{ $request->reason ?? 'Không có' }}</p>
+            <p><strong>📝 Ghi chú:</strong> {{ $request->note ?? 'Không có' }}</p>
 
             <p><strong>📌 Trạng thái hiện tại:</strong>
                 <span class="badge bg-warning text-dark">{{ ucfirst($request->status) }}</span>

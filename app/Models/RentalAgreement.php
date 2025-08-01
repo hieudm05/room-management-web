@@ -48,4 +48,12 @@ class RentalAgreement extends Model
     {
         return $this->belongsTo(User::class, 'landlord_id');
     }
+    public function userInfos()
+    {
+        return $this->hasMany(UserInfo::class, 'rental_id');
+    }
+    public function roomUser()
+    {
+        return $this->hasMany(RoomUser::class, 'rental_id');
+    }
 }

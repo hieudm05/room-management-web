@@ -11,17 +11,17 @@
                     <h5 class="mb-4 fw-bold text-primary text-center">📝 Thêm người vào phòng</h5>
 
                     @if(session('success'))
-                        <div class="alert alert-success">{{ session('success') }}</div>
+                    <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
 
                     @if($errors->any())
-                        <div class="alert alert-danger">
-                            <ul class="mb-0">
-                                @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
                     @endif
 
                     <form action="{{ route('renter.storeuser') }}" method="POST">
@@ -29,6 +29,12 @@
 
                         <div id="member-list">
                             <div class="member border rounded p-3 mb-3 bg-light">
+                                <div class="form-group">
+                                    <label for="rental_id_display">Mã hợp đồng</label>
+                                    <input type="text" class="form-control" id="rental_id_display"
+                                        value="{{ $rental?->rental_id ?? 'Không có hợp đồng' }}" readonly>
+                                </div>
+                                <input type="hidden" name="rental_id" value="{{ $rentalId }}">
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">Họ và Tên</label>
                                     <input type="text" name="full_name[]" class="form-control" placeholder="Nhập đầy đủ họ tên" required>
@@ -67,25 +73,25 @@
 
 {{-- Script --}}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const memberList = document.getElementById('member-list');
-    const addBtn = document.getElementById('add-member');
+    document.addEventListener('DOMContentLoaded', function() {
+        const memberList = document.getElementById('member-list');
+        const addBtn = document.getElementById('add-member');
 
-    addBtn.addEventListener('click', function () {
-        const firstMember = memberList.querySelector('.member');
-        const newMember = firstMember.cloneNode(true);
+        addBtn.addEventListener('click', function() {
+            const firstMember = memberList.querySelector('.member');
+            const newMember = firstMember.cloneNode(true);
 
-        newMember.querySelectorAll('input').forEach(input => input.value = '');
-        newMember.querySelector('.remove-member').classList.remove('d-none');
+            newMember.querySelectorAll('input').forEach(input => input.value = '');
+            newMember.querySelector('.remove-member').classList.remove('d-none');
 
-        memberList.appendChild(newMember);
+            memberList.appendChild(newMember);
+        });
+
+        memberList.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-member')) {
+                e.target.closest('.member').remove();
+            }
+        });
     });
-
-    memberList.addEventListener('click', function (e) {
-        if (e.target.classList.contains('remove-member')) {
-            e.target.closest('.member').remove();
-        }
-    });
-});
 </script>
 @endsection

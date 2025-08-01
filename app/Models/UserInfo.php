@@ -9,7 +9,7 @@ class UserInfo extends Model
 {
     protected $table = 'user_infos';
     protected $primaryKey = 'id';
-    protected $fillable = ['user_id', 'cccd', 'phone', 'email', 'room_id', 'full_name'];
+    protected $fillable = ['user_id', 'cccd', 'phone', 'email', 'room_id','rental_id' , 'full_name'];
 
     public function user()
     {
@@ -20,5 +20,9 @@ class UserInfo extends Model
     public function room()
     {
         return $this->belongsTo(Room::class, 'room_id');
+    }
+    public function rental()
+    {
+        return $this->belongsTo(RentalAgreement::class, 'rental_id');
     }
 }

@@ -68,9 +68,8 @@ class PaymentController extends Controller
 
                 $pivot = $service->pivot;
                 $isFree = $pivot->is_free;
-                $isPerPerson = $pivot->is_per_person;
+                $isPerPerson = $pivot->unit === 'per_person';
                 $price = $pivot->price;
-
                 $qty = $isFree ? 1 : ($isPerPerson ? ($room->people_renter ?? 1) : 1);
                 $total = $isFree ? 0 : $price * $qty;
 
@@ -164,7 +163,7 @@ class PaymentController extends Controller
                 'electric_photos' => $electricPhotos,
                 'water_price' => $waterPrice,
                 'water_unit' => $waterUnit ?? 'per_m3',
-                'water_occupants' => $utility ? $utility->water_occupants : ($bill ? $bill->water_occupants : 1),
+                'water_occupants' => $room ? $room->people_renter : ($bill ? $bill->water_occupants : 1),
                 'water_start' => $waterUnit == 'per_m3'
                     ? ($previousBill ? $previousBill->water_end : 0)
                     : ($bill ? $bill->water_start : 0),
@@ -226,8 +225,6 @@ class PaymentController extends Controller
             'data.complaint_landlord_cost' => 'nullable|numeric|min:0',
 
         ]);
-        // dd($validated);
-        \Log::info('Data sent to store:', $request->all()); // Debug
 
         DB::beginTransaction();
         try {

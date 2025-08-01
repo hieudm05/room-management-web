@@ -6,10 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Landlord\Approval;
 use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Room;
-use App\Models\Landlord\RoomUser;
-use App\Models\Landlord\RoomUsers;
 use App\Models\User;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -109,7 +106,6 @@ class ApprovalController extends Controller
                 'password' => Hash::make($password),
                 'role' => 'Renter',
             ]);
-     
             // Gửi mail thông báo
             Mail::raw(
                 "Chào $fullName,\n\nTài khoản của bạn đã được tạo:\nEmail: $tenantEmail\nMật khẩu: $password\n\nVui lòng đăng nhập và thay đổi mật khẩu sau lần đăng nhập đầu tiên.\n\nTrân trọng,\nHệ thống quản lý phòng trọ",
@@ -130,24 +126,9 @@ class ApprovalController extends Controller
                 'phone' => $phone,
                 'email' => $tenantEmail,
                 "room_id" => $approval->room_id,
+                'rental_id' => $rental->rental_id,  
             ]
         );
-
-            RoomUsers::create([
-
-                'user_id' => $user->id,
-                'room_id' => $approval->room_id,
-                 'rental_id' => $rental->rental_id,
-                'name' => $user->name ?: $fullName,
-                'email' => $user->email,
-                'phone' => $phone,
-                'cccd' => $cccd,
-                'started_at' => Carbon::now(),
-                'stopped_at' => null, // Hoặc ngày kết thúc nếu có
-                'is_active' => 1, // Hoặc trạng thái phù hợp
-            
-        ]);
-     
         // 8. Xóa bản ghi chờ phê duyệt
         $approval->delete();
         return back()->with('success', 'Hợp đồng đã được duyệt và thêm vào hệ thống.');
@@ -176,7 +157,6 @@ class ApprovalController extends Controller
         if ($approval->type !== 'add_user') {
             return back()->withErrors('❌ Loại yêu cầu không hợp lệ.');
         }
-
         // 🔍 Tách họ tên và email từ note: "Tên: Nguyễn Văn A | Email: abc@example.com"
         preg_match('/Tên:\s*(.*?)\s*\|\s*Email:\s*(.*)/', $approval->note, $matches);
         $fullNameFromNote = trim($matches[1] ?? '');

@@ -20,7 +20,7 @@ class RoomLeaveRequest extends Model
         'leave_date',
         'note',
         'staff_id',
-        'type', // 'leave' or 'transfer'
+        'action_type', // 'leave' or 'transfer'
         'landlord_id', // ID of the landlord who owns the room
         'landlord_status', // Status of the request from the landlord's perspective
          'staff_status',

@@ -12,17 +12,31 @@ class StaffRoomLeaveController extends Controller
     /**
      * Danh sách yêu cầu chờ duyệt sơ bộ bởi nhân viên
      */
-    public function index()
-    {
-        $staffId = Auth::id();
+   public function index()
+{
+    $staffId = Auth::id();
 
-        $requests = RoomLeaveRequest::with(['user', 'room'])
-            ->where('staff_id', $staffId)
-            ->where('staff_status', 'Pending') // ✅ Dùng staff_status
-            ->get();
+    $requests = RoomLeaveRequest::with(['user', 'room'])
+        ->where('staff_id', $staffId)
+        ->whereNotIn('staff_status', ['Finalized']) // đã xử lý xong thì ẩn
+        ->get();
 
-        return view('landlord.staff.roomleave.index', compact('requests'));
-    }
+    return view('landlord.staff.roomleave.index', compact('requests'));
+}
+   public function finalize($id)
+{
+    $request = RoomLeaveRequest::where('id', $id)
+        ->where('staff_id', Auth::id())
+        ->where('staff_status', 'Approved') // chỉ khi đã duyệt
+        ->where('status', 'approved')       // chủ trọ đã duyệt
+        ->firstOrFail();
+
+    $request->staff_status = 'Finalized';
+    $request->save();
+
+    return redirect()->route('landlord.staff.roomleave.index')
+        ->with('success', '✅ Đã xác nhận hoàn tất yêu cầu.');
+}
 
     /**
      * Xem chi tiết yêu cầu rời phòng
@@ -62,4 +76,17 @@ class StaffRoomLeaveController extends Controller
     return redirect()->route('landlord.staff.roomleave.index')
         ->with('success', '✅ Đã duyệt yêu cầu và chuyển đến chủ trọ.');
 }
+   public function processed()
+    {
+        $staffId = Auth::id();
+
+        // Lấy các yêu cầu trả phòng đã được xử lý bởi nhân viên này
+       $processedLeaves = RoomLeaveRequest::where('handled_by', $staffId)
+    ->with('room', 'user')
+    ->latest('updated_at') // hoặc latest('id')
+    ->paginate(10);
+
+        return view('landlord.staff.roomleave.processed', compact('processedLeaves'));
+    }
 }
+
