@@ -35,6 +35,49 @@ $user = Auth::user(); ?>
                                 class="nav-link">Phê duyệt yêu cầu chuyển phòng</a></li>
                         <li class="nav-item"><a href="{{ route('landlord.posts.approval.index') }}"
                                 class="nav-link">Duyệt bài đăng</a></li>
+<<<<<<< HEAD
+
+                            <a href="{{ route('landlords.properties.list') }}" class="nav-link">
+                                Quản Lý Bất Động Sản
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.rooms.index') }}" class="nav-link">
+                                Danh sách Phòng Tổng Quan
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.approvals.index') }}" class="nav-link">
+                                Quản Lý Phê Duyệt Hợp Đồng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.approvals.users.index') }}" class="nav-link">
+                                Quản Lý Phê Duyệt Người Dùng
+        
+                        <li class="nav-item">
+                            <a href="{{ route('landlords.room_edit_requests.index') }}" class="nav-link">
+                                Phê duyệt yêu cầu chỉnh sửa  phòng
+
+                            </a>
+                        </li>
+                         <li class="nav-item">
+                      <a href="{{ route('landlord.roomleave.index') }}" class="nav-link">
+                          Quản lý yêu cầu rời phòng
+                      </a>
+                  </li>
+                      <li class="nav-item">
+                      <a href="{{ route('landlord.roomleave.processed') }}" class="nav-link">
+                          Lịch sử duyệt rời phòng
+                      </a>
+                  </li>
+
+                        <li class="nav-item"><a href="{{ route('landlord.bookings.index') }}" class="nav-link">Quản
+                                lí đặt
+                                lịch</a></li>
+
+=======
+>>>>>>> 16ac02342d143393bb568ded9b2848c3826416c5
                     @endif
 
                     @if ($user->role === 'Staff')
@@ -44,9 +87,48 @@ $user = Auth::user(); ?>
                                 class="nav-link">Tiếp nhận khiếu nại</a></li>
                         <li class="nav-item"><a href="{{ route('staff.posts.index') }}" class="nav-link">Đăng bài</a>
                         </li>
+<<<<<<< HEAD
+                        <li class="nav-item">
+
+                            <a href="{{ route('landlord.staff.complaints.index') }}" class="nav-link">
+                                Nhân viên tiếp nhận khiếu nại
+
+                            </a>
+                        </li>
+                         <li class="nav-item">
+                   <a href="{{ route('landlord.staff.complaints.history') }}" class="nav-link">
+                                Lịch sử khiếu nại
+                      </a>
+                      
+                  </li>
+                  <li class="nav-item">
+                      <a href="{{ route('landlord.staff.roomleave.index') }}" class="nav-link">
+                          Quản lý yêu cầu rời sửa phòng
+                      </a>
+                  </li>
+                   <li class="nav-item">
+                      <a href="{{ route('landlord.staff.roomleave.processed') }}" class="nav-link">
+                          Lịch yêu cầu rời sửa phòng
+                      </a>
+                  </li>
+                  
+                   
+                   
+                    @endif
+
+                        <li class="nav-item"><a href="{{ route('staff.contract.renewals.index') }}"
+                                class="nav-link">Tiếp Nhận Tái Ký</a></li>
+
+                        <li class="nav-item"><a href="{{ route('booking.index') }}" class="nav-link">Quản
+                                lý đặt
+                                lịch</a></li>
+
+               
+=======
                         <li class="nav-item"><a href="{{ route('landlord.staff.complaints.history') }}"
                                 class="nav-link">Lịch sử xử lý khiếu nại</a></li>
                     @endif
+>>>>>>> 16ac02342d143393bb568ded9b2848c3826416c5
                 </ul>
             </div>
         </li>
