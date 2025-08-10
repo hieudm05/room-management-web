@@ -1,183 +1,180 @@
 <?php
-
-namespace App\Http\Controllers\Landlord;
+namespace App\Http\Controllers\LandLord;
 
 use App\Http\Controllers\Controller;
-use App\Models\Landlord\Property;
+use App\Models\LandLord\Property;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
-class HomeLandlordController extends Controller
+class HomeLandLordController extends Controller
 {
     public function index()
     {
-        // Lấy tất cả các bất động sản mà chủ trọ đang quản lý
-        $properties = Property::with(['rooms', 'rooms.bills', 'rooms.complaints'])->get();
+        // Lấy danh sách tất cả tòa nhà
+        $properties = Property::all();
 
-        $propertyStats = $properties->map(function ($property) {
-            $total_rooms = $property->rooms->count();
-            $rented_rooms = $property->rooms->where('status', 'Rented')->count();
-            $empty_rooms = $total_rooms - $rented_rooms;
-
-            // Tổng chi phí điện, nước, phát sinh
-            $electric_cost = $property->rooms->flatMap->bills->sum('electric_total');
-            $water_cost = $property->rooms->flatMap->bills->sum('water_total');
-            $other_cost = $property->rooms
-                ->flatMap->bills
-                ->flatMap->additionalFees
-                ->sum('total')
-                + $property->rooms->flatMap->bills->sum('complaint_landlord_cost');
-
-            // Số khiếu nại
-            $complaints = $property->rooms->flatMap->complaints->count();
-
-            // Doanh thu: tổng tiền từ bills
-            $revenue = $property->rooms
-            ->flatMap->bills
-             ->filter(fn($b) => $b->status === 'paid')
-            ->sum('total');
-
-
-            // Lợi nhuận
-            $profit = $revenue - ($electric_cost + $water_cost + $other_cost);
-
-            return [
-                'name' => $property->name ?? 'Unknown',
-                'total_rooms' => $total_rooms,
-                'rented_rooms' => $rented_rooms,
-                'empty_rooms' => $empty_rooms,
-                'electric_cost' => $electric_cost,
-                'water_cost' => $water_cost,
-                'other_cost' => $other_cost,
-                'complaints' => $complaints,
-                'revenue' => $revenue,
-                'profit' => $profit,
-            ];
+        // Tính toán thống kê tổng hợp
+        $total_rooms = Property::with('rooms')->get()->sum(function ($property) {
+            return $property->rooms->count();
+        });
+        $total_rented = Property::with('rooms')->get()->sum(function ($property) {
+            return $property->rooms->where('status', 'Rented')->count();
+        });
+        $total_empty = $total_rooms - $total_rented;
+        $total_revenue = Property::with(['rooms.bills'])->get()->sum(function ($property) {
+            $bills = $property->rooms->flatMap->bills;
+            $revenue = $bills->sum('total');
+            Log::debug("Revenue for property {$property->name}: {$revenue}"); // Log để debug
+            return $revenue;
+        });
+        // dd($total_revenue);
+        $total_profit = Property::with(['rooms.bills'])->get()->sum(function ($property) {
+            $bills = $property->rooms->flatMap->bills;
+            return $bills->sum('total') - ($bills->sum('electric_total') + $bills->sum('water_total') + $bills->sum('other_total'));
+        });
+        $total_complaints = Property::with(['rooms.complaints'])->get()->sum(function ($property) {
+            return $property->rooms->flatMap->complaints->count();
         });
 
-        // Tổng hợp toàn hệ thống
-        $total_rooms = $propertyStats->sum('total_rooms');
-        $total_rented = $propertyStats->sum('rented_rooms');
-        $total_empty = $propertyStats->sum('empty_rooms');
-        $total_electric = $propertyStats->sum('electric_cost');
-        $total_water = $propertyStats->sum('water_cost');
-        $total_other = $propertyStats->sum('other_cost');
-        $total_complaints = $propertyStats->sum('complaints');
-        $total_revenue = $propertyStats->sum('revenue');
-        $total_profit = $propertyStats->sum('profit');
+        // Tính $propertyStats (mặc định 5 tòa nhà)
+        $propertyStats = Property::with(['rooms', 'rooms.bills', 'rooms.complaints'])
+            ->take(5)
+            ->get()
+            ->map(function ($property) {
+                $rooms = $property->rooms;
+                $total_rooms = $rooms->count();
+                $rented_rooms = $rooms->where('status', 'Rented')->count();
+                $empty_rooms = $total_rooms - $rented_rooms;
+                $bills = $rooms->flatMap->bills;
+                $revenue = $bills->sum('total');
+                $electric_cost = $bills->sum('electric_total');
+                $water_cost = $bills->sum('water_total');
+                $other_cost = $bills->sum('other_total');
+                $profit = $revenue - ($electric_cost + $water_cost + $other_cost);
+
+                Log::debug("Property {$property->name}: revenue = {$revenue}, profit = {$profit}"); // Log để debug
+
+                return [
+                    'name' => $property->name,
+                    'revenue' => $revenue ?? 0, // Đảm bảo không trả về null
+                    'profit' => $profit ?? 0,
+                    'total_rooms' => $total_rooms,
+                    'rented_rooms' => $rented_rooms,
+                    'empty_rooms' => $empty_rooms,
+                    'electric_cost' => $electric_cost ?? 0,
+                    'water_cost' => $water_cost ?? 0,
+                    'other_cost' => $other_cost ?? 0,
+                    'complaints' => $rooms->flatMap->complaints->count(),
+                ];
+            })->values();
 
         return view('landlord.dashboard', compact(
             'properties',
-            'propertyStats',
             'total_rooms',
             'total_rented',
             'total_empty',
-            'total_electric',
-            'total_water',
-            'total_other',
-            'total_complaints',
             'total_revenue',
-            'total_profit'
+            'total_profit',
+            'total_complaints',
+            'propertyStats'
         ));
     }
 
     public function filterStats(Request $request)
     {
-        $month = $request->input('month');
-        $quarter = $request->input('quarter');
-        $year = $request->input('year');
+        $month = $request->input('month'); // e.g., "2024-07"
+        $quarter = $request->input('quarter'); // e.g., "1", "2", "3", "4"
+        $year = $request->input('year', now()->year); // Mặc định năm hiện tại
+        $selected_properties = $request->input('properties', []);
         $compareA = $request->input('compareA');
         $compareB = $request->input('compareB');
 
-        // Lấy tất cả bất động sản với quan hệ rooms, bills, complaints
-        $query = Property::with(['rooms', 'rooms.bills', 'rooms.complaints']);
+        // Tạo cache key
+        $cacheKey = 'property_stats_' . md5(serialize($request->all()));
 
-        // Lọc theo tháng, quý, năm dựa trên bills
-        if ($month) {
-            $query->whereHas('rooms.bills', function ($q) use ($month) {
-                $q->whereMonth('created_at', substr($month, 5, 2))
-                  ->whereYear('created_at', substr($month, 0, 4));
-            });
-        }
+        $data = Cache::remember($cacheKey, now()->addMinutes(60), function () use ($month, $quarter, $year, $selected_properties, $compareA, $compareB) {
+            $query = Property::with(['rooms', 'rooms.bills', 'rooms.complaints']);
 
-        if ($quarter && $year) {
-            $monthRanges = [
-                1 => [1, 3],
-                2 => [4, 6],
-                3 => [7, 9],
-                4 => [10, 12]
+            // Lọc theo tòa nhà
+            if (!empty($selected_properties)) {
+                $query->whereIn('name', $selected_properties);
+            } elseif ($compareA || $compareB) {
+                $query->whereIn('name', array_filter([$compareA, $compareB]));
+            } else {
+                $query->take(5); // Mặc định 5 tòa nhà
+            }
+
+            $properties = $query->get();
+
+            if ($properties->isEmpty()) {
+                Log::warning("No properties found for filter: ", [
+                    'month' => $month,
+                    'quarter' => $quarter,
+                    'year' => $year,
+                    'properties' => $selected_properties,
+                    'compareA' => $compareA,
+                    'compareB' => $compareB
+                ]);
+            }
+
+            $propertyStats = $properties->map(function ($property) use ($month, $quarter, $year) {
+                $rooms = $property->rooms;
+                $total_rooms = $rooms->count();
+                $rented_rooms = $rooms->where('status', 'Rented')->count();
+                $empty_rooms = $total_rooms - $rented_rooms;
+
+                // Lọc bills theo tháng/quý/năm
+                $bills = $rooms->flatMap->bills->filter(function ($bill) use ($month, $quarter, $year) {
+                    $billMonth = substr($bill->month, 0, 7);
+                    $billYear = substr($bill->month, 0, 4);
+                    $billQuarter = ceil((int)substr($bill->month, 5, 2) / 3);
+
+                    return (
+                        (!$month || $billMonth === $month) &&
+                        (!$quarter || $billQuarter == $quarter) &&
+                        (!$year || $billYear == $year)
+                    );
+                });
+
+                $revenue = $bills->sum('total');
+                $electric_cost = $bills->sum('electric_total');
+                $water_cost = $bills->sum('water_total');
+                $other_cost = $bills->sum('other_total');
+                $profit = $revenue - ($electric_cost + $water_cost + $other_cost);
+
+                Log::debug("Property {$property->name}: revenue = {$revenue}, bills count = {$bills->count()}"); // Log để debug
+
+                return [
+                    'name' => $property->name,
+                    'revenue' => $revenue ?? 0,
+                    'profit' => $profit ?? 0,
+                    'total_rooms' => $total_rooms,
+                    'rented_rooms' => $rented_rooms,
+                    'empty_rooms' => $empty_rooms,
+                    'electric_cost' => $electric_cost ?? 0,
+                    'water_cost' => $water_cost ?? 0,
+                    'other_cost' => $other_cost ?? 0,
+                    'complaints' => $rooms->flatMap->complaints->where('month', $month)->count(),
+                ];
+            })->values();
+
+            // Tính tổng hợp
+            $summary = [
+                'total_rooms' => $propertyStats->sum('total_rooms'),
+                'total_rented' => $propertyStats->sum('rented_rooms'),
+                'total_empty' => $propertyStats->sum('empty_rooms'),
+                'total_revenue' => $propertyStats->sum('revenue'),
+                'total_profit' => $propertyStats->sum('profit'),
+                'total_complaints' => $propertyStats->sum('complaints'),
             ];
-            $query->whereHas('rooms.bills', function ($q) use ($monthRanges, $quarter, $year) {
-                $q->whereBetween(\DB::raw('MONTH(created_at)'), $monthRanges[$quarter])
-                  ->whereYear('created_at', $year);
-            });
-        } elseif ($year) {
-            $query->whereHas('rooms.bills', function ($q) use ($year) {
-                $q->whereYear('created_at', $year);
-            });
-        }
-
-        // Lọc theo tên tòa nhà nếu có compareA hoặc compareB
-        if ($compareA || $compareB) {
-            $query->whereIn('name', array_filter([$compareA, $compareB]));
-        }
-
-        $properties = $query->get();
-
-        $propertyStats = $properties->map(function ($property) {
-            $total_rooms = $property->rooms->count();
-            $rented_rooms = $property->rooms->where('status', 'Rented')->count();
-            $empty_rooms = $total_rooms - $rented_rooms;
-
-            $electric_cost = $property->rooms->flatMap->bills->sum('electric_total');
-            $water_cost = $property->rooms->flatMap->bills->sum('water_total');
-            $other_cost = $property->rooms
-                ->flatMap->bills
-                ->flatMap->additionalFees
-                ->sum('total')
-                + $property->rooms->flatMap->bills->sum('complaint_landlord_cost');
-
-            $complaints = $property->rooms->flatMap->complaints->count();
-            $revenue = $property->rooms->flatMap->bills->sum('total');
-            $profit = $revenue - ($electric_cost + $water_cost + $other_cost);
 
             return [
-                'name' => $property->name ?? 'Unknown',
-                'total_rooms' => $total_rooms,
-                'rented_rooms' => $rented_rooms,
-                'empty_rooms' => $empty_rooms,
-                'electric_cost' => $electric_cost,
-                'water_cost' => $water_cost,
-                'other_cost' => $other_cost,
-                'complaints' => $complaints,
-                'revenue' => $revenue,
-                'profit' => $profit,
+                'propertyStats' => $propertyStats,
+                'summary' => $summary,
             ];
         });
 
-        $total_rooms = $propertyStats->sum('total_rooms');
-        $total_rented = $propertyStats->sum('rented_rooms');
-        $total_empty = $propertyStats->sum('empty_rooms');
-        $total_electric = $propertyStats->sum('electric_cost');
-        $total_water = $propertyStats->sum('water_cost');
-        $total_other = $propertyStats->sum('other_cost');
-        $total_complaints = $propertyStats->sum('complaints');
-        $total_revenue = $propertyStats->sum('revenue');
-        $total_profit = $propertyStats->sum('profit');
-
-        return response()->json([
-            'propertyStats' => $propertyStats,
-            'summary' => [
-                'total_rooms' => $total_rooms,
-                'total_rented' => $total_rented,
-                'total_empty' => $total_empty,
-                'total_electric' => $total_electric,
-                'total_water' => $total_water,
-                'total_other' => $total_other,
-                'total_complaints' => $total_complaints,
-                'total_revenue' => $total_revenue,
-                'total_profit' => $total_profit,
-            ]
-        ]);
+        return response()->json($data);
     }
 }
-?>

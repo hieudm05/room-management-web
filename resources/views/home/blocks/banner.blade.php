@@ -17,8 +17,8 @@
 
          <div class="row justify-content-center">
              <div class="col-xl-12 col-lg-12 col-md-12">
-                 <h1 class="big-header-capt mb-0 text-light">Search Your Next Home</h1>
-                 <p class="text-center mb-4 text-light">Find new & featured property located in your local city.</p>
+                <h1 class="big-header-capt mb-0 text-light">Tìm ngôi nhà tiếp theo của bạn</h1>
+                <p class="text-center mb-4 text-light">Khám phá bất động sản mới & nổi bật tại khu vực của bạn.</p>
              </div>
          </div>
 

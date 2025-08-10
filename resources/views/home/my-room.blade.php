@@ -1,118 +1,122 @@
 @extends('home.layouts.app')
 
 @section('title', 'Phòng của tôi')
-<style>
-    .content-wrapper {
-        min-height: 100%;
-        /* Đẩy footer xuống */
-    }
-</style>
+
 @section('content')
     <div class="container mt-4 content-wrapper">
+        <style>
+            .content-wrapper {
+                min-height: 100%;
+            }
+        </style>
 
-
-        <h3 class="mb-3">🏠 Thông tin phòng của bạn</h3>
-
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5><strong>Địa chỉ:</strong> {{ $room->property->address ?? 'Không rõ địa chỉ' }}</h5>
-                <p><strong>Số người ở:</strong> {{ $room->people_renter }}</p>
-                <p><strong>Diện tích:</strong> {{ $room->area }} m²</p>
-                <p><strong>Trạng thái:</strong> {{ $room->status === 'Rented' ? 'Đang cho thuê' : 'Ngừng hoạt động' }}</p>
-                @if ($hasRenewalPending)
-                    <div class="alert alert-info">
-                        🔁 Đang chờ quản lý để tái ký hợp đồng.
-                    </div>
-                @elseif ($alert)
-                    <div class="alert alert-{{ $alertType ?? 'warning' }}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>{{ $alert }}</div>
-                        </div>
-
-                        @if (!empty($showRenewButtons))
-                            <div class="mt-3 d-flex">
-                                <form method="POST" action="{{ route('client.contract.renew', ['room' => $room->room_id]) }}"
-                                    class="me-2">
-                                    @csrf
-                                    <input type="hidden" name="action" value="accept">
-                                    <button type="submit" class="btn btn-success btn-sm">🔁 Tái ký hợp đồng</button>
-                                </form>
-
-                                <form method="POST"
-                                    action="{{ route('client.contract.renew', ['room' => $room->room_id]) }}">
-                                    @csrf
-                                    <input type="hidden" name="action" value="reject">
-                                    <button type="submit" class="btn btn-danger btn-sm">❌ Từ chối</button>
-                                </form>
-                            </div>
-                        @endif
-                    </div>
-                @endif
-                {{-- Cảnh báo đóng tiền hóa đơn nếu như chưa đóng tiền  --}}
-                @if ($showBillReminder)
-                    <div class="alert alert-{{ $billReminderType }}">
-                        @if ($billReminderType === 'danger')
-                            😠 <strong>Lưu ý:</strong> Bạn chưa thanh toán hóa đơn tháng này. Vui lòng thanh toán sớm!
-                        @else
-                            ⚠️ <strong>Nhắc nhở:</strong> Hóa đơn tháng này chưa được thanh toán.
-                        @endif
-                    </div>
-                @endif
+        @if ($hasLeftRoom)
+            <div class="alert alert-info">
+                ⚠️ Bạn đã rời khỏi phòng này. Bạn vẫn có thể xem lại các hóa đơn cũ.
             </div>
-        </div>
-        <a href="{{ route('room-users.stopRentForm', ['room_id' => $room->room_id]) }}" class="btn btn-outline-primary">
-            👥 Xem thành viên phòng
-        </a>
-        <h4>📄 Hóa đơn</h4>
-
-        @if ($bills->isEmpty())
-            <p class="text-muted">Chưa có hóa đơn nào.</p>
         @else
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Tháng</th>
-                            <th>Tiền phòng</th>
-                            <th>Trạng thái</th>
-                            <th>Ngày tạo</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($bills as $bill)
+            @if ($room)
+                <h2>🏡 Thông tin phòng của bạn</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5><strong>Địa chỉ:</strong> {{ $room->property->address ?? 'Không rõ địa chỉ' }}</h5>
+                        <p><strong>Số người ở:</strong> {{ $room->currentUserInfos->count() }} người</p>
+                        <p><strong>Diện tích:</strong> {{ $room->area }} m²</p>
+                        <p><strong>Trạng thái:</strong>
+                            {{ $room->status === 'Rented' ? 'Đang cho thuê' : 'Ngừng hoạt động' }}</p>
+                    </div>
+                </div>
+                <a href="{{ route('home.roomleave.stopRentForm', ['room_id' => $room->room_id]) }}"
+                    class="btn btn-outline-primary mb-3">
+                    👥 Xem thành viên phòng
+                </a>
+            @endif
+            @if ($hasRenewalPending)
+                <div class="alert alert-info">
+                    🔁 Đã thành công chờ để được tái ký hợp đồng.
+                </div>
+            @elseif ($alert)
+                <div class="alert alert-{{ $alertType ?? 'warning' }}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>{{ $alert }}</div>
+                    </div>
+
+                    @if (!empty($showRenewButtons))
+                        <div class="mt-3 d-flex">
+                            <form method="POST" action="{{ route('client.contract.renew', ['room' => $room->room_id]) }}"
+                                class="me-2">
+                                @csrf
+                                <input type="hidden" name="action" value="accept">
+                                <button type="submit" class="btn btn-success btn-sm">🔁 Tái ký hợp đồng</button>
+                            </form>
+
+                            <form method="POST" action="{{ route('client.contract.renew', ['room' => $room->room_id]) }}">
+                                @csrf
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" class="btn btn-danger btn-sm">❌ Từ chối</button>
+                            </form>
+                        </div>
+                    @endif
+                </div>
+            @endif
+            {{-- Cảnh báo đóng tiền hóa đơn nếu như chưa đóng tiền  --}}
+            @if ($showBillReminder)
+                <div class="alert alert-{{ $billReminderType }}">
+                    @if ($billReminderType === 'danger')
+                        😠 <strong>Lưu ý:</strong> Bạn chưa thanh toán hóa đơn tháng này. Vui lòng thanh toán sớm!
+                    @else
+                        ⚠️ <strong>Nhắc nhở:</strong> Hóa đơn tháng này chưa được thanh toán.
+                    @endif
+                </div>
+            @endif
+
+            <h4>📄 Hóa đơn</h4>
+
+            @if ($bills->isEmpty())
+                <p class="text-muted">Chưa có hóa đơn nào.</p>
+            @else
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
                             <tr>
-                                <td>{{ $bill->month }}</td>
-                                <td>{{ number_format($bill->total) }} đ</td>
-                                <td>
-                                    @php
-                                        $statusLabel = match ($bill->status) {
-                                            'paid' => ['text' => 'Đã thanh toán', 'class' => 'bg-success'],
-                                            'pending' => ['text' => 'Chờ xác nhận', 'class' => 'bg-info'],
-                                            default => ['text' => 'Chưa thanh toán', 'class' => 'bg-warning'],
-                                        };
-                                    @endphp
-
-                                    <span class="badge {{ $statusLabel['class'] }}">
-                                        {{ $statusLabel['text'] }}
-                                    </span>
-                                </td>
-                                <td>{{ $bill->created_at->format('d/m/Y') }}</td>
-                                <td>
-                                    @if (!$bill->is_paid)
-                                        <button class="btn btn-sm btn-outline-primary mb-1" data-bs-toggle="modal"
-                                            data-bs-target="#qrModal{{ $bill->id }}">
-                                            Thanh toán
+                                <th>Tháng</th>
+                                <th>Tiền phòng</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($bills as $bill)
+                                <tr>
+                                    <td>{{ $bill->month }}</td>
+                                    <td>{{ number_format($bill->total) }} đ</td>
+                                    <td>
+                                        @php
+                                            $statusLabel = match ($bill->status) {
+                                                'paid' => ['text' => 'Đã thanh toán', 'class' => 'bg-success'],
+                                                'pending' => ['text' => 'Chờ xác nhận', 'class' => 'bg-info'],
+                                                default => ['text' => 'Chưa thanh toán', 'class' => 'bg-warning'],
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $statusLabel['class'] }}">{{ $statusLabel['text'] }}</span>
+                                    </td>
+                                    <td>{{ $bill->created_at->format('d/m/Y') }}</td>
+                                    <td>
+                                        @if (!$bill->is_paid)
+                                            <button class="btn btn-sm btn-outline-primary mb-1" data-bs-toggle="modal"
+                                                data-bs-target="#qrModal{{ $bill->id }}">
+                                                Thanh toán
+                                            </button>
+                                        @endif
+                                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                                            data-bs-target="#detailModal{{ $bill->id }}">
+                                            Chi tiết
                                         </button>
-                                    @endif
+                                    </td>
+                                </tr>
 
-                                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
-                                        data-bs-target="#detailModal{{ $bill->id }}">
-                                        Chi tiết
-                                    </button>
-                                </td>
-
-                                <!-- Modal QR -->
+                                {{-- Modal QR --}}
                                 <div class="modal fade" id="qrModal{{ $bill->id }}" tabindex="-1"
                                     aria-labelledby="qrModalLabel{{ $bill->id }}" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -143,7 +147,8 @@
                                                         <div class="mb-3">
                                                             <h6><strong>Số tiền:</strong></h6>
                                                             <p class="text-danger fs-5 fw-bold">
-                                                                {{ number_format($bill->total) }} đ</p>
+                                                                {{ number_format($bill->total) }} đ
+                                                            </p>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6 text-center">
@@ -160,7 +165,6 @@
                                                                     'Thanh toan hoa don ' . $bill->month,
                                                                 );
                                                             @endphp
-
                                                             <img src="https://img.vietqr.io/image/{{ $bankCode }}-{{ $accountNumber }}-compact2.png?amount={{ $amount }}&addInfo={{ $addInfo }}&accountName={{ $accountName }}"
                                                                 alt="QR Code" class="img-fluid rounded shadow border">
                                                             <p class="mt-2 text-muted"><small>📷 Quét mã để thanh toán tự
@@ -182,9 +186,8 @@
                                                             required>
                                                     </div>
                                                     <div class="text-end">
-                                                        <button type="submit" class="btn btn-primary">
-                                                            Tôi đã thanh toán
-                                                        </button>
+                                                        <button type="submit" class="btn btn-primary">Tôi đã thanh
+                                                            toán</button>
                                                     </div>
                                                 </form>
                                             </div>
@@ -192,7 +195,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Modal Chi Tiết -->
+                                {{-- Modal Chi tiết --}}
                                 <div class="modal fade" id="detailModal{{ $bill->id }}" tabindex="-1"
                                     aria-labelledby="detailModalLabel{{ $bill->id }}" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -201,9 +204,8 @@
                                                 style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">
                                                 <div>
                                                     <h5 class="modal-title fw-bold"
-                                                        id="detailModalLabel{{ $bill->id }}">
-                                                        🧾 Hóa Đơn Tháng {{ $bill->month }}
-                                                    </h5>
+                                                        id="detailModalLabel{{ $bill->id }}">🧾 Hóa Đơn Tháng
+                                                        {{ $bill->month }}</h5>
                                                     <small class="text-light">Mã HĐ: #{{ $bill->id }}</small>
                                                 </div>
                                                 <button type="button" class="btn-close btn-close-white"
@@ -241,6 +243,7 @@
                                                                     class="fw-bold fs-5 text-danger">{{ number_format($bill->total ?? 0) }}
                                                                     đ</span>
                                                             </div>
+
                                                             @if ($bill->utilityPhotos && $bill->utilityPhotos->isNotEmpty())
                                                                 <div class="mt-4">
                                                                     <strong>🖼️ Biên lai điện nước:</strong>
@@ -258,8 +261,6 @@
                                                                     </div>
                                                                 </div>
                                                             @endif
-
-
                                                         </div>
                                                     </div>
 
@@ -315,33 +316,28 @@
                                         </div>
                                     </div>
                                 </div>
-
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         @endif
-
     </div>
 
-@endsection
-
-
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const modals = document.querySelectorAll('[id^="qrModal"]');
-        modals.forEach(modal => {
-            modal.addEventListener('show.bs.modal', function() {
-                const billId = this.id.replace('qrModal', '');
-                const input = document.querySelector(`#payment_time_${billId}`);
-                if (input) {
-                    const now = new Date();
-                    const formatted = now.toISOString().slice(0, 16);
-                    input.value = formatted;
-                }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modals = document.querySelectorAll('[id^="qrModal"]');
+            modals.forEach(modal => {
+                modal.addEventListener('show.bs.modal', function() {
+                    const billId = this.id.replace('qrModal', '');
+                    const input = document.querySelector(`#payment_time_${billId}`);
+                    if (input) {
+                        const now = new Date();
+                        const formatted = now.toISOString().slice(0, 16);
+                        input.value = formatted;
+                    }
+                });
             });
         });
-    });
-</script>
+    </script>
+@endsection
