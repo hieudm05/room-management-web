@@ -15,6 +15,38 @@ class BookingController extends Controller
             ->orderByDesc('created_at')
             ->get();
             // dd($bookings);
+
+
+        return view('landlord.bookings.index', compact('bookings'));
+    }
+
+    // app/Http/Controllers/Landlord/BookingController.php
+
+    public function approve($id)
+    {
+        $booking = Booking::with('post')->findOrFail($id); // ✅ Load luôn post
+
+        if (!$booking->post || !$booking->post->staff_id) {
+            return response()->json(['success' => false, 'message' => 'Không xác định được nhân viên đã đăng bài.']);
+        }
+
+        $booking->status = 'approved';
+        $booking->confirmed_by = $booking->post->staff_id;
+        $booking->save();
+
+        return response()->json(['success' => true]);
+    }
+
+
+
+    public function reject($id)
+    {
+        $booking = Booking::findOrFail($id);
+        $booking->status = 'rejected';
+        $booking->save();
+
+        return response()->json(['success' => true]);
+
         $request->validate([
             'post_id' => 'required|exists:staff_posts,post_id',
             'check_in' => 'required|date_format:d/m/Y|after_or_equal:today',
@@ -40,5 +72,6 @@ class BookingController extends Controller
 
 
         return redirect()->back()->with('success', 'Booking submitted successfully!');
+
     }
 }

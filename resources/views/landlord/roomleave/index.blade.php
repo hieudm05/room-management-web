@@ -35,6 +35,9 @@
                                         ✍️ Duyệt chuyển nhượng
                                     </button>
                                 @else
+
+                                    <form action="{{ route('landlord.roomleave.transfer.submit', $req->id) }}" method="POST"
+
                                     <form action="{{ route('landlord.roomleave.approve', $req->id) }}" method="POST"
                                           onsubmit="return confirm('Bạn có chắc chắn muốn duyệt yêu cầu này?')">
                                         @csrf
@@ -62,7 +65,11 @@
                             <div class="modal-body">
                                 <form method="POST" action="{{ route('landlord.roomleave.approve', $req->id) }}">
                                     @csrf
+
+                                    <input type="hidden" name="new_renter_id" value="{{ $req->new_renter_id }}">
+
                                     <input type="hidden" name="new_renter_id" value="{{ $req->new_renter_id ?? '' }}">
+
 
                                     <div class="mb-3">
                                         <label class="form-label">🧍 Tên người nhận</label>
@@ -93,4 +100,8 @@
             </div>
         @endforelse
     </div>
+
 @endsection
+
+@endsection
+

@@ -877,4 +877,10 @@ class RoomController extends Controller
         $rooms = Room::where('property_id', $property_id)->get(['room_id']);
         return response()->json(['rooms' => $rooms]);
     }
+
+    public function getRoomsByProperty($property_id)
+    {
+        $rooms = Room::where('property_id', $property_id)->get(['room_id']);
+        return response()->json(['rooms' => $rooms]);
+    }
 }

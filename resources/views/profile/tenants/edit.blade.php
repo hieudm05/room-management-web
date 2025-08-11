@@ -55,6 +55,29 @@
                         </a>
                     </ul>
                 </div>
+
+                <hr class="my-2">
+                <ul class="list-group list-group-flush">
+                    <a href="{{ route('tenant.profile.edit') }}"
+                       class="list-group-item list-group-item-action d-flex align-items-center gap-2 {{ request()->routeIs('tenant.profile') ? 'active bg-primary text-white fw-bold' : '' }}"
+                       style="border-radius: 0 0.375rem 0.375rem 0;">
+                        <i class="bi bi-person-fill fs-5"></i> Thông tin cá nhân
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                        <i class="bi bi-key-fill fs-5"></i> Đổi mật khẩu
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                        <i class="bi bi-receipt-cutoff fs-5"></i> Lịch sử thanh toán
+                    </a>
+                     <a href="{{ route('home.complaints.index') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                        <i class="bi bi-receipt-cutoff fs-5"></i> Lịch sử khiếu nại
+                     </a>
+                     <a href="{{ route('home.profile.tenants.dashboard') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                        <i class="bi bi-receipt-cutoff fs-5"></i> Thống kê chi tiết
+                    </a>
+                </ul>
+
+
             </div>
 
             {{-- Main Content --}}

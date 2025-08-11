@@ -110,7 +110,7 @@ public function index(Request $request)
 
         $complaints = Complaint::with('room')
             ->where('staff_id', $userId)
-            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->whereBetween('resolved_at', [$monthStart, $monthEnd])
             ->get();
 
         $complaintLabels = $complaints

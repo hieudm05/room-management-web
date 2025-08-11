@@ -1,6 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Renter\DashboardRenterController;
+use App\Http\Controllers\Landlord\Staff\StaffRoomLeaveController;
 use App\Http\Controllers\Landlord\LandlordRoomLeaveController;
 use App\Http\Controllers\Landlord\LandLordComplaintController;
 use App\Http\Controllers\Renter\RenterComplaintController;
@@ -16,10 +17,12 @@ use App\Http\Controllers\Landlord\OCRController;
 use App\Http\Controllers\Client\MyRoomController;
 use App\Http\Controllers\Landlord\HomeLandlordController;
 use App\Http\Controllers\Landlord\RoomController;
-use App\Http\Controllers\Landlord\RoomEditRequestController;
+
 use App\Http\Controllers\Renter\RoomLeaveController;
-use App\Http\Controllers\Landlord\Staff\DocumentController;
-// use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
+
+
+use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
+
 use App\Http\Controllers\TenantProfileController;
 use App\Http\Controllers\Landlord\ChartController;
 use App\Http\Controllers\Landlord\ComplaintsChart;
@@ -29,7 +32,6 @@ use App\Http\Controllers\Landlord\ApprovalController;
 use App\Http\Controllers\Landlord\PropertyController;
 use App\Http\Controllers\Landlord\RoomStaffController;
 use App\Http\Controllers\Client\AuthLandlordController;
-use App\Http\Controllers\Client\ChangePasswordController;
 use App\Http\Controllers\Client\ResetPasswordController;
 use App\Http\Controllers\Landlord\BankAccountController;
 use App\Http\Controllers\Client\ForgotPasswordController;
@@ -44,19 +46,23 @@ use App\Http\Controllers\Landlord\Staff\ContractController;
 use App\Http\Controllers\Landlord\Staff\StaffPostController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomController;
 use App\Http\Controllers\Renter\RenterNotificationController;
+use App\Http\Controllers\Landlord\Staff\DocumentController;
+use App\Http\Controllers\Landlord\ComplaintsChartController;
+use App\Http\Controllers\Landlord\ContractRenewalController;
+
+
 
 // Địa chỉ
 
 use App\Http\Controllers\Landlord\LandlordBankAccountController;
 use App\Http\Controllers\Landlord\PropertyBankAccountController;
-use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
+
+
 use App\Http\Controllers\Landlord\Staff\StaffRoomEditController;
 use App\Http\Controllers\Landlord\landLordNotificationController;
 use App\Http\Controllers\Landlord\Staff\StaffComplaintController;
 use App\Http\Controllers\Landlord\PropertyRoomBankAccountController;
 use App\Http\Controllers\Landlord\Staff\StaffNotificationController;
-use App\Http\Controllers\Landlord\ContractRenewalController;
-
 
 
 use App\Http\Controllers\Landlord\BookingsController;
@@ -144,17 +150,6 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::delete('/{id}', [LandlordBankAccountController::class, 'destroy'])->name('destroy');
     });
 
-    // Dịch vụ
-    Route::resource('services', \App\Http\Controllers\Landlord\ServiceController::class);
-    Route::patch('services/{service}/hide', [\App\Http\Controllers\Landlord\ServiceController::class, 'hide'])->name('services.hide');
-    Route::patch('services/{service}/unhide', [\App\Http\Controllers\Landlord\ServiceController::class, 'unhide'])->name('services.unhide');
-    Route::get('services-hidden', [\App\Http\Controllers\Landlord\ServiceController::class, 'hidden'])->name('services.hidden');
-    Route::patch('services/{service}/toggle', [\App\Http\Controllers\Landlord\ServiceController::class, 'toggle'])->name('services.toggle');
-
-
-    // Tiện nghi
-     Route::resource('facilities', \App\Http\Controllers\Landlord\FacilityController::class);
-     
     // Rooms
     Route::prefix('rooms')->name('rooms.')->group(function () {
         Route::get('/', [RoomController::class, 'index'])->name('index');
@@ -227,7 +222,18 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/bills/{bill}', [LandlordBillController::class, 'show'])->name('bills.show');
         Route::get('/bills/export', [LandlordBillController::class, 'export'])->name('bills.export');
 
-   
+
+    // Bill của chủ trọ
+
+
+
+    Route::get('/bills', [LandlordBillController::class, 'index'])->name('bills.index');
+    Route::get('/bills/{bill}', [LandlordBillController::class, 'show'])->name('bills.show');
+    Route::get('/bills/export', [LandlordBillController::class, 'export'])->name('bills.export');
+
+
+
+
     // Staff yêu cầu chỉnh sửa phòng
     Route::prefix('staff/rooms')->name('staff.rooms.')->group(function () {
         Route::get('/{room}/edit', [StaffRoomEditController::class, 'edit'])->name('edit');
@@ -253,8 +259,23 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
             );
         return back()->with('success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
     })->name('staff.notifications.markAsRead');
-    
+
+
 });
+
+
+    Route::post('/staff/notifications/mark-as-read', function () {
+        $user = auth()->user();
+
+        $user->customNotifications()
+            ->wherePivot('is_read', false)
+            ->updateExistingPivot(
+                $user->customNotifications()->pluck('notifications.id')->toArray(),
+                ['is_read' => true, 'read_at' => now()]
+            );
+        return back()->with('success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
+    })->name('staff.notifications.markAsRead');
+
 
 // Các route ngoài landlords
 Route::prefix('rooms')->group(function () {
@@ -285,13 +306,6 @@ Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestF
 Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
-Route::middleware('auth')->group(function () {
-    // Hiển thị form đổi mật khẩu
-    Route::get('password/change', [ChangePasswordController::class, 'showChangeForm'])->name('password.change');
-
-    // Xử lý đổi mật khẩu
-    Route::post('password/change', [ChangePasswordController::class, 'updatePassword'])->name('password.change.update');
-});
 
 // Trang chủ
 Route::get('/', [HomeController::class, 'renter'])->name('renter');
@@ -363,32 +377,23 @@ Route::middleware(['auth'])->group(function () {
      * 🧑‍💼 Landlord (Chủ nhà)
      * ====================================
      */
+    Route::prefix('landlord')->name('landlord.')->group(function () {
         // Khiếu nại
-       Route::prefix('landlord')->name('landlord.')->middleware('auth')->group(function () {
-    Route::get('/complaints', [LandlordComplaintController::class, 'index'])->name('complaints.index');
-    Route::get('/complaints/{id}', [LandlordComplaintController::class, 'show'])->name('complaints.show');
-    Route::post('/complaints/{id}/approve', [LandlordComplaintController::class, 'approve'])->name('complaints.approve');
-    Route::get('/complaints/{id}/assign', [LandlordComplaintController::class, 'assignForm'])->name('complaints.assign.form');
-    Route::post('/complaints/{id}/assign', [LandlordComplaintController::class, 'assign'])->name('complaints.assign');
-    Route::get('/complaints/{id}/rejection', [LandlordComplaintController::class, 'showRejection'])->name('complaints.rejection');
-    Route::post('/complaints/{id}/accept-reject', [LandlordComplaintController::class, 'acceptReject'])->name('complaints.accept-reject');
-    Route::get('/complaints/{id}/reject', [LandlordComplaintController::class, 'rejectAsLandlordForm'])->name('complaints.reject.form');
-    Route::post('/complaints/{id}/reject', [LandlordComplaintController::class, 'rejectAsLandlord'])->name('complaints.reject');
-    Route::get('/complaints/{id}/resolve', [LandlordComplaintController::class, 'showResolveForm'])->name('complaints.resolve.form');
-    Route::post('/complaints/{id}/resolve', [LandlordComplaintController::class, 'resolveAsLandlord'])->name('complaints.resolve');
+        Route::get('/complaints', [LandlordComplaintController::class, 'index'])->name('complaints.index');
+        Route::get('/complaints/{id}', [LandlordComplaintController::class, 'show'])->name('complaints.show');
+        Route::post('/complaints/{id}/approve', [LandlordComplaintController::class, 'approve'])->name('complaints.approve');
+        Route::get('/complaints/{id}/rejection', [LandlordComplaintController::class, 'showRejection'])->name('complaints.rejection');
+        Route::get('/complaints/{id}/assign', [LandLordComplaintController::class, 'assignForm'])->name('complaints.assign.form');
+        Route::post('/complaints/{id}/assign', [LandLordComplaintController::class, 'assign'])->name('complaints.assign');
+        Route::post('/complaints/{id}/accept-reject', [LandLordComplaintController::class, 'acceptReject'])->name('complaints.accept-reject');
 
-       // Thông báo
-    Route::prefix('notifications')->name('notifications.')->group(function () {
+        // Thông báo
+        Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/', [LandLordNotificationController::class, 'index'])->name('index');
             Route::post('/{id}/read', [LandLordNotificationController::class, 'markAsRead'])->name('read');
             Route::delete('/{id}', [LandLordNotificationController::class, 'destroy'])->name('destroy');
             Route::post('/bulk-delete', [LandLordNotificationController::class, 'bulkDelete'])->name('bulk-delete');
         });
-});
-
-
-      
-        
     });
 
     /**
@@ -441,6 +446,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bulk-delete', [RenterNotificationController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('/mark-all-read', [StaffNotificationController::class, 'markAllAsRead'])->name('markAllRead');
     });
+
     // Renter yêu cầu rời phòng
 
 Route::prefix('room-leave')->middleware(['auth'])->group(function () {
@@ -454,6 +460,13 @@ Route::prefix('room-leave')->middleware(['auth'])->group(function () {
 
 });
     // Staff xử lý yêu cầu rời phòng
+    Route::prefix('staff')->name('landlord.staff.')->group(function () {
+        Route::get('/roomleave', [StaffRoomLeaveController::class, 'index'])->name('roomleave.index');
+        Route::post('/roomleave/{id}/approve', [StaffRoomLeaveController::class, 'approve'])->name('roomleave.approve');
+        Route::get('/roomleave/{id}/show', [StaffRoomLeaveController::class, 'show'])->name('roomleave.show');
+        Route::post('/roomleave/{id}/finalize', [StaffRoomLeaveController::class, 'finalize'])->name('roomleave.finalize');
+        Route::get('/roomleave/processed', [StaffRoomLeaveController::class, 'processed'])->name('roomleave.processed');
+    });
     Route::prefix('landlord')->name('landlord.')->group(function () {
 
         Route::get('/roomleave', [LandlordRoomLeaveController::class, 'index'])->name('roomleave.index');
@@ -467,7 +480,7 @@ Route::prefix('room-leave')->middleware(['auth'])->group(function () {
         Route::get('/roomleave/accept/{id}', [LandlordRoomLeaveController::class, 'acceptTransfer'])
          ->name('roomleave.accept');
     });
-
+});
       Route::middleware(['auth'])->group(function () {
     // Trang thống kê người thuê
     Route::get('/dashboard-renter', [DashboardRenterController::class, 'index'])->name('home.profile.tenants.dashboard');
@@ -521,7 +534,11 @@ Route::prefix('landlord/bookings')->middleware(['auth'])->name('landlord.booking
     Route::get('/', [BookingsController::class, 'index'])->name('index');
     Route::post('/{booking}/approve', [BookingsController::class, 'approve'])->name('approve');
     Route::post('/{booking}/reject', [BookingsController::class, 'reject'])->name('reject');
+    Route::post('/{id}/waiting', [BookingsController::class, 'waiting'])->name('waiting');
+    Route::post('/{id}/confirm', [BookingsController::class, 'confirm'])->name('confirm');
+    Route::post('/{id}/no-cancel', [BookingsController::class, 'noCancel'])->name('noCancel');
 });
+
 
 
 

@@ -2,11 +2,17 @@
 @section('title', 'Thành viên phòng')
 
 @section('content')
+
+    <div class="container mt-4">
+        <h3 class="mb-4">🧑‍🤝‍🧑 Thành viên trong phòng</h3>
+        @if (isset($incomingTransferRequest))
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <div class="container mt-4">
         <h3 class="mb-4">🧑‍🤝‍🧑 Thành viên trong phòng</h3>
     @if (isset($incomingTransferRequest) && $incomingTransferRequest->status === 'waiting_new_renter_accept')
     <!-- form hiển thị chuyển nhượng -->
+
 
     <div class="alert alert-info shadow-sm p-4 mb-4">
         <h5 class="mb-3">📋 Yêu cầu chuyển nhượng hợp đồng đến bạn</h5>
@@ -24,6 +30,23 @@
     </div>
 @endif
         {{-- Thông báo --}}
+
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show">
+                @foreach ($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
        {{-- SweetAlert Notifications --}}
     @if (session('success'))
         <script>
@@ -207,7 +230,11 @@
                                         <span class="text-success">✅ Đã duyệt (hệ thống)</span>
                                     @break
 
-                                   
+
+                                    @case('staff_approved')
+                                        <span class="text-success">✅ Đã duyệt bởi nhân viên</span>
+                                    @break
+
                                     @case('rejected')
                                         <span class="text-danger">❌ Bị từ chối</span>
                                     @break
@@ -218,7 +245,11 @@
 
                             </div>
 
+
+                            @if ($req->user_id == $userId && $req->status === 'pending')
+
                          @if ($req->user_id == $userId && strtolower(trim($req->status)) === 'pending')
+
                                 <div class="d-flex gap-2">
                                     <a href="{{ route('home.roomleave.viewRequest', $req->id) }}"
                                         class="btn btn-info btn-sm">👁️ Xem chi tiết</a>
@@ -245,6 +276,83 @@
     </div>
 
     {{-- Modal kết thúc / nhượng quyền (chủ hợp đồng) --}}
+
+    @if ($isContractOwner)
+        <div class="modal fade" id="terminateContractModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('home.roomleave.send') }}">
+                        @csrf
+                        <input type="hidden" name="room_id" value="{{ $room->room_id }}">
+                        <input type="hidden" name="user_id" value="{{ $userId }}">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title text-danger">🛑 Kết thúc hoặc Nhượng hợp đồng</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-warning">Bạn là <strong>chủ hợp đồng</strong>. Vui lòng chọn hành động:</p>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="action_type" value="leave"
+                                    id="leaveOption" checked>
+                                <label class="form-check-label" for="leaveOption">🚪 Rời khỏi phòng</label>
+                            </div>
+
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="radio" name="action_type" value="transfer"
+                                    id="transferOption">
+                                <label class="form-check-label" for="transferOption">🔄 Nhượng quyền cho người
+                                    khác</label>
+                            </div>
+                            <div class="mt-3" id="transferTarget" style="display: none;">
+                                <label>📋 Chọn người nhận quyền</label>
+                                <select name="new_renter_id" class="form-select">
+                                    @foreach ($room->userInfos as $info)
+                                        @if ($info->user->id !== $userId)
+                                            <option value="{{ $info->user->id }}">{{ $info->user->name }}
+                                                ({{ $info->user->email }})
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <label class="mt-3">📅 Ngày áp dụng</label>
+                            <input type="date" name="leave_date" class="form-control" required
+                                min="{{ now()->toDateString() }}" value="{{ old('leave_date') }}">
+                            @error('leave_date')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+
+                            <label class="mt-3">📝 Ghi chú (tuỳ chọn)</label>
+                            <textarea name="note" class="form-control" rows="3">{{ old('note') }}</textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+                            <button class="btn btn-warning" type="submit">Xác nhận</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const transferOption = document.getElementById('transferOption');
+                const leaveOption = document.getElementById('leaveOption'); // ✅ sửa lại tên cho đúng
+                const transferTarget = document.getElementById('transferTarget');
+
+                function toggleTransfer() {
+                    transferTarget.style.display = transferOption.checked ? 'block' : 'none';
+                }
+
+                transferOption.addEventListener('change', toggleTransfer);
+                leaveOption.addEventListener('change', toggleTransfer);
+                toggleTransfer();
+            });
+        </script>
+    @endif
   @if ($isContractOwner)
     <div class="modal fade" id="terminateContractModal" tabindex="-1" aria-labelledby="terminateContractModalLabel" aria-hidden="true">
         <div class="modal-dialog">
