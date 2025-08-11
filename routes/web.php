@@ -144,6 +144,17 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::delete('/{id}', [LandlordBankAccountController::class, 'destroy'])->name('destroy');
     });
 
+    // Dịch vụ
+    Route::resource('services', \App\Http\Controllers\Landlord\ServiceController::class);
+    Route::patch('services/{service}/hide', [\App\Http\Controllers\Landlord\ServiceController::class, 'hide'])->name('services.hide');
+    Route::patch('services/{service}/unhide', [\App\Http\Controllers\Landlord\ServiceController::class, 'unhide'])->name('services.unhide');
+    Route::get('services-hidden', [\App\Http\Controllers\Landlord\ServiceController::class, 'hidden'])->name('services.hidden');
+    Route::patch('services/{service}/toggle', [\App\Http\Controllers\Landlord\ServiceController::class, 'toggle'])->name('services.toggle');
+
+
+    // Tiện nghi
+     Route::resource('facilities', \App\Http\Controllers\Landlord\FacilityController::class);
+     
     // Rooms
     Route::prefix('rooms')->name('rooms.')->group(function () {
         Route::get('/', [RoomController::class, 'index'])->name('index');
