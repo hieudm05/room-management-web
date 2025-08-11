@@ -15,7 +15,6 @@ return new class extends Migration {
             $table->unsignedBigInteger('rental_agreement_id')->nullable();
 
             $table->unsignedBigInteger('staff_id')->nullable();     // Nhân viên xử lý
-           $table->string('status')->default('pending');
 
 
             $table->unsignedBigInteger('landlord_id')->nullable();  // Chủ nhà duyệt cuối

@@ -109,7 +109,7 @@
                             <tr>
                                 <th>Khu trọ</th>
                                 <th>Số phòng</th>
-                                <th>Số người tối đa</th>
+                                <th>Số người ở tối đa</th>
                                 <th>Diện tích</th>
                                 <th>Giá thuê</th>
                                 <th>Trạng thái</th>

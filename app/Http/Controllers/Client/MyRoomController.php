@@ -49,17 +49,22 @@ class MyRoomController extends Controller
             ->where('status', 'active')
             ->latest('end_date')
             ->first() : null;
+        // dd($contract);
 
+        
         $alert = null;
         $alertType = null;
         $showRenewButtons = false;
-
+        $alertType = null;
         if ($contract) {
+            $today = Carbon::today();
             $endDate = Carbon::parse($contract->end_date);
-            $monthsRemaining = floor($today->floatDiffInMonths($endDate));
+           $monthsRemaining = round($today->floatDiffInMonths($endDate));
             $endDateFormatted = $endDate->format('d/m/Y');
+            // dd($monthsRemaining);
 
             if ($monthsRemaining == 2) {
+                // dd("đã vào đây");
                 $alert = "⚠️ Hợp đồng phòng sắp hết hạn! Còn 2 tháng nữa ($endDateFormatted).";
                 $alertType = 'warning';
             } elseif ($monthsRemaining == 1) {
@@ -69,15 +74,15 @@ class MyRoomController extends Controller
             }
         }
 
-        $hasRenewalPending = $room ? $room->contractRenewals()
-            ->where('user_id', auth()->id())
-            ->where('status', 'pending')
-            ->exists() : false;
-
+      $hasRenewalPending = $room->contractRenewals()
+    ->where('user_id', auth()->id())
+    ->where('status', 'pending')
+    ->exists();
+        // dd($hasRenewalPending);
         // Kiểm tra cảnh báo hóa đơn chưa thanh toán
         $showBillReminder = false;
         $billReminderType = null;
-
+        $today = Carbon::create(2025,8,5);
         $day = $today->day;
 
         $unpaidBill = $room ? RoomBill::where('room_id', $room->room_id)

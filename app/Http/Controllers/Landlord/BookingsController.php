@@ -15,6 +15,7 @@ class BookingsController extends Controller
         $bookings = Booking::with(['user', 'post'])
             ->orderByDesc('created_at')
             ->get();
+            // dd($bookings);
 
         return view('landlord.bookings.index', compact('bookings'));
     }
