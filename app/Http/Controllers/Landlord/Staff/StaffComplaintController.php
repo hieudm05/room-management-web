@@ -102,6 +102,7 @@ class StaffComplaintController extends Controller
         $complaint->update([
             'status' => 'rejected',
             'reject_reason' => $request->reject_reason,
+            'handled_by' => auth()->id(), 
         ]);
 
         // Gửi thông báo

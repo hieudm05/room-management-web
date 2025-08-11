@@ -11,6 +11,10 @@ class BookingController extends Controller
 {
     public function store(Request $request)
     {
+        $bookings = Booking::with(['user', 'post'])
+            ->orderByDesc('created_at')
+            ->get();
+            // dd($bookings);
         $request->validate([
             'post_id' => 'required|exists:staff_posts,post_id',
             'check_in' => 'required|date_format:d/m/Y|after_or_equal:today',
