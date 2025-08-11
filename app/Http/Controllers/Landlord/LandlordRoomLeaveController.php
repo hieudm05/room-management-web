@@ -67,6 +67,7 @@ class LandlordRoomLeaveController extends Controller
                 'user_id' => $roomLeaveRequest->user_id,
                 'room_id' => $roomLeaveRequest->room_id,
                 'reason' => 'Rời phòng',
+                'action_type' => 'leave',
                 'leave_date' => now(),
             ]);
         }

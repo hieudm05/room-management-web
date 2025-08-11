@@ -66,6 +66,7 @@
                     <label for="month" class="form-label text-white me-2">Chọn tháng:</label>
                     <input type="month" id="month" name="month" class="form-control me-2"
                         value="{{ request('month', now()->format('Y-m')) }}">
+                        <input type="hidden" name="property_id" value="{{ request('property_id') }}">
                     <button type="submit" class="btn btn-light">Lọc</button>
                 </form>
             </div>
@@ -175,7 +176,7 @@
                 class="form-control status-select 
                     @if ($item['bill']->status == 'unpaid') border-warning shadow-sm @endif"
                 data-id="{{ $item['id_bill'] }}"
-                @if ($item['bill']->status == 'paid' || $item['bill']->status == 'pending') disabled @endif
+                @if (!$item['bill']->status == 'pending') disabled @endif
                 title="Chọn trạng thái thanh toán">
 
                 <option value="unpaid" {{ $item['bill']->status == 'unpaid' ? 'selected' : '' }}>

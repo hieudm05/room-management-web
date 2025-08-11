@@ -29,7 +29,46 @@
                 👥 Xem thành viên phòng
             </a>
         @endif
+        @if ($hasRenewalPending)
+                    <div class="alert alert-info">
+                        🔁 Đang chờ quản lý để tái ký hợp đồng.
+                    </div>
+                @elseif ($alert)
+                    <div class="alert alert-{{ $alertType ?? 'warning' }}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>{{ $alert }}</div>
+                        </div>
 
+                        @if (!empty($showRenewButtons))
+                            <div class="mt-3 d-flex">
+                                <form method="POST" action="{{ route('client.contract.renew', ['room' => $room->room_id]) }}"
+                                    class="me-2">
+                                    @csrf
+                                    <input type="hidden" name="action" value="accept">
+                                    <button type="submit" class="btn btn-success btn-sm">🔁 Tái ký hợp đồng</button>
+                                </form>
+
+                                <form method="POST"
+                                    action="{{ route('client.contract.renew', ['room' => $room->room_id]) }}">
+                                    @csrf
+                                    <input type="hidden" name="action" value="reject">
+                                    <button type="submit" class="btn btn-danger btn-sm">❌ Từ chối</button>
+                                </form>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+                {{-- Cảnh báo đóng tiền hóa đơn nếu như chưa đóng tiền  --}}
+                @if ($showBillReminder)
+                    <div class="alert alert-{{ $billReminderType }}">
+                        @if ($billReminderType === 'danger')
+                            😠 <strong>Lưu ý:</strong> Bạn chưa thanh toán hóa đơn tháng này. Vui lòng thanh toán sớm!
+                        @else
+                            ⚠️ <strong>Nhắc nhở:</strong> Hóa đơn tháng này chưa được thanh toán.
+                        @endif
+                    </div>
+                @endif
+                
         <h4>📄 Hóa đơn</h4>
 
         @if ($bills->isEmpty())

@@ -12,7 +12,7 @@ return new class extends Migration
    public function up()
 {
     DB::statement("ALTER TABLE room_leave_requests 
-        MODIFY status ENUM('pending', 'staff_approved', 'waiting_new_renter_accept', 'approved', 'rejected')");
+        MODIFY status ENUM('penfding', 'staff_approved', 'waiting_new_renter_accept', 'approved', 'rejected')");
 }
 
 public function down()
