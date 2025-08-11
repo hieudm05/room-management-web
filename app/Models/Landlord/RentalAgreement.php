@@ -25,6 +25,10 @@ class RentalAgreement extends Model
 {
     return $this->belongsTo(Room::class, 'room_id', 'room_id');
 }
+ public function leaveRequests()
+{
+    return $this->hasMany(RoomLeaveRequest::class, 'rental_agreement_id');
+}
 }
 
 

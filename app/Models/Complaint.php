@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\CommonIssue;
 use App\Models\Landlord\Property;
 use App\Models\Landlord\Room;
+use App\Models\Landlord\Staff\Rooms\RoomBill;
+
 class Complaint extends Model
 {
       protected $fillable = [
@@ -17,7 +19,16 @@ class Complaint extends Model
         'detail',
         'staff_id',
         'user_id',
+        'user_cost',
+        'landlord_cost',
+        'note',
+        'resolved_at',
+        'reject_reason',
+        'main_photo',
+        'photo_album',
+        'handled_by',
         'status',
+        'room_bill_id', // Added field for room_bill_id
     ];
 
    public function property()
@@ -46,5 +57,10 @@ public function resolvedPhotos()
 {
     return $this->hasMany(ComplaintPhoto::class)->where('type', 'resolved');
 }
+public function bill()
+{
+    return $this->belongsTo(RoomBill::class, 'room_bill_id');
+}
+
 
 }

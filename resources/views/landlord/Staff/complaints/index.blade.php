@@ -45,13 +45,13 @@
                                     <td>{{ Str::limit($c->detail, 80) }}</td>
                                     <td>{{ $c->created_at->format('d/m/Y H:i') }}</td>
                                     <td class="text-center">
-                                        <a href="{{ route('landlords.staff.complaints.edit', $c->id) }}"
+                                        <a href="{{ route('landlord.staff.complaints.edit', $c->id) }}"
                                            class="btn btn-sm btn-outline-primary" title="Xử lý">
                                             🔧
                                         </a>
                                     </td>
                                     <td class="text-center">
-                                        <a href="{{ route('landlords.staff.complaints.rejectform', $c->id) }}"
+                                        <a href="{{ route('landlord.staff.complaints.rejectform', $c->id) }}"
                                            class="btn btn-sm btn-outline-danger"
                                            onclick="return confirm('Bạn chắc chắn muốn từ chối khiếu nại này?');">
                                             ❌ Từ chối

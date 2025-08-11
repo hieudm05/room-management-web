@@ -7,6 +7,8 @@
             --danger-color: #fff3f3;
         }
 
+
+
         .border-dashed {
             border: 1px dashed red;
             transition: border-color 0.3s ease;
@@ -109,7 +111,7 @@
                                                 class="text-danger">*</span></label>
                                         <input type="hidden" id="rules" name="rules" value="{{ old('rules') }}"
                                             class="form-control @error('rules') is-invalid @enderror" required>
-                                        <div id="quill-editor" class="snow-editor" style="height: 350px"></div>
+                                        <div id="quill-editor" style="height: 350px"></div>
                                         @error('rules')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
@@ -171,6 +173,11 @@
                             <div class="col-12">
                                 <label class="form-label">Xác định vị trí trên bản đồ</label>
                                 <div id="map" style="height: 350px; border: 1px solid #ccc;"></div>
+                                <input id="autocompleteResults" class="form-control mt-2"
+                                    style="display:none; position:absolute; z-index:9999;" />
+                                <div id="autocomplete-list" class="list-group position-absolute w-50 bg-white border"
+                                    style="z-index: 1000; display:none;"></div>
+
                                 <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude') }}">
                                 <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude') }}">
                             </div>
@@ -406,12 +413,57 @@
 
         // Map and address
         document.addEventListener('DOMContentLoaded', async function() {
+            let userIsEditingAddress = false;
             const provinceSelect = document.getElementById('province');
             const districtSelect = document.getElementById('district');
             const wardSelect = document.getElementById('ward');
-            const oldProvince = '{{ old('province') }}';
-            const oldDistrict = '{{ old('district') }}';
-            const oldWard = '{{ old('ward') }}';
+            let oldProvince = '{{ old('province') }}';
+            let oldDistrict = '{{ old('district') }}';
+            let oldWard = '{{ old('ward') }}';
+
+            const addressInput = document.querySelector('#detailed_address');
+            const suggestionBox = document.createElement('div');
+            suggestionBox.classList.add('autocomplete-list');
+            suggestionBox.id = 'autocomplete-suggestions';
+            addressInput.parentNode.appendChild(suggestionBox);
+            let apiKey = '{{ config('services.locationiq.key') }}';
+
+            addressInput.addEventListener('input', async function() {
+                const query = this.value.trim();
+                if (!query) return;
+
+                const res = await fetch(
+                    `https://us1.locationiq.com/v1/autocomplete.php?key=${apiKey}&q=${encodeURIComponent(query)}&format=json`
+                    );
+                const data = await res.json();
+
+                suggestionBox.innerHTML = '';
+                suggestionBox.style.display = 'block';
+
+                data.slice(0, 5).forEach(suggest => {
+                    const item = document.createElement('div');
+                    item.classList.add('list-group-item', 'list-group-item-action');
+                    // Cắt phần chi tiết từ display_name trước dấu phẩy đầu tiên
+                    let detailOnly = suggest.display_name.split(',')[0];
+                    item.textContent = detailOnly;
+
+                    item.addEventListener('click', () => {
+                        addressInput.value = detailOnly;
+                        userIsEditingAddress = false;
+                        marker.setLatLng([suggest.lat, suggest.lon]);
+                        map.setView([suggest.lat, suggest.lon], 16);
+                        document.getElementById('latitude').value = suggest.lat;
+                        document.getElementById('longitude').value = suggest.lon;
+                        suggestionBox.style.display = 'none';
+                    });
+                    suggestionBox.appendChild(item);
+                });
+            });
+
+            document.addEventListener('click', () => {
+                suggestionBox.style.display = 'none';
+            });
+
 
             try {
                 const provinces = await fetch("https://provinces.open-api.vn/api/p/").then(res => {
@@ -484,6 +536,7 @@
                 wardSelect.addEventListener('change', updateMapWithAddress);
 
                 if (oldProvince) {
+
                     await provinceSelect.dispatchEvent(new Event('change'));
                 }
                 if (oldDistrict) {
@@ -495,12 +548,108 @@
             }
 
             let map = L.map('map').setView([21.028511, 105.804817], 13);
-            let marker = null;
-            const apiKey = '{{ config('services.locationiq.key') }}';
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
+            // Tạo marker có thể kéo
+            let marker = L.marker([21.028511, 105.804817], {
+                draggable: true
             }).addTo(map);
+
+            // Khi kéo mũi tên, cập nhật địa chỉ hành chính
+            marker.on('dragend', function(e) {
+                const pos = marker.getLatLng();
+                map.setView(pos);
+                reverseGeocodeAndUpdateAddress(pos.lat, pos.lng);
+            });
+
+            // Khi người dùng zoom/di chuyển map → tự động reverse
+            map.on('moveend', function() {
+                const center = map.getCenter();
+                marker.setLatLng(center);
+                reverseGeocodeAndUpdateAddress(center.lat, center.lng);
+            });
+
+            // Hàm reverse geocoding
+          async function reverseGeocodeAndUpdateAddress(lat, lon) {
+    try {
+        const res = await fetch(`https://us1.locationiq.com/v1/reverse.php?key=${apiKey}&lat=${lat}&lon=${lon}&format=json`);
+        const data = await res.json();
+        if (!data || !data.address) return;
+
+        const addr = data.address;
+
+        // Địa chỉ chi tiết
+      if (!userIsEditingAddress || !document.querySelector('#detailed_address').value.trim()) {
+            document.querySelector('#detailed_address').value = addr.road || addr.display_name || '';
+        }
+
+        const provinceText = addr.state;
+        const districtText = addr.county;
+        const wardText = addr.suburb || addr.village;
+
+        // --- Cập nhật tỉnh ---
+        let provinceMatched = [...provinceSelect.options].find(opt => provinceText && opt.text.includes(provinceText.trim()));
+        if (!provinceMatched) return;
+
+        provinceSelect.value = provinceMatched.value;
+        await provinceSelect.dispatchEvent(new Event('change'));
+
+        // --- Đợi huyện tải về rồi mới gán huyện ---
+        const waitForDistrictOptions = () => new Promise(resolve => {
+            const interval = setInterval(() => {
+                if (districtSelect.options.length > 1) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 100);
+        });
+        await waitForDistrictOptions();
+
+        let districtMatched = [...districtSelect.options].find(opt => districtText && opt.text.includes(districtText.trim()));
+        if (districtMatched) {
+           provinceSelect.value = provinceMatched.value;
+
+// ✅ GÁN LẠI GIÁ TRỊ "OLD" để hệ thống hiểu là bạn đã chọn lại
+// ⚠️ PHẢI khai báo let thay vì const ở phía trên!
+oldProvince = provinceMatched.value;
+oldDistrict = '';
+oldWard = '';
+
+await provinceSelect.dispatchEvent(new Event('change'));
+
+        }
+
+        // --- Đợi xã tải về rồi mới gán xã ---
+        const waitForWardOptions = () => new Promise(resolve => {
+            const interval = setInterval(() => {
+                if (wardSelect.options.length > 1) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 100);
+        });
+        await waitForWardOptions();
+
+        let wardMatched = [...wardSelect.options].find(opt => wardText && opt.text.includes(wardText.trim()));
+        if (wardMatched) {
+            wardSelect.value = wardMatched.value;
+        }
+
+        // Gán lat lon
+        document.querySelector('#latitude').value = lat;
+        document.querySelector('#longitude').value = lon;
+    } catch (error) {
+        console.error('Reverse geocoding error:', error);
+    }
+}
+
+            // Thêm tile layer từ MapTiler
+            const maptilerKey = "{{ config('services.maptiler.key') }}";
+            // console.log('MapTiler Key:', maptilerKey);
+                L.tileLayer(`https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=${maptilerKey}`, {
+            tileSize: 512,
+            zoomOffset: -1,
+            attribution: '© MapTiler © OpenStreetMap contributors'
+        }).addTo(map);
+
 
             function updateMapWithAddress() {
                 let detail = document.querySelector('#detailed_address').value.trim();
@@ -517,14 +666,20 @@
 
                 fetch(
                         `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${encodeURIComponent(fullAddress)}&format=json`
-                        )
+                    )
                     .then(response => response.json())
                     .then(data => {
                         if (data.length > 0) {
                             let lat = parseFloat(data[0].lat);
                             let lon = parseFloat(data[0].lon);
-                            if (marker) map.removeLayer(marker);
-                            marker = L.marker([lat, lon]).addTo(map);
+                            if (marker) {
+                                marker.setLatLng([lat, lon]);
+                            } else {
+                                marker = L.marker([lat, lon], {
+                                    draggable: true
+                                }).addTo(map);
+                            }
+
                             map.setView([lat, lon], 16);
                             document.querySelector('#latitude').value = lat;
                             document.querySelector('#longitude').value = lon;
@@ -543,9 +698,13 @@
 
             let debounceTimer;
             document.querySelector('#detailed_address').addEventListener('input', function() {
+                userIsEditingAddress = true;
                 clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(updateMapWithAddress, 1000);
+                debounceTimer = setTimeout(() => {
+                    updateMapWithAddress(); // Đã có sẵn rồi
+                }, 2500); // giảm xuống cho mượt hơn
             });
+
         });
     </script>
 @endsection

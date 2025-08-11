@@ -14,13 +14,13 @@
     @endif
 
     {{-- ✅ Thông báo khi thao tác thành công --}}
-    @if (session('success'))
+    {{-- @if (session('success'))
         <script>
             window.onload = function() {
                 alert("{{ session('success') }}");
             };
         </script>
-    @endif
+    @endif --}}
 
     <div class="col-xl-12">
         <div class="card mb-3">
@@ -109,7 +109,7 @@
                             <tr>
                                 <th>Khu trọ</th>
                                 <th>Số phòng</th>
-                                <th>Số người tối đa</th>
+                                <th>Số người ở tối đa</th>
                                 <th>Diện tích</th>
                                 <th>Giá thuê</th>
                                 <th>Trạng thái</th>
@@ -237,3 +237,20 @@
         </script>
     @endsection
 @endsection
+
+@push('scripts')
+    {{-- SweetAlert2 CDN (chỉ cần nếu layout chưa có) --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {{-- Hiển thị thông báo SweetAlert2 nếu có --}}
+    @if(session('success'))
+        <script>
+            Swal.fire({
+                title: "Thành công!",
+                text: "{{ session('success') }}",
+                icon: "success",
+                confirmButtonText: "OK"
+            });
+        </script>
+    @endif
+@endpush
