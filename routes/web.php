@@ -17,10 +17,12 @@ use App\Http\Controllers\Landlord\OCRController;
 use App\Http\Controllers\Client\MyRoomController;
 use App\Http\Controllers\Landlord\HomeLandlordController;
 use App\Http\Controllers\Landlord\RoomController;
-use App\Http\Controllers\Landlord\RoomEditRequestController;
+
 use App\Http\Controllers\Renter\RoomLeaveController;
-use App\Http\Controllers\Landlord\Staff\DocumentController;
-// use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
+
+
+use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
+
 use App\Http\Controllers\TenantProfileController;
 use App\Http\Controllers\Landlord\ChartController;
 use App\Http\Controllers\Landlord\ComplaintsChart;
@@ -44,19 +46,23 @@ use App\Http\Controllers\Landlord\Staff\ContractController;
 use App\Http\Controllers\Landlord\Staff\StaffPostController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomController;
 use App\Http\Controllers\Renter\RenterNotificationController;
+use App\Http\Controllers\Landlord\Staff\DocumentController;
+use App\Http\Controllers\Landlord\ComplaintsChartController;
+use App\Http\Controllers\Landlord\ContractRenewalController;
+
+
 
 // Địa chỉ
 
 use App\Http\Controllers\Landlord\LandlordBankAccountController;
 use App\Http\Controllers\Landlord\PropertyBankAccountController;
-use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
+
+
 use App\Http\Controllers\Landlord\Staff\StaffRoomEditController;
 use App\Http\Controllers\Landlord\landLordNotificationController;
 use App\Http\Controllers\Landlord\Staff\StaffComplaintController;
 use App\Http\Controllers\Landlord\PropertyRoomBankAccountController;
 use App\Http\Controllers\Landlord\Staff\StaffNotificationController;
-use App\Http\Controllers\Landlord\ContractRenewalController;
-
 
 
 use App\Http\Controllers\Landlord\BookingsController;
@@ -216,7 +222,18 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/bills/{bill}', [LandlordBillController::class, 'show'])->name('bills.show');
         Route::get('/bills/export', [LandlordBillController::class, 'export'])->name('bills.export');
 
-   
+
+    // Bill của chủ trọ
+
+
+
+    Route::get('/bills', [LandlordBillController::class, 'index'])->name('bills.index');
+    Route::get('/bills/{bill}', [LandlordBillController::class, 'show'])->name('bills.show');
+    Route::get('/bills/export', [LandlordBillController::class, 'export'])->name('bills.export');
+
+
+
+
     // Staff yêu cầu chỉnh sửa phòng
     Route::prefix('staff/rooms')->name('staff.rooms.')->group(function () {
         Route::get('/{room}/edit', [StaffRoomEditController::class, 'edit'])->name('edit');
@@ -242,8 +259,23 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
             );
         return back()->with('success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
     })->name('staff.notifications.markAsRead');
-    
+
+
 });
+
+
+    Route::post('/staff/notifications/mark-as-read', function () {
+        $user = auth()->user();
+
+        $user->customNotifications()
+            ->wherePivot('is_read', false)
+            ->updateExistingPivot(
+                $user->customNotifications()->pluck('notifications.id')->toArray(),
+                ['is_read' => true, 'read_at' => now()]
+            );
+        return back()->with('success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
+    })->name('staff.notifications.markAsRead');
+
 
 // Các route ngoài landlords
 Route::prefix('rooms')->group(function () {
@@ -414,6 +446,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bulk-delete', [RenterNotificationController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('/mark-all-read', [StaffNotificationController::class, 'markAllAsRead'])->name('markAllRead');
     });
+
     // Renter yêu cầu rời phòng
 
 Route::prefix('room-leave')->middleware(['auth'])->group(function () {
@@ -501,7 +534,11 @@ Route::prefix('landlord/bookings')->middleware(['auth'])->name('landlord.booking
     Route::get('/', [BookingsController::class, 'index'])->name('index');
     Route::post('/{booking}/approve', [BookingsController::class, 'approve'])->name('approve');
     Route::post('/{booking}/reject', [BookingsController::class, 'reject'])->name('reject');
+    Route::post('/{id}/waiting', [BookingsController::class, 'waiting'])->name('waiting');
+    Route::post('/{id}/confirm', [BookingsController::class, 'confirm'])->name('confirm');
+    Route::post('/{id}/no-cancel', [BookingsController::class, 'noCancel'])->name('noCancel');
 });
+
 
 
 

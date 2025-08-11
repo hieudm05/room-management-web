@@ -12,7 +12,11 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Landlord\ContractRenewal;
 use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Staff\Rooms\RoomBill;
+
 use App\Models\Landlord\Staff\Rooms\RoomStaff;
+
+use App\Models\RoomLeaveLog;
+
 
 class MyRoomController extends Controller
 {
@@ -52,7 +56,6 @@ class MyRoomController extends Controller
             ->latest('end_date')
             ->first() : null;
         // dd($contract);
-
 
         $alert = null;
         $alertType = null;
@@ -113,6 +116,7 @@ class MyRoomController extends Controller
     }
 
     public function renew(Request $request, $roomId)
+
 {
     $room = Room::findOrFail($roomId);
 
@@ -185,3 +189,30 @@ class MyRoomController extends Controller
 }
 
 }
+
+    {
+        $room = Room::findOrFail($roomId);
+
+        if ($request->input('action') === 'accept') {
+            $exists = ContractRenewal::where('room_id', $room->room_id)
+                ->where('user_id', auth()->id())
+                ->where('status', 'pending')
+                ->exists();
+
+            if ($exists) {
+                return back()->with('error', 'Bạn đã gửi yêu cầu tái ký rồi.');
+            }
+
+            ContractRenewal::create([
+                'room_id' => $room->room_id,
+                'user_id' => auth()->id(),
+                'status' => 'pending',
+            ]);
+
+            return back()->with('success', 'Gửi yêu cầu tái ký thành công.');
+        }
+
+        return back();
+    }
+}
+
