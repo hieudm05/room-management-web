@@ -178,7 +178,7 @@
                             <h4 class="mb-0 fw-semibold text-primary">Mô Tả</h4>
                         </div>
                         <div class="card-body p-4">
-                            <div class="description-content lh-lg text-muted">
+                            <div class="description-content lh-lg text-black">
                                 {!! $post->description !!}
                             </div>
                         </div>
@@ -240,61 +240,10 @@
                             <h4 class="mb-0">{{ number_format($post->price, 2) }} VND/tháng</h4>
                         </div>
                         <div class="card-body">
-<<<<<<< HEAD
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>Tiền phòng/tháng</span>
-                                        <h4 class="text-primary mb-0">{{ number_format($post->price, 2) }} VND</h4>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <button type="button" class="btn btn-primary rounded-pill w-100">Đặt Ngay</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Agent Contact -->
-                    <div class="card mb-4 shadow-sm border-0 rounded-3">
-                        <div class="card-body text-center">
-                            <a href="#" class="btn btn-outline-primary rounded-pill" data-bs-toggle="modal"
-                                data-bs-target="#agentMessage">
-                                <i class="fas fa-comment-alt me-2"></i> Liên Hệ Người Đăng
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Similar Properties -->
-                    <div class="card shadow-sm border-0 rounded-3">
-                        <div class="card-header bg-light border-0 rounded-top-3">
-                            <h4 class="mb-0 fw-semibold text-primary">Bài Viết Liên Quan</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="property-list">
-                                @foreach ($post->category->posts()->where('post_id', '!=', $post->post_id)->where('status', 1)->where('is_public', 1)->take(4)->get() as $similar)
-                                    <div class="property-item d-flex mb-3">
-                                        <a href="{{ route('posts.show', $similar->slug) }}">
-                                            <img src="{{ asset('storage/' . $similar->thumbnail) }}"
-                                                class="img-fluid rounded me-3"
-                                                style="width: 100px; max-height: 100px; object-fit: cover;"
-                                                alt="{{ $similar->title }}" loading="lazy">
-                                        </a>
-                                        <div>
-                                            <h5>
-                                                <a href="{{ route('posts.show', $similar->slug) }}"
-                                                    class="text-decoration-none">
-                                                    {{ Str::limit($similar->title, 50) }}
-                                                </a>
-                                            </h5>
-                                            <p class="mb-1"><i class="fas fa-map-marker-alt me-1"></i>
-                                                {{ $similar->city }}</p>
-                                            <span class="badge bg-primary">For Rent</span>
-                                            <h6 class="mt-1">{{ number_format($similar->price, 2) }} VND</h6>
-=======
                             <form action="{{ route('bookings') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="post_id" value="{{ $post->post_id }}">
+                                <input type="hidden" name="room_id" value="{{ $post->room_id }}">
                                 <div class="row g-3">
 
                                     <!-- Check In Date -->
@@ -307,7 +256,6 @@
                                             <input type="text" id="checkIn" name="check_in" class="form-control"
                                                 value="{{ \Carbon\Carbon::today()->format('d/m/Y') }}"
                                                 placeholder="Chọn ngày nhận phòng" required>
->>>>>>> e2482cc2cfc16f873fd9383124bd4f905d479c6c
                                         </div>
                                     </div>
 
@@ -411,7 +359,7 @@
         const picker = flatpickr(checkInInput, {
             dateFormat: "d/m/Y",
             minDate: "today",
-            defaultDate: "{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
+            defaultDate: @json(\Carbon\Carbon::today()->format('Y-m-d'))
         });
 
         calendarIcon.addEventListener('click', function() {
@@ -419,3 +367,4 @@
         });
     });
 </script>
+

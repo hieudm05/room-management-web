@@ -751,11 +751,14 @@
                             url: '/get-rooms/' + propertyId, // URL endpoint để lấy danh sách phòng
                             type: 'GET',
                             success: function(data) {
+                                console.log(data);
+                                
                                 // Kích hoạt dropdown phòng
                                 roomSelect.prop('disabled', false);
 
                                 // Thêm các phòng vào dropdown
                                 $.each(data.rooms, function(index, room) {
+                                    
                                     roomSelect.append('<option value="' + room.room_id +
                                         '">' + room.room_id + '</option>');
                                 });

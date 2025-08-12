@@ -7,6 +7,7 @@ use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -14,6 +15,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Cell\Comment;
 use PhpOffice\PhpSpreadsheet\Style\Conditional;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
 
 class RoomBillExport implements FromArray, WithHeadings, WithStyles, WithEvents
 {
@@ -26,10 +28,34 @@ class RoomBillExport implements FromArray, WithHeadings, WithStyles, WithEvents
         $this->room = $room;
         $this->data = $data;
     }
+     public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet->getDelegate();
+                 $sheet->getStyle("D{$this->totalRow}")
+                ->getNumberFormat()
+                ->setFormatCode('#,##0');
+
+                // Ví dụ: Căn giữa tất cả ô
+                $sheet->getStyle($sheet->calculateWorksheetDimension())->applyFromArray([
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                    'font' => [
+                        'name' => 'Arial',
+                        'size' => 12,
+                    ],
+                ]);
+            },
+        ];
+    }
 
     public function array(): array
     {
         $rows = [];
+        $commentRichText = new RichText();
 
         // Tiêu đề chính
         $rows[] = ['HÓA ĐƠN THANH TOÁN PHÒNG TRỌ', '', '', '', '', ''];
@@ -50,8 +76,8 @@ class RoomBillExport implements FromArray, WithHeadings, WithStyles, WithEvents
         // Tiền điện
         $rows[] = ['TIỀN ĐIỆN', '', '', '', '', ''];
         $rows[] = ['Chỉ số đầu (kWh)', $this->data['electric_start'], '', 'Chỉ số cuối (kWh)', $this->data['electric_end'], ''];
-        $rows[] = ['Số điện tiêu thụ (kWh)', '=D12-B12', '', 'Đơn giá điện (VND/kWh)', $this->data['electric_price'], ''];
-        $rows[] = ['Thành tiền điện (VND)', '=B13*E13', '', '', '', ''];
+        $rows[] = ['Số điện tiêu thụ (kWh)', $this->data['electric_kwh'], '', 'Đơn giá điện (VND/kWh)', $this->data['electric_price'], ''];
+        $rows[] = ['Thành tiền điện (VND)', $this->data['electric_total'], '', '', '', ''];
         $rows[] = [];
 
         // Tiền nước
@@ -60,10 +86,10 @@ class RoomBillExport implements FromArray, WithHeadings, WithStyles, WithEvents
         if ($this->data['water_unit'] == 'per_m3') {
             $rows[] = ['Chỉ số đầu (m³)', $this->data['water_start'], '', 'Chỉ số cuối (m³)', '=B17+' . $this->data['water_m3'], ''];
             $rows[] = ['Số nước tiêu thụ (m³)', $this->data['water_m3'], '', '', '', ''];
-            $rows[] = ['Đơn giá nước (VND)', $this->data['water_price'], '', 'Thành tiền nước (VND)', '=B18*B19', ''];
+            $rows[] = ['Đơn giá nước (VND)', $this->data['water_price'], '', 'Thành tiền nước (VND)', $this->data['water_total'], ''];
         } else {
             $rows[] = ['Số người sử dụng', $this->data['water_occupants'], '', '', '', ''];
-            $rows[] = ['Đơn giá nước (VND)', $this->data['water_price'], '', 'Thành tiền nước (VND)', '=B18*B19', ''];
+            $rows[] = ['Đơn giá nước (VND)', $this->data['water_price'], '', 'Thành tiền nước (VND)', $this->data['water_total'], ''];
         }
         $rows[] = [];
 
@@ -86,29 +112,43 @@ class RoomBillExport implements FromArray, WithHeadings, WithStyles, WithEvents
             $rows[] = [];
         }
 
-        // Chi phí phát sinh
-        $feeStartRow = count($rows) + 2;
+       // Chi phí phát sinh
         if (!empty($this->data['additional_fees'])) {
             $rows[] = ['CHI PHÍ PHÁT SINH', '', '', '', '', ''];
             $rows[] = ['Tên chi phí', 'Giá (VND)', 'Số lượng', 'Tổng (VND)', '', ''];
+
+            $totalAdditional = 0; // Tổng chi phí phát sinh
+
             foreach ($this->data['additional_fees'] as $fee) {
+                $total = (float)$fee['price'] * (int)$fee['qty']; // Tính trực tiếp
+                $totalAdditional += $total;
+
                 $rows[] = [
                     $fee['name'],
-                    $fee['price'],
+                    number_format($fee['price'], 0, ',', '.'), // Format tiền
                     $fee['qty'],
-                    '=B' . (count($rows) + 1) . '*C' . (count($rows) + 1),
+                    number_format($total, 0, ',', '.'),
                     '',
                     ''
                 ];
             }
-            $rows[] = ['Tổng chi phí phát sinh', '', '', '=SUM(D' . $feeStartRow . ':D' . (count($rows)) . ')', '', ''];
+
+            $rows[] = [
+                'Tổng chi phí phát sinh',
+                '',
+                '',
+                number_format($totalAdditional, 0, ',', '.'),
+                '',
+                ''
+            ];
             $rows[] = [];
         }
 
         // Tổng thanh toán
         $this->totalRow = count($rows) + 2;
         $rows[] = ['TỔNG THANH TOÁN', '', '', '', '', ''];
-        $rows[] = ['Tổng cộng (VND)', '=B10+B14+' . ($this->data['water_unit'] == 'per_m3' ? 'E19' : 'E18') . (empty($this->data['services']) ? '' : '+D' . ($serviceStartRow + count($this->data['services'])) . '') . (empty($this->data['additional_fees']) ? '' : '+D' . ($feeStartRow + count($this->data['additional_fees'])) . ''), '', '', '', ''];
+        $rows[] = ['Tổng cộng (VND)', '', '', (float) $this->data['total'], '', ''];
+
 
         // Ghi chú
         $rows[] = [];
@@ -213,24 +253,10 @@ class RoomBillExport implements FromArray, WithHeadings, WithStyles, WithEvents
         $conditional->setOperatorType(Conditional::OPERATOR_GREATERTHAN);
         $conditional->addCondition(5000000);
         $conditional->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFFFCCCC');
-        $sheet->getConditionalStyles("B{$this->totalRow}")->add($conditional);
+        $conditionalStyles = $sheet->getConditionalStyles("B{$this->totalRow}");
+        $conditionalStyles[] = $conditional;
+        $sheet->setConditionalStyles("B{$this->totalRow}", $conditionalStyles);
+
     }
 
-    public function registerEvents(): array
-    {
-        return [
-            \Maatwebsite\Excel\Events\AfterSheet::class => function (\Maatwebsite\Excel\Events\AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
-
-                // Thêm ghi chú (comments)
-                $sheet->getComment('A1')->getText()->createTextRun('Hóa đơn phòng trọ')->setBold(true);
-                $sheet->getComment('B14')->getText()->createTextRun('Tổng tiền điện được tính bằng công thức: (Chỉ số cuối - Chỉ số đầu) * Đơn giá');
-                if ($this->data['water_unit'] == 'per_m3') {
-                    $sheet->getComment('E19')->getText()->createTextRun('Tổng tiền nước được tính bằng công thức: Số nước tiêu thụ * Đơn giá');
-                } else {
-                    $sheet->getComment('E18')->getText()->createTextRun('Tổng tiền nước được tính bằng công thức: Số người * Đơn giá');
-                }
-            },
-        ];
-    }
 }
