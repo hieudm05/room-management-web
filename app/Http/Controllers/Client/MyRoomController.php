@@ -15,7 +15,7 @@ use App\Models\Landlord\Staff\Rooms\RoomBill;
 
 use App\Models\Landlord\Staff\Rooms\RoomStaff;
 
-use App\Models\RoomLeaveLog;
+// use App\Models\RoomLeaveLog;
 
 
 class MyRoomController extends Controller
@@ -214,5 +214,4 @@ class MyRoomController extends Controller
 
         return back();
     }
-}
 

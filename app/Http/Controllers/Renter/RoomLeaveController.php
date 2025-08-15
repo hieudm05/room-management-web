@@ -45,7 +45,6 @@ class RoomLeaveController extends Controller
         ->get()
         ->keyBy('user_id');
 
-        ->get();
 
 
     // ✅ THÊM đoạn này để lấy yêu cầu chuyển nhượng tới bạn
@@ -71,9 +70,9 @@ class RoomLeaveController extends Controller
      * Gửi yêu cầu rời phòng
      */
     public function sendLeaveRequest(Request $request)
-      
+
     {
-          
+
         $userId = Auth::id();
 
         $request->validate([
@@ -120,7 +119,7 @@ class RoomLeaveController extends Controller
 
 
         $leaveRequest = new RoomLeaveRequest([
-            
+
             'user_id'       => $userId,
             'room_id'       => $room->room_id,
             'leave_date'    => $request->leave_date,
@@ -135,7 +134,7 @@ class RoomLeaveController extends Controller
 
             'action_type'   => $request->action_type,
             'new_renter_id' => $request->action_type === 'transfer' ? $request->new_renter_id : null,
-            
+
         ]);
 
         $leaveRequest->save();
@@ -151,14 +150,14 @@ if ($landlord) {
         $landlord->id,
         '📤 Yêu cầu rời phòng mới',
         'Người thuê ' . auth()->user()->name . ' đã gửi yêu cầu rời phòng ' . $room->room_number,
-        route('landlord.roomleave.index', $leaveRequest->id) 
+        route('landlord.roomleave.index', $leaveRequest->id)
     );
-}   
-    // 
+}
+    //
 
         return redirect()->route('home.roomleave.stopRentForm')
             ->with('success', '✅ Yêu cầu đã được gửi.');
-        
+
 
     }
 
@@ -228,7 +227,7 @@ if ($landlord) {
             $userInfo = $request->userInfo;
 
             if ($request->action_type === 'transfer') {
-            
+
                 $contract = $request->room->rentalAgreement;
 
                 if ($contract && $contract->renter_id == $request->user_id) {
@@ -312,7 +311,7 @@ if ($landlord) {
 
     $pending = RoomLeaveRequest::with('room.property', 'user')
         ->where('new_renter_id', $userId)
-        ->where('status', 'waiting_new_renter_accept') 
+        ->where('status', 'waiting_new_renter_accept')
         ->whereNull('transfer_accepted_at')
         ->where('action_type', 'transfer')
         ->first();
@@ -363,7 +362,7 @@ public function acceptTransfer(Request $request)
         ->with('success', 'Bạn đã nhận chuyển nhượng hợp đồng thành công!');
 }
 
- 
+
 
   private function sendNotificationToUser($userId, $title, $message, $link = null)
     {
