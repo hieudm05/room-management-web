@@ -534,9 +534,10 @@ Route::prefix('landlord/bookings')->middleware(['auth'])->name('landlord.booking
     Route::get('/', [BookingsController::class, 'index'])->name('index');
     Route::post('/{booking}/approve', [BookingsController::class, 'approve'])->name('approve');
     Route::post('/{booking}/reject', [BookingsController::class, 'reject'])->name('reject');
-    Route::post('/{id}/waiting', [BookingsController::class, 'waiting'])->name('waiting');
-    Route::post('/{id}/confirm', [BookingsController::class, 'confirm'])->name('confirm');
-    Route::post('/{id}/no-cancel', [BookingsController::class, 'noCancel'])->name('noCancel');
+    Route::post('/{booking}/waiting', [BookingsController::class, 'waiting'])->name('waiting');
+Route::post('/{booking}/completed', [BookingsController::class, 'completed'])->name('completed');
+    Route::post('/{booking}/no-cancel', [BookingsController::class, 'noCancel'])->name('noCancel');
+    Route::post('/{booking}/completed-with-image', [BookingsController::class, 'doneWithImage'])->name('completedWithImage');
 });
 
 
