@@ -384,7 +384,7 @@
                     e.preventDefault();
                     alert(
                         'Số điện thoại không hợp lệ! Hãy nhập theo định dạng: 0xxxxxxxxx hoặc +84xxxxxxxxx'
-                        );
+                    );
                     phoneInput.focus();
                 }
             });

@@ -1,10 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Renter\DashboardRenterController;
-use App\Http\Controllers\Landlord\Staff\StaffRoomLeaveController;
-use App\Http\Controllers\Landlord\LandlordRoomLeaveController;
-use App\Http\Controllers\Landlord\LandLordComplaintController;
-use App\Http\Controllers\Renter\RenterComplaintController;
+
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\RoomBillController;
@@ -15,20 +11,19 @@ use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\Landlord\BookingsChart;
 use App\Http\Controllers\Landlord\OCRController;
 use App\Http\Controllers\Client\MyRoomController;
-use App\Http\Controllers\Landlord\HomeLandlordController;
 use App\Http\Controllers\Landlord\RoomController;
-
-use App\Http\Controllers\Renter\RoomLeaveController;
-
-
-use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
-
 use App\Http\Controllers\TenantProfileController;
 use App\Http\Controllers\Landlord\ChartController;
 use App\Http\Controllers\Landlord\ComplaintsChart;
 use App\Http\Controllers\Landlord\ContractRenewal;
 use App\Http\Controllers\Client\AuthUserController;
+
+use App\Http\Controllers\Renter\RoomLeaveController;
+
+
 use App\Http\Controllers\Landlord\ApprovalController;
+
+use App\Http\Controllers\Landlord\BookingsController;
 use App\Http\Controllers\Landlord\PropertyController;
 use App\Http\Controllers\Landlord\RoomStaffController;
 use App\Http\Controllers\Client\AuthLandlordController;
@@ -36,37 +31,43 @@ use App\Http\Controllers\Client\ResetPasswordController;
 use App\Http\Controllers\Landlord\BankAccountController;
 use App\Http\Controllers\Client\ForgotPasswordController;
 use App\Http\Controllers\Landlord\ApprovalUserController;
+use App\Http\Controllers\Landlord\HomeLandlordController;
 use App\Http\Controllers\Landlord\LandlordBillController;
 use App\Http\Controllers\Landlord\PostApprovalController;
 use App\Http\Controllers\Landlord\StaffAccountController;
+use App\Http\Controllers\Landlord\StaffBookingController;
 use App\Http\Controllers\Renter\AddUserRequestController;
 use App\Http\Controllers\Landlord\Staff\PaymentController;
 use App\Http\Controllers\Landlord\Staff\ServiceController;
+use App\Http\Controllers\Renter\DashboardRenterController;
+use App\Http\Controllers\Renter\RenterComplaintController;
 use App\Http\Controllers\Landlord\Staff\ContractController;
-use App\Http\Controllers\Landlord\Staff\StaffPostController;
-use App\Http\Controllers\Landlord\Staff\StaffRoomController;
-use App\Http\Controllers\Renter\RenterNotificationController;
 use App\Http\Controllers\Landlord\Staff\DocumentController;
 use App\Http\Controllers\Landlord\ComplaintsChartController;
 use App\Http\Controllers\Landlord\ContractRenewalController;
+use App\Http\Controllers\Landlord\Staff\StaffPostController;
+use App\Http\Controllers\Landlord\Staff\StaffRoomController;
+use App\Http\Controllers\Renter\RenterNotificationController;
+use App\Http\Controllers\Landlord\LandLordComplaintController;
 
 
 
 // Địa chỉ
 
+use App\Http\Controllers\Landlord\LandlordRoomLeaveController;
 use App\Http\Controllers\Landlord\LandlordBankAccountController;
+
+
 use App\Http\Controllers\Landlord\PropertyBankAccountController;
-
-
+use App\Http\Controllers\Landlord\Staff\ElectricWaterController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomEditController;
 use App\Http\Controllers\Landlord\landLordNotificationController;
 use App\Http\Controllers\Landlord\Staff\StaffComplaintController;
+
+
+use App\Http\Controllers\Landlord\Staff\StaffRoomLeaveController;
 use App\Http\Controllers\Landlord\PropertyRoomBankAccountController;
 use App\Http\Controllers\Landlord\Staff\StaffNotificationController;
-
-
-use App\Http\Controllers\Landlord\BookingsController;
-use App\Http\Controllers\Landlord\StaffBookingController;
 
 
 
@@ -558,4 +559,13 @@ Route::middleware(['auth', 'role:Landlord'])->prefix('landlord')->group(function
     Route::post('/posts', [App\Http\Controllers\Landlord\PostController::class, 'store'])->name('landlord.posts.store');
     Route::delete('/posts/{id}', [App\Http\Controllers\Landlord\PostController::class, 'destroy'])->name('landlord.posts.destroy');
     Route::get('/posts/{id}', [App\Http\Controllers\Landlord\PostController::class, 'show'])->name('landlord.posts.show');
+});
+
+
+Route::prefix('search')->group(function () {
+   Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/search', [HomeController::class, 'search'])->name('search.results');
+Route::get('/districts/{city}', [HomeController::class, 'getDistricts'])->name('districts');
+Route::get('/wards/{district}', [HomeController::class, 'getWards'])->name('wards');
+Route::post('/posts/suggest-nearby', [HomeController::class, 'suggestNearby'])->name('posts.suggestNearby');
 });
