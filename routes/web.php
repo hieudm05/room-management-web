@@ -61,8 +61,7 @@ use App\Http\Controllers\Landlord\ContractRenewalController;
 
 use App\Http\Controllers\Landlord\BookingsController;
 use App\Http\Controllers\Landlord\StaffBookingController;
-
-
+use App\Http\Controllers\Renter\RenterHistoryBillController;
 
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
@@ -408,18 +407,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/complaints/{id}', [StaffComplaintController::class, 'destroy'])->name('complaints.destroy');
 
 
-       Route::get('/complaints/{id}', [StaffComplaintController::class, 'show'])->name('complaints.show');
-       Route::delete('/complaints/{id}', [StaffComplaintController::class, 'destroy'])->name('complaints.destroy');
-
-
-
-        Route::get('/complaints/{id}', [StaffComplaintController::class, 'show'])->name('complaints.show');
-        Route::delete('/complaints/{id}', [StaffComplaintController::class, 'destroy'])->name('complaints.destroy');
-
-
-
-        Route::get('/complaints/{id}', [StaffComplaintController::class, 'show'])->name('complaints.show');
-        Route::delete('/complaints/{id}', [StaffComplaintController::class, 'destroy'])->name('complaints.destroy');
+      
         Route::get('/chart', [ChartController::class, 'index'])->name('chart.index');
     Route::get('/complaint', [ChartController::class, 'complaintChart'])->name('landlord.staff.chart.complaint');
     Route::get('/booking', [ChartController::class, 'bookingChart'])->name('landlord.staff.chart.booking');
@@ -474,6 +462,8 @@ Route::prefix('room-leave')->middleware(['auth'])->group(function () {
 
     // So sánh chi phí giữa 2 mốc thời gian
     Route::get('/compare-room-bills', [DashboardRenterController::class, 'compare'])->name('home.profile.tenants.compare');
+    //Lịch sử hóa đơn các phòng đã thuê
+    Route::get('/history-room-bills', [RenterHistoryBillController::class, 'index'])->name('home.profile.tenants.history');
 });
 
 

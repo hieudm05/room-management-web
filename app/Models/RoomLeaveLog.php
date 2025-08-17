@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 use App\Models\Landlord\Room;
+use App\Models\Landlord\Staff\Rooms\RoomBill ;
+
 class RoomLeaveLog extends Model
 {
     protected $table = 'room_leave_logs';
@@ -35,4 +37,12 @@ class RoomLeaveLog extends Model
     {
         return $this->belongsTo(Room::class, 'room_id');
     }
+  public function roomBills()
+{
+    return $this->hasMany(RoomBill::class, 'room_id', 'room_id');
+}
+public function rental()
+{
+    return $this->belongsTo(RentalAgreement::class, 'rental_id', 'rental_id');
+}
 }

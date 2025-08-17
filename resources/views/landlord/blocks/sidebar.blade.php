@@ -35,7 +35,7 @@ $user = Auth::user(); ?>
                                 class="nav-link">Phê duyệt yêu cầu chuyển phòng</a></li>
                         <li class="nav-item"><a href="{{ route('landlord.posts.approval.index') }}"
                                 class="nav-link">Duyệt bài đăng</a></li>
-<<<<<<< HEAD
+
 
                             <a href="{{ route('landlords.properties.list') }}" class="nav-link">
                                 Quản Lý Bất Động Sản
