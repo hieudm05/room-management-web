@@ -24,15 +24,69 @@ class StaffBookingController extends Controller
         return view('landlord.Staff.staff_bookings.index', compact('bookings'));
     }
     public function wait($id)
-    {
-        $booking = Booking::find($id);
-        if (!$booking) return response()->json(['success' => false]);
+{
+    $booking = Booking::with(['post', 'user'])->findOrFail($id);
 
-        $booking->status = 'waiting';
-        $booking->save();
-
-        return response()->json(['success' => true]);
+    // ✅ Chỉ staff quản lý post mới được set waiting
+    if ($booking->post->staff_id != auth()->id()) {
+        return response()->json(['success' => false, 'message' => 'Bạn không có quyền đổi trạng thái này.']);
     }
+
+    $booking->status = 'waiting';
+    $booking->save();
+
+    // ✅ Lấy thông tin staff
+    $staff = auth()->user();
+    $customerEmail = $booking->user->email ?? $booking->email;
+
+    // ✅ Lấy địa chỉ từ post
+    $address = null;
+    if ($booking->post) {
+        $addressParts = array_filter([
+            $booking->post->address,
+            $booking->post->ward,
+            $booking->post->district,
+            $booking->post->city,
+        ]);
+        $address = implode(', ', $addressParts);
+    }
+
+    // ✅ Gửi mail cho khách
+    if ($customerEmail) {
+        \Mail::send('landlord.bookings.emails.bookingss', [
+            'customer_name'   => $booking->user->name ?? $booking->guest_name,
+            'appointment_time'=> $booking->check_in, // dùng check_in
+            'landlord_name'   => $staff->name,
+            'landlord_phone'  => $staff->phone_number ?? 'Không có',
+            'landlord_address'=> $address ?? 'Không có',
+        ], function ($message) use ($customerEmail) {
+            $message->to($customerEmail);
+            $message->subject('📅 Thông báo hẹn gặp để xem phòng');
+        });
+    }
+
+    // ✅ Tạo notification cho user (nếu có tài khoản)
+    if ($booking->user) {
+        $notification = \App\Models\Notification::create([
+            'title'      => 'Thông báo lịch hẹn xem phòng',
+            'message'    => 'Nhân viên ' . $staff->name . ' đã hẹn bạn xem phòng ' . ($booking->room->room_number ?? ''),
+            'type'       => 'system',
+            'link'       => route('user.bookings.index'),
+            'expired_at' => now()->addDays(7),
+            'is_global'  => false,
+        ]);
+
+        $notification->users()->attach($booking->user->id, [
+            'is_read'     => false,
+            'received_at' => now(),
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+    }
+
+    return response()->json(['success' => true, 'message' => 'Đã gửi email và thông báo cho khách.']);
+}
+
 
     public function done($id)
     {
