@@ -14,7 +14,8 @@
                 <p>🏠 Phòng: <strong>{{ $incomingTransferRequest->room->room_number }}</strong></p>
                 <p>🏢 Tòa nhà: {{ $incomingTransferRequest->room->property->name ?? 'Không xác định' }}</p>
                 <p>📅 Ngày chuyển:
-                    <strong>{{ \Carbon\Carbon::parse($incomingTransferRequest->leave_date)->format('d/m/Y') }}</strong></p>
+                    <strong>{{ \Carbon\Carbon::parse($incomingTransferRequest->leave_date)->format('d/m/Y') }}</strong>
+                </p>
                 <p>📝 Ghi chú: {{ $incomingTransferRequest->note ?? 'Không có ghi chú' }}</p>
 
                 <form method="POST" action="{{ route('renter.transfer.accept', $incomingTransferRequest->id) }}"
@@ -123,10 +124,7 @@
                     @if ($user->id == $userId)
                         @if ($isContractOwner)
                             <div>
-                                <p class="mb-1">
-                                    💰 Tiền cọc hợp đồng:
-                                    <strong>{{ number_format($room->rentalAgreement->deposit ?? 0) }} VNĐ</strong>
-                                </p>
+
                                 <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
                                     data-bs-target="#terminateContractModal">
                                     🛑 Kết thúc/nhượng hợp đồng
@@ -160,7 +158,7 @@
                 <div class="modal fade" id="leaveModal-{{ $user->id }}" tabindex="-1">
                     <div class="modal-dialog">
                         <div class="modal-content">
-                            <form method="POST" action="{{ route('home.roomleave.send') }}">
+                            <form method="POST" action="{{ route('home.roomleave.send') }}" >
                                 @csrf
                                 <input type="hidden" name="room_id" value="{{ $room->room_id }}">
                                 <input type="hidden" name="user_id" value="{{ $userId }}">
@@ -260,7 +258,7 @@
             aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <form method="POST" action="{{ route('home.roomleave.send') }}">
+                    <form method="POST" action="{{ route('home.roomleave.send') }}" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="room_id" value="{{ $room->room_id }}">
                         <input type="hidden" name="user_id" value="{{ $userId }}">
@@ -268,8 +266,7 @@
                         <div class="modal-header">
                             <h5 class="modal-title text-danger" id="terminateContractModalLabel">🛑 Kết thúc hoặc Nhượng hợp
                                 đồng</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body">
@@ -305,13 +302,17 @@
                                     @endforeach
                                 </select>
                             </div>
-
+                 
                             <label for="leave_date" class="form-label mt-3">📅 Ngày áp dụng</label>
                             <input type="date" name="leave_date" id="leave_date" class="form-control" required
                                 min="{{ now()->toDateString() }}" value="{{ old('leave_date') }}">
                             @error('leave_date')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
+                            <div class="mt-3" id="qrUpload" style="display: none;">
+                                <label for="deposit_file" class="form-label">📷 Tải QR deposit</label>
+                                <input type="file" name="deposit_qr_image" id="deposit_file" class="form-control">
+                            </div>
 
                             <label for="note" class="form-label mt-3">📝 Ghi chú (tuỳ chọn)</label>
                             <textarea name="note" id="note" class="form-control" rows="3">{{ old('note') }}</textarea>
@@ -415,6 +416,31 @@
                 transferOption.addEventListener('change', toggleTransfer);
                 toggleTransfer();
             });
+             document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById('terminateContractModal');
+    if (!modal) return;
+
+    const transferOption  = modal.querySelector('#transferOption');
+    const terminateOption = modal.querySelector('#terminateOption');
+    const transferTarget  = modal.querySelector('#transferTarget');
+    const qrUpload        = modal.querySelector('#qrUpload');
+
+    function toggleFields() {
+        // Nếu chọn nhượng thì hiện select người nhận
+        transferTarget.style.display = transferOption && transferOption.checked ? 'block' : 'none';
+
+        // Nếu chọn kết thúc hợp đồng thì hiện QR
+        qrUpload.style.display = terminateOption && terminateOption.checked ? 'block' : 'none';
+    }
+
+    transferOption?.addEventListener('change', toggleFields);
+    terminateOption?.addEventListener('change', toggleFields);
+
+    modal.addEventListener('shown.bs.modal', toggleFields);
+
+    toggleFields();
+});
+    
         </script>
     @endif
 

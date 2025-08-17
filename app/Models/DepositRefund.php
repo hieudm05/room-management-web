@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Landlord\RentalAgreement;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,7 +12,7 @@ class DepositRefund extends Model
 
     protected $table = 'deposit_refunds';
     protected $primaryKey = 'id';
-
+ 
     protected $fillable = [
         'rental_id',
         'user_id',
@@ -23,9 +24,9 @@ class DepositRefund extends Model
     /**
      * Quan hệ tới hợp đồng thuê (rental agreement)
      */
-    public function rentalAgreement()
+    public function rental()
     {
-        return $this->belongsTo(\App\Models\RentalAgreement::class, 'rental_id', 'rental_id');
+        return $this->belongsTo(RentalAgreement::class, 'rental_id', 'rental_id');
     }
 
     /**
@@ -33,6 +34,6 @@ class DepositRefund extends Model
      */
     public function user()
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 }

@@ -52,6 +52,7 @@
                         <th>STT</th>
                         <th>Người đặt</th>
                         <th>📞 SĐT</th>
+                        <th>📧 Email</th>
                         <th>🏠 Phòng</th>
                         <th>📅 Ngày nhận</th>
                         <th>🖼️ Minh chứng</th>
@@ -67,9 +68,16 @@
                             <td class="fw-semibold">{{ $booking->user->name ?? $booking->guest_name }}</td>
                             <td>
                                 @if ($booking->user)
-                                    {{ $booking->user->info->phone ?? 'Không xác định' }}
+                                    {{ $booking->user->phone_number ?? 'Không xác định' }}
                                 @else
                                     {{ $booking->phone ?? 'Không xác định' }}
+                                @endif
+                            </td>
+                            <td>
+                                @if ($booking->user)
+                                    {{ $booking->user->email ?? 'Không xác định' }}
+                                @else
+                                    {{ $booking->email ?? 'Không xác định' }}
                                 @endif
                             </td>
                             <td>{{ $booking->room->room_number ?? 'Không xác định' }}</td>
@@ -87,6 +95,8 @@
                             <td>{{ $booking->note ?? '—' }}</td>
                             <td>
                                 @php
+                                    $isLandlordPost = $booking->post && $booking->post->post_by == auth()->id();
+
                                     $statusLabels = [
                                         'pending' => '⏳ Đang chờ',
                                         'approved' => '✅ Đã duyệt',
@@ -94,6 +104,7 @@
                                         'no-cancel' => '🚫 Không đến',
                                         'completed' => '🏁 Hoàn thành',
                                         'waiting' => '🕓 Đang đợi',
+                                        'done-with-image' => '📷 Đã nhận phòng (Có ảnh)',
                                     ];
                                     $statusClasses = [
                                         'pending' => 'bg-warning text-dark',
@@ -102,6 +113,7 @@
                                         'no-cancel' => 'bg-secondary text-white',
                                         'completed' => 'bg-primary text-white',
                                         'waiting' => 'bg-info text-white',
+                                        'done-with-image' => 'bg-dark text-white',
                                     ];
                                 @endphp
                                 <span
@@ -112,19 +124,38 @@
                             <td>
                                 @if ($booking->status === 'pending')
                                     <div class="d-flex flex-column gap-1">
-                                        <button class="btn btn-sm btn-success btn-approve" data-id="{{ $booking->id }}">
-                                            <i class="bi bi-check-circle me-1"></i> Duyệt
+
+                                        <button class="btn btn-success btn-sm btn-approve" data-id="{{ $booking->id }}">
+                                            <i class="bi bi-check-circle"></i> Duyệt
                                         </button>
-                                        @if (!$booking->wasReturnedFromStaff)
-                                            <button class="btn btn-sm btn-outline-danger btn-reject"
-                                                data-id="{{ $booking->id }}">
-                                                <i class="bi bi-x-circle me-1"></i> Từ chối
-                                            </button>
-                                        @endif
+                                        <button class="btn btn-danger btn-sm btn-reject" data-id="{{ $booking->id }}">
+                                            <i class="bi bi-x-circle"></i> Từ chối
+                                        </button>
+                                    </div>
+                                @elseif ($isLandlordPost && $booking->status === 'approved')
+                                    <div class="d-flex flex-column gap-1">
+                                        <button class="btn btn-warning btn-sm btn-wait" data-id="{{ $booking->id }}">
+                                            <i class="bi bi-hourglass-split"></i> Đợi
+                                        </button>
+                                        <button class="btn btn-danger btn-sm btn-reject" data-id="{{ $booking->id }}">
+                                            <i class="bi bi-x-circle"></i> Từ chối
+                                        </button>
+                                    </div>
+                                @elseif ($isLandlordPost && $booking->status === 'waiting')
+                                    <div class="d-flex flex-column gap-1">
+                                        <button class="btn btn-success btn-sm btn-done" data-id="{{ $booking->id }}">
+                                            <i class="bi bi-check-circle"></i> Xác nhận
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm btn-no-cancel"
+                                            data-id="{{ $booking->id }}">
+                                            <i class="bi bi-person-x"></i> Không gặp
+                                        </button>
                                     </div>
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif
+                            </td>
+
                             </td>
                         </tr>
                     @empty
@@ -136,6 +167,34 @@
                     @endforelse
                 </tbody>
             </table>
+            <!-- Modal Upload -->
+            <div class="modal fade" id="uploadProofModal" tabindex="-1" aria-labelledby="uploadProofLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <form id="proofForm" enctype="multipart/form-data" method="POST">
+                        @csrf
+                        <input type="hidden" name="booking_id" id="proofBookingId">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title"><i class="bi bi-upload"></i> Tải lên hình xác nhận</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="proofImage" class="form-label">Chọn ảnh xác nhận</label>
+                                    <input type="file" class="form-control" id="proofImage" name="proof_image"
+                                        accept="image/*" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">✔ Xác nhận hoàn thành</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
         </div>
     </div>
 @endsection
@@ -144,7 +203,11 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = '{{ csrf_token() }}';
+            const uploadModal = new bootstrap.Modal(document.getElementById('uploadProofModal'));
+            const proofForm = document.getElementById('proofForm');
+            const proofBookingId = document.getElementById('proofBookingId');
 
+            // Xử lý hành động thường (không upload ảnh)
             function handleBookingAction(id, action) {
                 fetch(`/landlord/bookings/${id}/${action}`, {
                         method: 'POST',
@@ -155,28 +218,96 @@
                         },
                         body: JSON.stringify({})
                     })
-                    .then(response => response.json())
+                    .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            const row = document.getElementById(`booking-row-${id}`);
-                            row.classList.add('table-success');
-                            setTimeout(() => location.reload(), 800);
+                            setTimeout(() => location.reload(), 500);
                         } else {
                             alert(data.message || 'Có lỗi xảy ra.');
                         }
                     })
-                    .catch(() => {
-                        alert('Không thể kết nối đến máy chủ.');
-                    });
+                    .catch(() => alert('Không thể kết nối máy chủ.'));
             }
 
-            document.querySelectorAll('.btn-approve, .btn-reject').forEach(button => {
-                button.addEventListener('click', function() {
-                    const id = this.dataset.id;
-                    const action = this.classList.contains('btn-approve') ? 'approve' : 'reject';
-                    handleBookingAction(id, action);
+
+            // Xử lý mở modal upload ảnh
+            function openUploadModal(id) {
+                proofBookingId.value = id;
+                proofForm.reset();
+                uploadModal.show();
+            }
+
+            // Submit form upload ảnh
+            proofForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const bookingId = proofBookingId.value;
+                const formData = new FormData(proofForm);
+
+                fetch(`/staff/bookings/${bookingId}/done-with-image`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                        },
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            uploadModal.hide();
+                            setTimeout(() => location.reload(), 800);
+                        } else {
+                            alert(data.message || '❌ Có lỗi khi xác nhận!');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Lỗi khi gửi form:', err);
+                        alert('⚠ Không thể gửi form!');
+                    });
+            });
+
+            // Gán sự kiện cho tất cả nút
+            // Nút "Đợi"
+            // Nút duyệt
+            document.querySelectorAll('.btn-approve').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    handleBookingAction(btn.dataset.id, 'approve');
                 });
             });
+            document.querySelectorAll('.btn-wait').forEach(button => {
+                button.addEventListener('click', function() {
+                    handleBookingAction(this.dataset.id, 'waiting');
+                });
+            });
+            document.querySelectorAll('.btn-wait').forEach(button => {
+                button.addEventListener('click', function() {
+                    handleBookingAction(this.dataset.id, 'waiting');
+                });
+            });
+
+            // Nút "Từ chối"
+            document.querySelectorAll('.btn-reject').forEach(button => {
+                button.addEventListener('click', function() {
+                    handleBookingAction(this.dataset.id, 'reject');
+                });
+            });
+
+            // Nút "Hoàn thành"
+            // Nút "Xác nhận"
+            document.querySelectorAll('.btn-done').forEach(button => {
+                button.addEventListener('click', function() {
+                    openUploadModal(this.dataset.id); // Mở modal upload ảnh
+                });
+            });
+
+
+            // Nút "Không gặp"
+            document.querySelectorAll('.btn-no-cancel').forEach(button => {
+                button.addEventListener('click', function() {
+                    handleBookingAction(this.dataset.id, 'no-cancel');
+                });
+            });
+
         });
     </script>
 @endpush

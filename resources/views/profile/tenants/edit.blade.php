@@ -53,8 +53,15 @@
                             class="list-group-item list-group-item-action d-flex align-items-center gap-2">
                             <i class="bi bi-receipt-cutoff fs-5"></i> Thống kê chi tiết
                         </a>
+                        <a href="{{ route('home.roomleave.deposits') }}"
+                            class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                            <i class="bi bi-receipt-cutoff fs-5"></i> Cọc tiền nhà 
+                        </a>
                     </ul>
                 </div>
+
+               
+
             </div>
 
             {{-- Main Content --}}

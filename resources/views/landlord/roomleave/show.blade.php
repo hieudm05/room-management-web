@@ -8,6 +8,12 @@
     <div class="card">
         <div class="card-body">
             <p>👤 Người thuê: <strong>{{ $request->user->name }}</strong></p>
+
+            <p>🏠 Phòng: {{ $request->room->name }}</p>
+            <p>📅 Ngày yêu cầu: {{ $request->leave_date }}</p>
+            <p>📌 Loại: {{ $request->type === 'transfer' ? 'Nhượng quyền' : 'Rời phòng' }}</p>
+            <p>📝 Ghi chú: {{ $request->reason ?? '(Không có)' }}</p>
+
             <p>🏠 Phòng: {{ $request->room->room_number }}</p>
             <p>📅 Ngày yêu cầu: {{ $request->leave_date }}</p>
             <p>📌 Loại: {{ $request->action_type === 'transfer' ? 'Nhượng quyền' : 'Rời phòng' }}</p>

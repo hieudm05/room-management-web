@@ -6,11 +6,10 @@
             <h2 class="fw-bold text-primary display-5">
                 <i class="bi bi-list-ul me-2"></i> Danh sách bài đăng
             </h2>
-            <a href="{{ Auth::user()->role === 'Landlord' ? route('landlord.posts.create') : route('staff.posts.create') }}"
+            <a href="{{ route('landlord.posts.create') }}"
                 class="btn btn-gradient-primary px-5 py-3 rounded-pill fw-bold">
                 <i class="bi bi-plus-circle-fill me-2"></i> Tạo bài đăng mới
             </a>
-
         </div>
 
         @if (session('success'))
@@ -70,7 +69,7 @@
                                 <tbody>
                                     @foreach ($posts as $key => $post)
                                         <tr>
-                                            <td class="ps-4">{{ $key + 1 }}</td>
+                                            <td class="ps-4">{{ $posts->firstItem() + $key }}</td>
                                             <td>{{ Str::limit($post->title, 40) }}</td>
                                             <td>{{ number_format((float) $post->price, 0, ',', '.') }} VNĐ</td>
                                             <td>{{ $post->area }} m²</td>
@@ -86,12 +85,12 @@
                                             <td>{{ $post->created_at->format('d/m/Y H:i') }}</td>
                                             <td class="text-end pe-4">
                                                 <div class="btn-group" role="group">
-                                                    <a href="{{ route('staff.posts.show', $post->post_id) }}"
+                                                    <a href="{{ route('landlord.posts.show', $post->post_id) }}"
                                                         class="btn btn-outline-primary btn-sm rounded-start-pill">
                                                         <i class="bi bi-eye-fill me-1"></i> Xem
                                                     </a>
                                                     @if ($post->status == 0)
-                                                        <form action="{{ route('staff.posts.destroy', $post->post_id) }}"
+                                                        <form action="{{ route('landlord.posts.destroy', $post->post_id) }}"
                                                             method="POST" class="d-inline-block"
                                                             onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài đăng này?')">
                                                             @csrf
@@ -109,6 +108,9 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div class="mt-4">
+                        {{ $posts->links() }}
                     </div>
                 @else
                     <div class="alert alert-info shadow-lg rounded-4" role="alert">
@@ -145,11 +147,11 @@
                                             <td>{{ $post->created_at->format('d/m/Y H:i') }}</td>
                                             <td class="text-end pe-4">
                                                 <div class="btn-group" role="group">
-                                                    <a href="{{ route('staff.posts.show', $post->post_id) }}"
+                                                    <a href="{{ route('landlord.posts.show', $post->post_id) }}"
                                                         class="btn btn-outline-primary btn-sm rounded-start-pill">
                                                         <i class="bi bi-eye-fill me-1"></i> Xem
                                                     </a>
-                                                    <form action="{{ route('staff.posts.destroy', $post->post_id) }}"
+                                                    <form action="{{ route('landlord.posts.destroy', $post->post_id) }}"
                                                         method="POST" class="d-inline-block"
                                                         onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài đăng này?')">
                                                         @csrf
@@ -157,7 +159,7 @@
                                                         <button type="submit"
                                                             class="btn btn-outline-danger btn-sm rounded-end-pill">
                                                             <i class="bi bi-trash3-fill me-1"></i> Xóa
-                                                        </button>
+                                                            </button>
                                                     </form>
                                                 </div>
                                             </td>
@@ -201,7 +203,7 @@
                                             <td><span class="badge bg-success px-3 py-2">Đã duyệt</span></td>
                                             <td>{{ $post->created_at->format('d/m/Y H:i') }}</td>
                                             <td class="text-end pe-4">
-                                                <a href="{{ route('staff.posts.show', $post->post_id) }}"
+                                                <a href="{{ route('landlord.posts.show', $post->post_id) }}"
                                                     class="btn btn-outline-primary btn-sm rounded-pill">
                                                     <i class="bi bi-eye-fill me-1"></i> Xem
                                                 </a>
@@ -246,7 +248,7 @@
                                             <td><span class="badge bg-danger px-3 py-2">Từ chối</span></td>
                                             <td>{{ $post->created_at->format('d/m/Y H:i') }}</td>
                                             <td class="text-end pe-4">
-                                                <a href="{{ route('staff.posts.show', $post->post_id) }}"
+                                                <a href="{{ route('landlord.posts.show', $post->post_id) }}"
                                                     class="btn btn-outline-primary btn-sm rounded-pill">
                                                     <i class="bi bi-eye-fill me-1"></i> Xem
                                                 </a>
@@ -264,17 +266,14 @@
                 @endif
             </div>
         </div>
-
     </div>
 
     <style>
         .btn-gradient-primary {
             background-color: orangered;
-            /* Màu xanh dương cơ bản */
             color: #fff;
             border: none;
             border-radius: 3px;
-            /* Giảm bo tròn lại */
             transition: all 0.2s ease-in-out;
             font-weight: 600;
             letter-spacing: 0.5px;
@@ -282,7 +281,6 @@
 
         .btn-gradient-primary:hover {
             background-color: white;
-            /* Màu hover đậm hơn */
             transform: translateY(-1px);
             box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
         }

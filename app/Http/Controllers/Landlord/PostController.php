@@ -1,48 +1,35 @@
 <?php
 
-namespace App\Http\Controllers\Landlord\Staff;
+namespace App\Http\Controllers\Landlord;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\StaffPost;
 use App\Models\Category;
 use App\Models\Feature;
-use App\Models\Landlord\Property as LandlordProperty;
-use App\Models\Landlord\Room;
-use App\Models\User;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
+use App\Models\Landlord\Property;
+use Illuminate\Http\Request;
+use App\Models\StaffPost;
 
-class StaffPostController extends Controller
+class PostController extends Controller
 {
-    // Danh sách bài viết
     public function index()
     {
-        $staffId = auth()->id(); // hoặc auth()->user()->id nếu dùng guard mặc định
-        // Nếu dùng guard riêng cho staff thì: auth('staff')->id()
-
-        $posts = StaffPost::with(['category', 'features'])
-            ->where('staff_id', $staffId)
-            ->orderBy('created_at', 'desc')
+        // Lấy bài đăng của landlord hiện tại
+        $posts = StaffPost::where('landlord_id', auth()->id())
+            ->with(['category', 'property', 'features'])
+            ->latest()
             ->paginate(10);
 
-        return view('staff.posts.index', compact('posts'));
+        return view('landlord.posts.index', compact('posts'));
     }
 
-
-    // Form tạo bài viết
     public function create()
     {
         $categories = Category::all();
+        $properties = Property::where('landlord_id', auth()->id())->get();
         $features = Feature::all();
-        $landlords = User::where('role', 'landlord')->get();
-        $properties = LandlordProperty::all();
-        $rooms = Room::all();
 
-        return view('staff.posts.create', compact('categories', 'features', 'landlords', 'properties', 'rooms'));
+        return view('landlord.posts.create', compact('categories', 'properties', 'features'));
     }
-
-    // Lưu bài viết
     public function store(Request $request)
     {
         $request->validate([
@@ -54,7 +41,6 @@ class StaffPostController extends Controller
             'province' => 'required|string|max:255',
             'district' => 'required|string|max:255',
             'ward' => 'required|string|max:255',
-            'landlord_id' => 'required|exists:users,id',
             'property_id' => 'required|exists:properties,property_id',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
@@ -64,13 +50,13 @@ class StaffPostController extends Controller
 
         $post = new StaffPost();
         $post->category_id = $request->category_id;
-        $post->post_by = auth()->id();
-        $post->staff_id = auth()->id();
-        $post->landlord_id = $request->landlord_id;
+        $post->staff_id = null; // Không phải staff
+        $post->landlord_id = auth()->id(); // Landlord đăng
         $post->property_id = $request->property_id;
+        $post->post_by = auth()->id();
         $post->room_id = $request->room_id;
         $post->title = $request->title;
-        $post->slug = Str::slug($request->title) . '-' . time();
+        $post->slug = \Str::slug($request->title) . '-' . time();
         $post->price = $request->price;
         $post->area = $request->area;
         $post->address = $request->address;
@@ -81,14 +67,10 @@ class StaffPostController extends Controller
         $post->longitude = $request->longitude;
         $post->description = $request->description;
 
-
-        // Upload thumbnail
         if ($request->hasFile('thumbnail')) {
-            $path = $request->file('thumbnail')->store('thumbnails', 'public');
-            $post->thumbnail = $path;
+            $post->thumbnail = $request->file('thumbnail')->store('thumbnails', 'public');
         }
 
-        // Upload gallery
         if ($request->hasFile('gallery')) {
             $gallery = [];
             foreach ($request->file('gallery') as $image) {
@@ -97,35 +79,30 @@ class StaffPostController extends Controller
             $post->gallery = json_encode($gallery);
         }
 
-        $post->status = 0; // Mặc định chờ duyệt
+        $post->status = 0;
         $post->save();
 
-        // Gán đặc điểm nổi bật (nếu có)
         if ($request->has('features')) {
             $post->features()->sync($request->input('features'));
         }
 
-        return redirect()->route('staff.posts.index')->with('success', 'Đăng bài thành công');
+        return redirect()->route('landlord.posts.index')->with('success', 'Đăng bài thành công');
     }
-
-
-    // Xem chi tiết bài viết
-    public function show($id)
-    {
-        $post = StaffPost::with(['category', 'features'])->findOrFail($id);
-
-        return view('staff.posts.show', compact('post'));
-    }
-
-
-
-    // Các hàm khác (index, create, store, v.v.)
 
     public function destroy($post_id)
     {
-        $post = StaffPost::findOrFail($post_id);
+        $post = StaffPost::where('landlord_id', auth()->id())->findOrFail($post_id);
         $post->delete();
 
-        return redirect()->route('staff.posts.index')->with('success', 'Đã xóa bài viết thành công.');
+        return redirect()->route('landlord.posts.index')->with('success', 'Đã xóa bài viết thành công.');
+    }
+
+    public function show($id)
+    {
+        $post = StaffPost::where('landlord_id', auth()->id())
+            ->with(['category', 'features', 'property'])
+            ->findOrFail($id);
+
+        return view('landlord.posts.show', compact('post'));
     }
 }

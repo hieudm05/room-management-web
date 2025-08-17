@@ -102,7 +102,7 @@ class RoomController extends Controller
     {
         $properties = Property::all();
         $facilities = Facility::where('name', '!=', 'Thang máy')->get();
-         $services = Service::where('is_hidden', false)->get();
+        $services = Service::where('is_hidden', false)->get();
 
         return view('landlord.rooms.create', compact('facilities', 'properties', 'services'));
     }
@@ -868,9 +868,8 @@ class RoomController extends Controller
 
     public function getRoomsByProperty($property_id)
     {
-        $rooms = Room::where('property_id', $property_id)->get(['room_id']);
+        $rooms = Room::where('property_id', $property_id)->get(['room_id', 'room_number']);
         return response()->json(['rooms' => $rooms]);
     }
 
-   
 }

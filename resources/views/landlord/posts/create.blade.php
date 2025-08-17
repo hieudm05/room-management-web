@@ -10,7 +10,7 @@
                             <i class="bi bi-house-door-fill me-2"></i> Đăng bài cho thuê nhà trọ
                         </h2>
 
-                        <form action="{{ route('staff.posts.store') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('landlord.posts.store') }}" method="POST" enctype="multipart/form-data">
                             @csrf
 
                             <div class="row g-4">
@@ -22,25 +22,12 @@
                                         required>
                                         <option value="">-- Chọn loại chuyên mục --</option>
                                         @foreach ($categories as $category)
-                                            <option value="{{ $category->category_id }}">{{ $category->name }}</option>
+                                            <option value="{{ $category->category_id }}"
+                                                {{ old('category_id') == $category->category_id ? 'selected' : '' }}>
+                                                {{ $category->name }}</option>
                                         @endforeach
                                     </select>
                                     @error('category_id')
-                                        <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
-
-                                {{-- Chủ trọ --}}
-                                <div class="col-md-6">
-                                    <label for="landlord_id" class="form-label fw-semibold text-dark">Chủ trọ</label>
-                                    <select name="landlord_id" id="landlord_id" class="form-select shadow-sm rounded-3"
-                                        required>
-                                        <option value="">-- Chọn chủ trọ --</option>
-                                        @foreach ($landlords as $landlord)
-                                            <option value="{{ $landlord->id }}">{{ $landlord->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('landlord_id')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
@@ -52,7 +39,9 @@
                                         required>
                                         <option value="">-- Chọn bất động sản --</option>
                                         @foreach ($properties as $property)
-                                            <option value="{{ $property->property_id }}">{{ $property->name }}</option>
+                                            <option value="{{ $property->property_id }}"
+                                                {{ old('property_id') == $property->property_id ? 'selected' : '' }}>
+                                                {{ $property->name }}</option>
                                         @endforeach
                                     </select>
                                     @error('property_id')
@@ -60,10 +49,10 @@
                                     @enderror
                                 </div>
 
+                                {{-- Phòng (Optional) --}}
                                 <div class="col-md-6">
-                                    <label for="room_id" class="form-label fw-semibold text-dark">Phòng</label>
-                                    <select name="room_id" id="room_id" class="form-select shadow-sm rounded-3" required
-                                        disabled>
+                                    <label for="room_id" class="form-label fw-semibold text-dark">Phòng (Tùy chọn)</label>
+                                    <select name="room_id" id="room_id" class="form-select shadow-sm rounded-3" disabled>
                                         <option value="">-- Chọn Phòng --</option>
                                     </select>
                                     @error('room_id')
@@ -137,8 +126,7 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label for="address" class="form-label fw-semibold text-dark">Địa chỉ chi
-                                        tiết</label>
+                                    <label for="address" class="form-label fw-semibold text-dark">Địa chỉ chi tiết</label>
                                     <input type="text" name="address" id="address"
                                         class="form-control shadow-sm rounded-3" placeholder="VD: Số 123, Ngõ 45"
                                         value="{{ old('address') }}" required>
@@ -215,7 +203,7 @@
                                 <div class="col-md-6">
                                     <label for="thumbnail" class="form-label fw-semibold text-dark">Ảnh thumbnail</label>
                                     <input type="file" name="thumbnail" id="thumbnail"
-                                        class="form-control shadow-sm rounded-3" accept="image/*">
+                                        class="form-control shadow-sm rounded-3" accept="image/jpeg,image/png,image/jpg">
                                     @error('thumbnail')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -229,8 +217,9 @@
                                 <div class="col-md-6">
                                     <label for="gallery" class="form-label fw-semibold text-dark">Album ảnh</label>
                                     <input type="file" name="gallery[]" id="gallery"
-                                        class="form-control shadow-sm rounded-3" accept="image/*" multiple>
-                                    @error('gallery')
+                                        class="form-control shadow-sm rounded-3" accept="image/jpeg,image/png,image/jpg"
+                                        multiple>
+                                    @error('gallery.*')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                     <div id="gallery-preview" class="mt-3 d-flex flex-wrap gap-2"></div>
@@ -315,7 +304,7 @@
                     .trim();
             }
 
-            // Fetch address from LocationIQ (VietMap geocoding API not provided)
+            // Fetch address from LocationIQ
             async function fetchAddress(query) {
                 try {
                     const response = await fetch(
@@ -341,6 +330,11 @@
                         option.dataset.code = item.code;
                         provinceSelect.appendChild(option);
                     });
+                    // Restore old province value if exists
+                    if ("{{ old('province') }}") {
+                        provinceSelect.value = "{{ old('province') }}";
+                        provinceSelect.dispatchEvent(new Event('change'));
+                    }
                 } catch (error) {
                     console.error('Error loading provinces:', error);
                     alert('Không thể tải danh sách tỉnh/thành. Vui lòng thử lại.');
@@ -367,6 +361,11 @@
                             option.dataset.code = district.code;
                             districtSelect.appendChild(option);
                         });
+                        // Restore old district value if exists
+                        if ("{{ old('district') }}") {
+                            districtSelect.value = "{{ old('district') }}";
+                            districtSelect.dispatchEvent(new Event('change'));
+                        }
                         updateMapFromAddress();
                     } catch (error) {
                         console.error('Error loading districts:', error);
@@ -394,6 +393,11 @@
                             option.dataset.code = ward.code;
                             wardSelect.appendChild(option);
                         });
+                        // Restore old ward value if exists
+                        if ("{{ old('ward') }}") {
+                            wardSelect.value = "{{ old('ward') }}";
+                            wardSelect.dispatchEvent(new Event('change'));
+                        }
                         updateMapFromAddress();
                     } catch (error) {
                         console.error('Error loading wards:', error);
@@ -411,18 +415,15 @@
 
                 if (!provinceName) return;
 
-                // Try full address first
                 let query = [address, wardName, districtName, provinceName].filter(Boolean).join(', ');
                 let data = await fetchAddress(query);
 
-                // If no results, try simplified address
                 if (!data.length) {
                     const simplifiedAddress = simplifyAddress(address);
                     query = [simplifiedAddress, wardName, districtName, provinceName].filter(Boolean).join(', ');
                     data = await fetchAddress(query);
                 }
 
-                // If still no results, try without address
                 if (!data.length && (wardName || districtName || provinceName)) {
                     query = [wardName, districtName, provinceName].filter(Boolean).join(', ');
                     data = await fetchAddress(query);
@@ -440,7 +441,6 @@
                         marker = new vietmapgl.Marker().setLngLat([lon, lat]).addTo(map);
                     }
 
-                    // Update hidden inputs with latitude and longitude
                     latitudeInput.value = lat.toFixed(6);
                     longitudeInput.value = lon.toFixed(6);
                 } else {
@@ -461,7 +461,6 @@
                     marker = new vietmapgl.Marker().setLngLat([lng, lat]).addTo(map);
                 }
 
-                // Update hidden inputs with latitude and longitude
                 latitudeInput.value = lat.toFixed(6);
                 longitudeInput.value = lng.toFixed(6);
 
@@ -551,10 +550,8 @@
                     return;
                 }
 
-                // Try full address first
                 let data = await fetchAddress(query);
 
-                // If no results, try simplified address
                 if (!data.length) {
                     const simplified = simplifyAddress(query);
                     if (simplified !== query) {
@@ -562,7 +559,6 @@
                     }
                 }
 
-                // If still no results, try broader components
                 if (!data.length) {
                     const parts = query.split(',').map(part => part.trim());
                     if (parts.length > 1) {
@@ -583,11 +579,9 @@
                         marker = new vietmapgl.Marker().setLngLat([lon, lat]).addTo(map);
                     }
 
-                    // Update hidden inputs with latitude and longitude
                     latitudeInput.value = lat.toFixed(6);
                     longitudeInput.value = lon.toFixed(6);
 
-                    // Update form fields
                     try {
                         const addressResponse = await fetch(
                             `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${lat}&lon=${lon}&format=json&addressdetails=1&countrycodes=vn`
@@ -676,11 +670,9 @@
                 }
             });
 
-            // Update map when address fields change
             wardSelect.addEventListener('change', updateMapFromAddress);
             addressInput.addEventListener('input', debounce(updateMapFromAddress, 500));
 
-            // Debounce function to prevent excessive API calls
             function debounce(func, wait) {
                 let timeout;
                 return function(...args) {
@@ -738,26 +730,24 @@
                     var propertyId = $(this).val();
                     var roomSelect = $('#room_id');
 
-                    // Xóa các tùy chọn hiện tại trong dropdown phòng
                     roomSelect.empty().append('<option value="">-- Chọn Phòng --</option>');
                     roomSelect.prop('disabled', true);
 
                     if (propertyId) {
-                        // Gửi yêu cầu AJAX để lấy danh sách phòng
                         $.ajax({
-                            url: '/get-rooms/' + propertyId, // URL endpoint để lấy danh sách phòng
+                            url: '/get-rooms/' + propertyId,
                             type: 'GET',
                             success: function(data) {
                                 console.log(data);
-
-                                // Kích hoạt dropdown phòng
                                 roomSelect.prop('disabled', false);
-
-                                // Thêm các phòng vào dropdown
                                 $.each(data.rooms, function(index, room) {
                                     roomSelect.append('<option value="' + room.room_id +
                                         '">' + room.room_number + '</option>');
                                 });
+                                // Restore old room_id if exists
+                                if ("{{ old('room_id') }}") {
+                                    roomSelect.val("{{ old('room_id') }}");
+                                }
                             },
                             error: function() {
                                 alert('Không thể tải danh sách phòng. Vui lòng thử lại.');
@@ -765,6 +755,11 @@
                         });
                     }
                 });
+
+                // Trigger property_id change if old value exists
+                if ("{{ old('property_id') }}") {
+                    $('#property_id').val("{{ old('property_id') }}").trigger('change');
+                }
             });
         </script>
 
@@ -795,7 +790,6 @@
                 box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
             }
 
-            /* Green glow for filled inputs */
             .form-control:not(:placeholder-shown):not([type="file"]),
             .form-control[type="file"]:valid,
             .form-select option[value]:not([value=""]):checked,
