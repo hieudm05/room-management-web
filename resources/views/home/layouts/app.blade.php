@@ -43,15 +43,19 @@
                 @include('home.blocks.aside')
             </div>
         </div>
+
+
         <!-- End Navigation -->
         <!-- ============================ Hero Banner Start ================================== -->
         @include('home.blocks.banner')
+
 
         <!-- ============================ Hero Banner End ================================== -->
 
         <!-- ============================ Latest Property For Sale Start ================================== -->
         <section class="wrapper">
             @yield('content')
+
         </section>
         <!-- ============================ Latest Property For Sale End ================================== -->
 

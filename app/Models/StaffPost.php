@@ -33,8 +33,6 @@ class StaffPost extends Model
         'published_at',
         'ward',
         'expired_at',
-        'latitude',
-        'longitude',
         'description',
         'amenities',
         'furnitures',
@@ -47,6 +45,8 @@ class StaffPost extends Model
         'approved_by',
         'approved_at',
         'rejected_reason',
+        'latitude',
+        'longitude',
         'is_public', // New field added
     ];
 
