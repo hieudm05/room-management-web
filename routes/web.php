@@ -1,6 +1,5 @@
 <?php
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\RoomBillController;
@@ -17,14 +16,14 @@ use App\Http\Controllers\Landlord\ChartController;
 use App\Http\Controllers\Landlord\ComplaintsChart;
 use App\Http\Controllers\Landlord\ContractRenewal;
 use App\Http\Controllers\Client\AuthUserController;
-
 use App\Http\Controllers\Renter\RoomLeaveController;
-
-
 use App\Http\Controllers\Landlord\ApprovalController;
-
+use App\Http\Controllers\Landlord\BookingsController;
+use App\Http\Controllers\Renter\RoomLeaveController;
+use App\Http\Controllers\Landlord\ApprovalController;
 use App\Http\Controllers\Landlord\BookingsController;
 use App\Http\Controllers\Landlord\PropertyController;
+use App\Http\Controllers\Client\UserBookingController;
 use App\Http\Controllers\Landlord\RoomStaffController;
 use App\Http\Controllers\Client\AuthLandlordController;
 use App\Http\Controllers\Client\ResetPasswordController;
@@ -338,6 +337,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/my-room/renew/{room}', [MyRoomController::class, 'renew'])->name('client.contract.renew');
     Route::post('/bills/{bill}/mark-pending', [RoomBillController::class, 'markPending'])->name('bills.markPending');
 });
+// Routes cho user bookings
+Route::prefix('user')->middleware(['auth'])->group(function () {
+    Route::get('/bookings', [UserBookingController::class, 'index'])
+        ->name('user.bookings.index');
+    Route::get('/bookings/{id}', [UserBookingController::class, 'show'])
+        ->name('user.bookings.show');
+});
+
 
 // Admin profile
 Route::middleware(['auth'])->prefix('admin')->group(function () {
