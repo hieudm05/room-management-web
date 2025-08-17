@@ -434,7 +434,7 @@
 
                 const res = await fetch(
                     `https://us1.locationiq.com/v1/autocomplete.php?key=${apiKey}&q=${encodeURIComponent(query)}&format=json`
-                    );
+                );
                 const data = await res.json();
 
                 suggestionBox.innerHTML = '';
@@ -568,87 +568,94 @@
             });
 
             // Hàm reverse geocoding
-          async function reverseGeocodeAndUpdateAddress(lat, lon) {
-    try {
-        const res = await fetch(`https://us1.locationiq.com/v1/reverse.php?key=${apiKey}&lat=${lat}&lon=${lon}&format=json`);
-        const data = await res.json();
-        if (!data || !data.address) return;
+            async function reverseGeocodeAndUpdateAddress(lat, lon) {
+                try {
+                    const res = await fetch(
+                        `https://us1.locationiq.com/v1/reverse.php?key=${apiKey}&lat=${lat}&lon=${lon}&format=json`
+                        );
+                    const data = await res.json();
+                    if (!data || !data.address) return;
 
-        const addr = data.address;
+                    const addr = data.address;
 
-        // Địa chỉ chi tiết
-      if (!userIsEditingAddress || !document.querySelector('#detailed_address').value.trim()) {
-            document.querySelector('#detailed_address').value = addr.road || addr.display_name || '';
-        }
+                    // Địa chỉ chi tiết
+                    if (!userIsEditingAddress || !document.querySelector('#detailed_address').value
+                    .trim()) {
+                        document.querySelector('#detailed_address').value = addr.road || addr
+                            .display_name || '';
+                    }
 
-        const provinceText = addr.state;
-        const districtText = addr.county;
-        const wardText = addr.suburb || addr.village;
+                    const provinceText = addr.state;
+                    const districtText = addr.county;
+                    const wardText = addr.suburb || addr.village;
 
-        // --- Cập nhật tỉnh ---
-        let provinceMatched = [...provinceSelect.options].find(opt => provinceText && opt.text.includes(provinceText.trim()));
-        if (!provinceMatched) return;
+                    // --- Cập nhật tỉnh ---
+                    let provinceMatched = [...provinceSelect.options].find(opt => provinceText && opt.text
+                        .includes(provinceText.trim()));
+                    if (!provinceMatched) return;
 
-        provinceSelect.value = provinceMatched.value;
-        await provinceSelect.dispatchEvent(new Event('change'));
+                    provinceSelect.value = provinceMatched.value;
+                    await provinceSelect.dispatchEvent(new Event('change'));
 
-        // --- Đợi huyện tải về rồi mới gán huyện ---
-        const waitForDistrictOptions = () => new Promise(resolve => {
-            const interval = setInterval(() => {
-                if (districtSelect.options.length > 1) {
-                    clearInterval(interval);
-                    resolve();
+                    // --- Đợi huyện tải về rồi mới gán huyện ---
+                    const waitForDistrictOptions = () => new Promise(resolve => {
+                        const interval = setInterval(() => {
+                            if (districtSelect.options.length > 1) {
+                                clearInterval(interval);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                    await waitForDistrictOptions();
+
+                    let districtMatched = [...districtSelect.options].find(opt => districtText && opt.text
+                        .includes(districtText.trim()));
+                    if (districtMatched) {
+                        provinceSelect.value = provinceMatched.value;
+
+                        // ✅ GÁN LẠI GIÁ TRỊ "OLD" để hệ thống hiểu là bạn đã chọn lại
+                        // ⚠️ PHẢI khai báo let thay vì const ở phía trên!
+                        oldProvince = provinceMatched.value;
+                        oldDistrict = '';
+                        oldWard = '';
+
+                        await provinceSelect.dispatchEvent(new Event('change'));
+
+                    }
+
+                    // --- Đợi xã tải về rồi mới gán xã ---
+                    const waitForWardOptions = () => new Promise(resolve => {
+                        const interval = setInterval(() => {
+                            if (wardSelect.options.length > 1) {
+                                clearInterval(interval);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                    await waitForWardOptions();
+
+                    let wardMatched = [...wardSelect.options].find(opt => wardText && opt.text.includes(
+                        wardText.trim()));
+                    if (wardMatched) {
+                        wardSelect.value = wardMatched.value;
+                    }
+
+                    // Gán lat lon
+                    document.querySelector('#latitude').value = lat;
+                    document.querySelector('#longitude').value = lon;
+                } catch (error) {
+                    console.error('Reverse geocoding error:', error);
                 }
-            }, 100);
-        });
-        await waitForDistrictOptions();
-
-        let districtMatched = [...districtSelect.options].find(opt => districtText && opt.text.includes(districtText.trim()));
-        if (districtMatched) {
-           provinceSelect.value = provinceMatched.value;
-
-// ✅ GÁN LẠI GIÁ TRỊ "OLD" để hệ thống hiểu là bạn đã chọn lại
-// ⚠️ PHẢI khai báo let thay vì const ở phía trên!
-oldProvince = provinceMatched.value;
-oldDistrict = '';
-oldWard = '';
-
-await provinceSelect.dispatchEvent(new Event('change'));
-
-        }
-
-        // --- Đợi xã tải về rồi mới gán xã ---
-        const waitForWardOptions = () => new Promise(resolve => {
-            const interval = setInterval(() => {
-                if (wardSelect.options.length > 1) {
-                    clearInterval(interval);
-                    resolve();
-                }
-            }, 100);
-        });
-        await waitForWardOptions();
-
-        let wardMatched = [...wardSelect.options].find(opt => wardText && opt.text.includes(wardText.trim()));
-        if (wardMatched) {
-            wardSelect.value = wardMatched.value;
-        }
-
-        // Gán lat lon
-        document.querySelector('#latitude').value = lat;
-        document.querySelector('#longitude').value = lon;
-    } catch (error) {
-        console.error('Reverse geocoding error:', error);
-    }
-}
+            }
 
             // Thêm tile layer từ MapTiler
             const maptilerKey = "{{ config('services.maptiler.key') }}";
             // console.log('MapTiler Key:', maptilerKey);
-                L.tileLayer(`https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=${maptilerKey}`, {
-            tileSize: 512,
-            zoomOffset: -1,
-            attribution: '© MapTiler © OpenStreetMap contributors'
-        }).addTo(map);
+            L.tileLayer(`https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=${maptilerKey}`, {
+                tileSize: 512,
+                zoomOffset: -1,
+                attribution: '© MapTiler © OpenStreetMap contributors'
+            }).addTo(map);
 
 
             function updateMapWithAddress() {

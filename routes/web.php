@@ -17,12 +17,11 @@ use App\Http\Controllers\Landlord\ComplaintsChart;
 use App\Http\Controllers\Landlord\ContractRenewal;
 use App\Http\Controllers\Client\AuthUserController;
 use App\Http\Controllers\Renter\RoomLeaveController;
-
 use App\Http\Controllers\Landlord\ApprovalController;
-
-
 use App\Http\Controllers\Landlord\BookingsController;
-
+use App\Http\Controllers\Renter\RoomLeaveController;
+use App\Http\Controllers\Landlord\ApprovalController;
+use App\Http\Controllers\Landlord\BookingsController;
 use App\Http\Controllers\Landlord\PropertyController;
 use App\Http\Controllers\Client\UserBookingController;
 use App\Http\Controllers\Landlord\RoomStaffController;
@@ -567,4 +566,13 @@ Route::middleware(['auth', 'role:Landlord'])->prefix('landlord')->group(function
     Route::post('/posts', [App\Http\Controllers\Landlord\PostController::class, 'store'])->name('landlord.posts.store');
     Route::delete('/posts/{id}', [App\Http\Controllers\Landlord\PostController::class, 'destroy'])->name('landlord.posts.destroy');
     Route::get('/posts/{id}', [App\Http\Controllers\Landlord\PostController::class, 'show'])->name('landlord.posts.show');
+});
+
+
+Route::prefix('search')->group(function () {
+   Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/search', [HomeController::class, 'search'])->name('search.results');
+Route::get('/districts/{city}', [HomeController::class, 'getDistricts'])->name('districts');
+Route::get('/wards/{district}', [HomeController::class, 'getWards'])->name('wards');
+Route::post('/posts/suggest-nearby', [HomeController::class, 'suggestNearby'])->name('posts.suggestNearby');
 });
