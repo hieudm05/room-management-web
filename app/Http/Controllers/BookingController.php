@@ -20,9 +20,8 @@ class BookingController extends Controller
         'nullable',
         'regex:/^(0[3-9][0-9]{8}|\+84[3-9][0-9]{8})$/'
     ],
+    'email' => 'nullable|email|max:255', // ✅ validate email
 ]);
-
-
 
 Booking::create([
     'post_id' => $request->post_id,
@@ -32,9 +31,11 @@ Booking::create([
     'status' => 'pending',
     'guest_name' => $request->guest_name,
     'phone' => $request->phone,
+    'email' => $request->email, // ✅ lưu email
     'room_id' => $request->room_id,
     'confirmed_by' => $request->post_by,
 ]);
+
 
 
 
