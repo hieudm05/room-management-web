@@ -41,8 +41,23 @@ $user = Auth::user(); ?>
             <div class="collapse menu-dropdown" id="sidebarRoom">
                 <ul class="nav nav-sm flex-column">
                     @if ($user->role === 'Landlord')
-                        <li class="nav-item">
-                            <a href="{{ route('landlords.rooms.index') }}" class="nav-link">Danh sách phòng</a>
+                        <li class="nav-item"><a href="{{ route('landlords.properties.list') }}" class="nav-link">Quản Lý
+                                Bất Động Sản</a></li>
+                        <li class="nav-item"><a href="{{ route('landlords.rooms.index') }}" class="nav-link">Danh sách
+                                Phòng Tổng Quan</a></li>
+                        <li class="nav-item"><a href="{{ route('landlords.approvals.index') }}" class="nav-link">Quản Lý
+                                Phê Duyệt Hợp Đồng</a></li>
+                        <li class="nav-item"><a href="{{ route('landlords.approvals.users.index') }}" Fireplace:
+                                class="nav-link">Quản Lý Phê Duyệt Người Dùng</a></li>
+                        <li class="nav-item"><a href="{{ route('landlords.room_edit_requests.index') }}"
+                                class="nav-link">Phê duyệt yêu cầu chuyển phòng</a></li>
+                        <li class="nav-item"><a href="{{ route('landlord.posts.approval.index') }}"
+                                class="nav-link">Duyệt bài đăng</a></li>
+
+
+                            <a href="{{ route('landlords.properties.list') }}" class="nav-link">
+                                Quản Lý Bất Động Sản
+                            </a>
                         </li>
                     @endif
                     @if ($user->role === 'Staff')

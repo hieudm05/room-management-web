@@ -26,6 +26,7 @@ use App\Http\Controllers\Landlord\PropertyController;
 use App\Http\Controllers\Client\UserBookingController;
 use App\Http\Controllers\Landlord\RoomStaffController;
 use App\Http\Controllers\Client\AuthLandlordController;
+use App\Http\Controllers\Client\ChangePasswordController;
 use App\Http\Controllers\Client\ResetPasswordController;
 use App\Http\Controllers\Landlord\BankAccountController;
 use App\Http\Controllers\Client\ForgotPasswordController;
@@ -67,8 +68,7 @@ use App\Http\Controllers\Landlord\Staff\StaffComplaintController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomLeaveController;
 use App\Http\Controllers\Landlord\PropertyRoomBankAccountController;
 use App\Http\Controllers\Landlord\Staff\StaffNotificationController;
-
-
+use App\Http\Controllers\Renter\RenterHistoryBillController;
 
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
@@ -306,6 +306,10 @@ Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestF
 Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
+Route::get('password/change', [ChangePasswordController::class, 'showChangeForm'])->name('password.change');
+
+    // Xử lý đổi mật khẩu
+    Route::post('password/change', [ChangePasswordController::class, 'updatePassword'])->name('password.change.update');
 
 // Trang chủ
 Route::get('/', [HomeController::class, 'renter'])->name('renter');
@@ -465,6 +469,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/home/roomleave/{id}/finalize', [RoomLeaveController::class, 'finalize'])->name('home.roomleave.finalize');
         Route::post('/transfer/accept', [RoomLeaveController::class, 'acceptTransfer'])->name('renter.transfer.accept');
         Route::get('/transfer/confirm', [RoomLeaveController::class, 'confirmTransfer'])->name('roomleave.confirmTransfer');
+        Route::get('/transfer/deposits', [RoomLeaveController::class, 'depositHistory'])->name('home.roomleave.deposits');
 
     });
     // Staff xử lý yêu cầu rời phòng
@@ -548,7 +553,7 @@ Route::post('/{booking}/completed', [BookingsController::class, 'completed'])->n
     Route::post('/{booking}/completed-with-image', [BookingsController::class, 'doneWithImage'])->name('completedWithImage');
 });
 
-
+Route::get('/tenants/history', [RenterHistoryBillController::class, 'index'])->name('home.profile.tenants.history');
 
 
 Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');

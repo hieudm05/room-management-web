@@ -3,19 +3,13 @@
 namespace App\Http\Controllers\Landlord;
 
 use App\Http\Controllers\Controller;
-
+use App\Models\DepositRefund;
+use App\Models\Notification;
+use Carbon\Carbon;
 use App\Models\Landlord\RoomLeaveRequest;
 use App\Models\RoomLeaveLog;
 use App\Models\Landlord\RentalAgreement;
-use App\Models\RoomLeaveLog as ModelsRoomLeaveLog;
-
-use App\Models\Notification;
-use Carbon\Carbon;
-// use App\Models\Landlord\RoomLeaveRequest;
-// use App\Models\RoomLeaveLog;
-// use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Room;
-
 use App\Models\UserInfo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,27 +17,15 @@ use Illuminate\Support\Facades\DB;
 
 class LandlordRoomLeaveController extends Controller
 {
-
-    // Danh sách yêu cầu đang chờ duyệt
-    // public function index()
-    // {
-    //     $requests = RoomLeaveRequest::with(['user', 'room'])
-    //         ->where('status', 'staff_approved')
-
     public function index()
     {
         $requests = RoomLeaveRequest::with(['user', 'room'])
             ->where('status', 'pending')
-
             ->where('landlord_id', Auth::id())
             ->get();
 
         return view('landlord.roomleave.index', compact('requests'));
     }
-
-
-    // Danh sách yêu cầu đã xử lý
-
 
     public function processed()
     {
@@ -56,229 +38,184 @@ class LandlordRoomLeaveController extends Controller
         return view('landlord.roomleave.processed', compact('requests'));
     }
 
-
-    // Xem chi tiết một yêu cầu
-
-
     public function show($id)
     {
         $request = RoomLeaveRequest::with(['user', 'room'])->findOrFail($id);
         return view('landlord.roomleave.show', compact('request'));
     }
 
-
-    // Duyệt yêu cầu
   public function approve(Request $request, $id)
 {
-    DB::transaction(function () use ($request, $id) {
+   DB::transaction(function () use ($request, $id) {
         $roomLeaveRequest = RoomLeaveRequest::findOrFail($id);
 
+        if ($request->hasFile('proof_image')) {
+            $file = $request->file('proof_image');
+            $path = $file->store('public/deposits'); // Lưu trong storage/app/public/deposits
+
+            // Lưu vào DB chỉ còn "deposits/filename.png"
+            $roomLeaveRequest->proof_image = str_replace('public/', '', $path);
+        }
+
+        $roomLeaveRequest->status = 'approved'; // nếu có logic duyệt
+        $roomLeaveRequest->save();
+        // --- Xử lý chuyển nhượng ---
         if ($roomLeaveRequest->action_type === 'transfer' && $request->new_renter_id) {
             $roomLeaveRequest->new_renter_id = $request->new_renter_id;
             $roomLeaveRequest->status = 'waiting_new_renter_accept';
+
+            $this->sendNotificationToUser(
+                $request->new_renter_id,
+                '📬 Bạn được chuyển quyền thuê phòng',
+                'Bạn vừa nhận được yêu cầu xác nhận chuyển quyền thuê phòng từ người thuê hiện tại.',
+                route('my-room')
+            );
+
+            $this->sendNotificationToUser(
+                $roomLeaveRequest->user_id,
+                '📤 Đã gửi yêu cầu chuyển nhượng',
+                'Yêu cầu chuyển nhượng của bạn đã được landlord duyệt. Đang chờ người mới xác nhận.',
+                route('my-room')
+            );
         }
 
+        // --- Xử lý rời phòng ---
         if ($roomLeaveRequest->action_type === 'leave') {
             $roomLeaveRequest->status = 'approved';
 
-            // Xóa hoặc vô hiệu người khỏi phòng
+            // Update UserInfo
             UserInfo::where('user_id', $roomLeaveRequest->user_id)
                 ->where('room_id', $roomLeaveRequest->room_id)
-                ->delete();
+                ->update(['active' => 0, 'left_at' => now()]);
 
+            $room = Room::find($roomLeaveRequest->room_id);
+            $agreement = RentalAgreement::where('room_id', $roomLeaveRequest->room_id)
+                ->where('status', 'active')
+                ->first();
+
+            if ($room && $agreement) {
+                $isContractOwner = $agreement->renter_id === $roomLeaveRequest->user_id;
+                $remainingOccupants = UserInfo::where('room_id', $roomLeaveRequest->room_id)
+                    ->where('active', 1)
+                    ->where('user_id', '!=', $roomLeaveRequest->user_id)
+                    ->count();
+
+                // Nếu chủ hợp đồng rời và không còn người thuê, phòng và hợp đồng được cập nhật
+                if ($isContractOwner && $remainingOccupants === 0) {
+                    $room->status = 'available';
+                    $room->save();
+
+                    $agreement->status = 'terminated';
+                    $agreement->end_date = now();
+                    $agreement->save();
+                }
+
+                // --- Xử lý cọc chỉ khi là chủ hợp đồng ---
+                if ($agreement->deposit > 0 && $isContractOwner) {
+                    $refundChoice = $request->input('refund_deposit'); // 1 = hoàn, 0 = giữ lại
+                    $refundReason = $request->input('refund_reason', null);
+
+                    $depositRefund = DepositRefund::updateOrCreate(
+                        [
+                            'rental_id' => $agreement->rental_id,
+                            'user_id'   => $roomLeaveRequest->user_id,
+                        ],
+                        [
+                            'amount'      => $agreement->deposit,
+                            'refund_date' => $refundChoice == "1" ? now() : null,
+                            'status'      => $refundChoice == "1" ? 'refunded' : 'not_refunded',
+                            'reason'      => $refundChoice == "0" ? $refundReason : null,
+                        ]
+                    );
+
+                    // Gửi thông báo cho người thuê
+                    if ($refundChoice == "1") {
+                        $this->sendNotificationToUser(
+                            $roomLeaveRequest->user_id,
+                            '💰 Cọc phòng được hoàn',
+                            'Cọc phòng của bạn sẽ được hoàn vào tài khoản trong thời gian sớm nhất.',
+                            route('my-room')
+                        );
+                    } else {
+                        $this->sendNotificationToUser(
+                            $roomLeaveRequest->user_id,
+                            '💰 Cọc phòng không được hoàn',
+                            'Cọc phòng của bạn sẽ không được hoàn. Lý do: ' . ($refundReason ?? 'Không có'),
+                            route('my-room')
+                        );
+                    }
+                }
+            }
+
+            // Ghi log rời phòng
             RoomLeaveLog::create([
-                'user_id' => $roomLeaveRequest->user_id,
-                'room_id' => $roomLeaveRequest->room_id,
-                'reason' => 'Rời phòng',
+                'user_id'     => $roomLeaveRequest->user_id,
+                'room_id'     => $roomLeaveRequest->room_id,
+                'reason'      => $roomLeaveRequest->reason ?? 'Rời phòng',
                 'action_type' => 'leave',
-                'leave_date' => now(),
+                'leave_date'  => now(),
             ]);
         }
 
+        // --- Cập nhật thông tin xử lý ---
         $roomLeaveRequest->handled_by = Auth::id();
         $roomLeaveRequest->handled_at = now();
         $roomLeaveRequest->save();
     });
 
     return redirect()->route('landlord.roomleave.index')
-        ->with('success', '✅ Đã duyệt yêu cầu thành công.');
+        ->with('success', '✅ Đã duyệt yêu cầu thành công và gửi thông báo cọc.');
 }
 
-   public function acceptTransfer($id)
-{
-    $request = RoomLeaveRequest::findOrFail($id);
 
-    // Bảo vệ: chỉ đúng người mới được xác nhận
-    if ($request->new_renter_id !== Auth::id()) {
-        return redirect()->back()->with('error', '❌ Bạn không có quyền xác nhận yêu cầu này.');
-    }
 
-    // Bảo vệ: chỉ xử lý trạng thái phù hợp
-    if ($request->status !== 'waiting_new_renter_accept') {
-        return redirect()->back()->with('error', '❌ Yêu cầu này không hợp lệ hoặc đã được xử lý.');
-    }
+    public function acceptTransfer($id)
+    {
+      $request = RoomLeaveRequest::with(['user', 'room.rentalAgreement'])->findOrFail($id);
 
-    DB::transaction(function () use ($request) {
-        // Cập nhật người thuê chính trong hợp đồng
-        $agreement = RentalAgreement::where('room_id', $request->room_id)->first();
-        if ($agreement) {
-            $agreement->renter_id = $request->new_renter_id;
-            $agreement->save();
+        if ($request->new_renter_id !== Auth::id()) {
+            return redirect()->back()->with('error', '❌ Bạn không có quyền xác nhận yêu cầu này.');
         }
 
-        // Gán phòng cho người được chuyển quyền
-        UserInfo::updateOrInsert(
-            ['user_id' => $request->new_renter_id],
-            ['room_id' => $request->room_id, 'active' => 1, 'updated_at' => now()]
-        );
+        if ($request->status !== 'waiting_new_renter_accept') {
+            return redirect()->back()->with('error', '❌ Yêu cầu này không hợp lệ hoặc đã được xử lý.');
+        }
 
-        // Vô hiệu người cũ
-        UserInfo::where('user_id', $request->user_id)
-            ->where('room_id', $request->room_id)
-            ->update(['active' => 0, 'left_at' => now()]);
+        DB::transaction(function () use ($request) {
+            $agreement = RentalAgreement::where('room_id', $request->room_id)->first();
+            if ($agreement) {
+                $agreement->renter_id = $request->new_renter_id;
+                $agreement->save();
+            }
 
-        // Ghi log (tuỳ chọn)
-        RoomLeaveLog::create([
-            'user_id' => $request->user_id,
-            'room_id' => $request->room_id,
-            'reason' => 'Chuyển quyền',
-            'leave_date' => now(),
-        ]);
+            UserInfo::updateOrInsert(
+                ['user_id' => $request->new_renter_id],
+                ['room_id' => $request->room_id, 'active' => 1, 'updated_at' => now()]
+            );
 
-        // Cập nhật trạng thái
-        $request->status = 'approved';
-        $request->save();
-    });
+            UserInfo::where('user_id', $request->user_id)
+                ->where('room_id', $request->room_id)
+                ->update(['active' => 0, 'left_at' => now()]);
 
-    return redirect()->route('my-room')->with('success', '✅ Bạn đã xác nhận nhận quyền thuê phòng.');
-}
+            RoomLeaveLog::create([
+                'user_id' => $request->user_id,
+                'room_id' => $request->room_id,
+                'reason' => 'Chuyển quyền',
+                'leave_date' => now(),
+            ]);
 
-    // Hiện form từ chối
+            $request->status = 'approved';
+            $request->save();
+        });
 
-    // public function approve(Request $request, $id)
-    // {
-    //     DB::transaction(function () use ($request, $id) {
-    //         $roomLeaveRequest = RoomLeaveRequest::findOrFail($id);
-
-    //         if ($roomLeaveRequest->action_type === 'transfer' && $request->new_renter_id) {
-    //             $roomLeaveRequest->new_renter_id = $request->new_renter_id;
-    //             $roomLeaveRequest->status = 'waiting_new_renter_accept';
-
-    //             $this->sendNotificationToUser(
-    //                 $request->new_renter_id,
-    //                 '📬 Bạn được chuyển quyền thuê phòng',
-    //                 'Bạn vừa nhận được yêu cầu xác nhận chuyển quyền thuê phòng từ người thuê hiện tại.',
-    //                 route('my-room')
-    //             );
-
-    //             $this->sendNotificationToUser(
-    //                 $roomLeaveRequest->user_id,
-    //                 '📤 Đã gửi yêu cầu chuyển nhượng',
-    //                 'Yêu cầu chuyển nhượng của bạn đã được landlord duyệt. Đang chờ người mới xác nhận.',
-    //                 route('my-room')
-    //             );
-    //         }
-
-    //         if ($roomLeaveRequest->action_type === 'leave') {
-    //             $roomLeaveRequest->status = 'approved';
-
-    //             UserInfo::where('user_id', $roomLeaveRequest->user_id)
-    //                 ->where('room_id', $roomLeaveRequest->room_id)
-    //                 ->update(['active' => 0, 'left_at' => now()]);
-
-    //             $room = Room::find($roomLeaveRequest->room_id);
-    //             $agreement = RentalAgreement::where('room_id', $roomLeaveRequest->room_id)
-    //                 ->where('status', 'active')
-    //                 ->first();
-
-    //             if ($room && $agreement) {
-    //                 $isContractOwner = $agreement->renter_id === $roomLeaveRequest->user_id;
-
-    //                 $remainingOccupants = UserInfo::where('room_id', $roomLeaveRequest->room_id)
-    //                     ->where('active', 1)
-    //                     ->where('user_id', '!=', $roomLeaveRequest->user_id)
-    //                     ->count();
-
-    //                 if ($isContractOwner && $remainingOccupants === 0) {
-    //                     $room->status = 'available';
-    //                     $room->save();
-
-    //                     $agreement->status = 'terminated';
-    //                     $agreement->end_date = now();
-    //                     $agreement->save();
-    //                 }
-    //             }
-
-    //             RoomLeaveLog::create([
-    //                 'user_id' => $roomLeaveRequest->user_id,
-    //                 'room_id' => $roomLeaveRequest->room_id,
-    //                 'reason' => 'Rời phòng',
-    //                 'action_type' => 'leave',
-    //                 'leave_date' => now(),
-    //             ]);
-    //         }
-
-    //         $roomLeaveRequest->handled_by = Auth::id();
-    //         $roomLeaveRequest->handled_at = now();
-    //         $roomLeaveRequest->save();
-    //     });
-
-    //     return redirect()->route('landlord.roomleave.index')
-    //         ->with('success', '✅ Đã duyệt yêu cầu thành công.');
-    // }
-
-    // public function acceptTransfer($id)
-    // {
-    //     $request = RoomLeaveRequest::findOrFail($id);
-
-    //     if ($request->new_renter_id !== Auth::id()) {
-    //         return redirect()->back()->with('error', '❌ Bạn không có quyền xác nhận yêu cầu này.');
-    //     }
-
-    //     if ($request->status !== 'waiting_new_renter_accept') {
-    //         return redirect()->back()->with('error', '❌ Yêu cầu này không hợp lệ hoặc đã được xử lý.');
-    //     }
-
-    //     DB::transaction(function () use ($request) {
-    //         $agreement = RentalAgreement::where('room_id', $request->room_id)->first();
-    //         if ($agreement) {
-    //             $agreement->renter_id = $request->new_renter_id;
-    //             $agreement->save();
-    //         }
-
-    //         UserInfo::updateOrInsert(
-    //             ['user_id' => $request->new_renter_id],
-    //             ['room_id' => $request->room_id, 'active' => 1, 'updated_at' => now()]
-    //         );
-
-    //         UserInfo::where('user_id', $request->user_id)
-    //             ->where('room_id', $request->room_id)
-    //             ->update(['active' => 0, 'left_at' => now()]);
-
-    //         RoomLeaveLog::create([
-    //             'user_id' => $request->user_id,
-    //             'room_id' => $request->room_id,
-    //             'reason' => 'Chuyển quyền',
-    //             'leave_date' => now(),
-    //         ]);
-
-    //         $request->status = 'approved';
-    //         $request->save();
-    //     });
-
-    //     return redirect()->route('my-room')->with('success', '✅ Bạn đã xác nhận nhận quyền thuê phòng.');
-    // }
-
+        return redirect()->route('my-room')->with('success', '✅ Bạn đã xác nhận nhận quyền thuê phòng.');
+    }
 
     public function rejectForm($id)
     {
         $request = RoomLeaveRequest::findOrFail($id);
         return view('landlord.roomleave.reject', compact('request'));
     }
-
-
-    // Từ chối yêu cầu
-
 
     public function reject(Request $request, $id)
     {
@@ -296,70 +233,42 @@ class LandlordRoomLeaveController extends Controller
         return redirect()->route('landlord.roomleave.index')->with('info', '❌ Đã từ chối yêu cầu và gửi lý do cho người thuê.');
     }
 
-      public function submitTransferForm(Request $request, $id)
-{
-    $request->validate([
-        'new_renter_id' => 'required|exists:users,id',
-    ]);
+    public function submitTransferForm(Request $request, $id)
+    {
+        $request->validate([
+            'new_renter_id' => 'required|exists:users,id',
+        ]);
 
-    $roomLeaveRequest = RoomLeaveRequest::findOrFail($id);
+        $roomLeaveRequest = RoomLeaveRequest::findOrFail($id);
 
-    // Kiểm tra xem có đúng loại chuyển nhượng không
-    if ($roomLeaveRequest->action_type !== 'transfer') {
-        return redirect()->back()->with('error', '❌ Yêu cầu không phải là loại chuyển nhượng.');
+        if ($roomLeaveRequest->action_type !== 'transfer') {
+            return redirect()->back()->with('error', '❌ Yêu cầu không phải là loại chuyển nhượng.');
+        }
+
+        $roomLeaveRequest->new_renter_id = $request->new_renter_id;
+        $roomLeaveRequest->status = 'waiting_new_renter_accept';
+        $roomLeaveRequest->handled_by = Auth::id();
+        $roomLeaveRequest->handled_at = now();
+        $roomLeaveRequest->save();
+
+        return redirect()->route('landlord.roomleave.index')->with('success', '✅ Đã gửi yêu cầu chuyển nhượng cho người được chỉ định.');
     }
 
-    // Cập nhật người được chuyển nhượng & chuyển trạng thái về cho nhân viên
-    $roomLeaveRequest->new_renter_id = $request->new_renter_id;
-    $roomLeaveRequest->status = 'waiting_new_renter_accept'; // trạng thái mới
-    $roomLeaveRequest->handled_by = Auth::id();
-    $roomLeaveRequest->handled_at = now();
-    $roomLeaveRequest->save();
+    private function sendNotificationToUser($userId, $title, $message, $link = null)
+    {
+        $notification = Notification::create([
+            'title' => $title,
+            'message' => $message,
+            'type' => 'user',
+            'link' => $link,
+            'created_at' => now(),
+            'expired_at' => now()->addDays(7),
+            'is_global' => false,
+        ]);
 
-    return redirect()->route('landlord.roomleave.index')->with('success', '✅ Đã gửi yêu cầu chuyển nhượng cho người được chỉ định.');
+        $notification->users()->attach($userId, [
+            'is_read' => false,
+            'received_at' => Carbon::now(),
+        ]);
+    }
 }
-}
-
-
-
-
-    // public function submitTransferForm(Request $request, $id)
-    // {
-    //     $request->validate([
-    //         'new_renter_id' => 'required|exists:users,id',
-    //     ]);
-
-    //     $roomLeaveRequest = RoomLeaveRequest::findOrFail($id);
-
-    //     if ($roomLeaveRequest->action_type !== 'transfer') {
-    //         return redirect()->back()->with('error', '❌ Yêu cầu không phải là loại chuyển nhượng.');
-    //     }
-
-    //     $roomLeaveRequest->new_renter_id = $request->new_renter_id;
-    //     $roomLeaveRequest->status = 'waiting_new_renter_accept';
-    //     $roomLeaveRequest->handled_by = Auth::id();
-    //     $roomLeaveRequest->handled_at = now();
-    //     $roomLeaveRequest->save();
-
-    //     return redirect()->route('landlord.roomleave.index')->with('success', '✅ Đã gửi yêu cầu chuyển nhượng cho người được chỉ định.');
-    // }
-
-    // private function sendNotificationToUser($userId, $title, $message, $link = null)
-    // {
-    //     $notification = Notification::create([
-    //         'title' => $title,
-    //         'message' => $message,
-    //         'type' => 'user',
-    //         'link' => $link,
-    //         'created_at' => now(),
-    //         'expired_at' => now()->addDays(7),
-    //         'is_global' => false,
-    //     ]);
-
-    //     $notification->users()->attach($userId, [
-    //         'is_read' => false,
-    //         'received_at' => Carbon::now(),
-    //     ]);
-    // }
-
-
