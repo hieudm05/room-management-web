@@ -1,7 +1,5 @@
 <?php
-
-namespace App\Http\Controllers\Landlord\Staff;
-
+namespace App\Http\Controllers\Landlord;
 use App\Models\User;
 use App\Models\RentalAgreement;
 use App\Exports\RoomBillExport;
@@ -12,7 +10,6 @@ use App\Models\Landlord\BankAccount;
 use App\Models\Landlord\BillService;
 use App\Models\Landlord\Property;
 use App\Models\Landlord\Room;
-use App\Models\Landlord\Service;
 use App\Models\Landlord\Staff\Rooms\RoomBill;
 use App\Models\Landlord\Staff\Rooms\RoomBillService;
 use App\Models\Landlord\Staff\Rooms\RoomBillAdditionalFee;
@@ -27,44 +24,51 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 
-class PaymentController extends Controller
+class BillController extends Controller
 {
-    public function list()
-    {
-        $staffId = Auth::id();
+     public function list()
+{
+    $idLandlord = Auth::id();
 
-        // Lấy tất cả room_id mà nhân viên quản lý
-        $roomIds = RoomStaff::where('staff_id', $staffId)
-            ->where('status', 'active')
-            ->pluck('room_id');
+    // Lấy danh sách room_id mà landlord đang quản lý (qua property)
+    $roomIds = Room::whereHas('property', function ($query) use ($idLandlord) {
+        $query->where('landlord_id', $idLandlord);
+    })
+    ->where('status', 'Rented')
+    ->pluck('room_id');
 
-        if ($roomIds->isEmpty()) {
-            // Không quản lý phòng nào
-            return view('landlord.Staff.rooms.bills.listBill', compact('roomIds'))->with('properties', collect());
-        }
-
-        // Lấy property_id từ các phòng này
-        $propertyIds = Room::whereIn('room_id', $roomIds)
-            ->pluck('property_id')
-            ->unique();
-
-        if ($propertyIds->isEmpty()) {
-            // Không có tòa nhà nào
-            return view('landlord.Staff.rooms.bills.listBill', compact('propertyIds'))->with('properties', collect());
-        }
-
-        // Lấy danh sách tòa nhà
-        $properties = Property::whereIn('property_id', $propertyIds)->get();
-
-        return view('landlord.Staff.rooms.bills.listBill', compact('properties', 'propertyIds', 'roomIds'));
+    if ($roomIds->isEmpty()) {
+        return view('landlord.bills.bill_Input.listBill', compact('roomIds'))
+            ->with('properties', collect());
     }
+
+    // Lấy danh sách property_id từ các room đã lấy
+    $propertyIds = Room::whereIn('room_id', $roomIds->toArray())
+        ->pluck('property_id')
+        ->unique();
+
+    if ($propertyIds->isEmpty()) {
+        return view('landlord.bills.bill_Input.listBill', compact('propertyIds'))
+            ->with('properties', collect());
+    }
+
+    // Lấy danh sách property
+    $properties = Property::whereIn('property_id', $propertyIds)->get();
+
+    return view('landlord.bills.bill_Input.listBill', compact('properties', 'propertyIds', 'roomIds'));
+}
+
+
     public function index(Request $request)
     {
-        $staffId = Auth::id();
+        $idLandlord = Auth::id();
         $propertyId = $request->input('property_id'); // Lấy property_id từ query string
         $month = $request->input('month', now()->format('Y-m'));
-        $roomIds = RoomStaff::where('staff_id', $staffId)->where('status', 'active')->pluck('room_id');
-
+        $roomIds = Room::whereHas('property', function ($query) use ($idLandlord) {
+        $query->where('landlord_id', $idLandlord);
+            })
+            ->where('status', 'Rented')
+            ->pluck('room_id');
         $rooms = Room::whereIn('room_id', $roomIds)
             ->where('property_id', $propertyId)
             ->with([
@@ -73,7 +77,7 @@ class PaymentController extends Controller
                 'services',
             ])
             ->get();
-        $data = [];
+            $data = [];
         foreach ($rooms as $room) {
             $rentalAgreement = $room->rentalAgreement;
             $tenant = $rentalAgreement ? User::find($rentalAgreement->renter_id) : null;
@@ -229,11 +233,10 @@ class PaymentController extends Controller
                 'is_bill_locked' => $isBillLocked,
             ];
         }
-
-        return view('landlord.Staff.rooms.bills.index', compact('rooms', 'data'));
+        return view('landlord.bills.bill_Input.index', compact('rooms', 'data'));
     }
 
-    public function store(Request $request, Room $room)
+      public function store(Request $request, Room $room)
     {
         $staffId = Auth::id();
         // dd($request->all());
@@ -421,12 +424,13 @@ class PaymentController extends Controller
         $tenant = $rentalAgreement ? User::find($rentalAgreement->renter_id) : null;
 
         // Lấy dịch vụ
-        $services = RoomBillService::where('room_bill_id', $bill->id)->get()->map(function ($sv) {
+        $services = BillService::where('bill_id', $bill->id)->get()->map(function ($sv) {
             return [
                 'name' => optional($sv->service)->name ?? 'Không rõ',
                 'price' => $sv->price,
                 'qty' => $sv->qty,
                 'total' => $sv->total,
+                'type_display' => $sv->type_display ?? 'Tùy chỉnh',
             ];
         })->toArray();
         $serviceTotal = array_sum(array_column($services, 'total'));

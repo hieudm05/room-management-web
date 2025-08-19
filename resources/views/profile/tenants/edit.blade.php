@@ -60,7 +60,8 @@
                     </ul>
                 </div>
 
-               
+                <hr class="my-2">
+
 
             </div>
 

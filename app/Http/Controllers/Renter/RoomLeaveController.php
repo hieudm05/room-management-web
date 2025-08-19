@@ -96,7 +96,7 @@ public function sendLeaveRequest(Request $request)
     }
 
     // Không chuyển nhượng cho chính mình
-    if ($request->action_type === 'transfer' && $request->new_renter_id == $userId) {
+if ($request->action_type === 'transfer' && $request->new_renter_id == $userId) {
         return back()->withErrors('Không thể chuyển nhượng cho chính bạn.');
     }
 
@@ -184,8 +184,7 @@ $leaveRequest->save();
     public function viewRequest($id)
     {
         $userId = Auth::id();
-
-        $request = RoomLeaveRequest::with(['room.property', 'newRenter'])
+$request = RoomLeaveRequest::with(['room.property', 'newRenter'])
             ->where('id', $id)
             ->where('user_id', $userId)
             ->first();
@@ -276,7 +275,7 @@ $leaveRequest->save();
             'previous_renter_id' => $request->action_type === 'transfer' ? $request->user_id : null,
             'new_renter_id' => $request->new_renter_id ?? null,
             'reason' => $request->reason,
-            'status' => 'Approved',
+'status' => 'Approved',
             'handled_by' => $request->approved_by ?? null,
         ]);
 
@@ -368,7 +367,7 @@ public function acceptTransfer(Request $request)
         $notification = Notification::create([
             'title' => $title,
             'message' => $message,
-            'type' => 'user',
+'type' => 'user',
             'link' => $link,
             'created_at' => now(),
             'expired_at' => now()->addDays(7),

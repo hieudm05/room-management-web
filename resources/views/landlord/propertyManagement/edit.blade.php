@@ -126,7 +126,7 @@
                                         <input type="hidden" id="rules" name="rules"
                                             value="{{ old('rules', $property->rules) }}"
                                             class="form-control @error('rules') is-invalid @enderror" required>
-                                        <div id="quill-editor" class="snow-editor" style="height: 350px">
+                                        <div id="quill-editor" style="height: 350px">
                                             {!! old('rules', $property->rules) !!}
                                         </div>
                                         @error('rules')
@@ -362,8 +362,34 @@
         // Map and address
         // Map and address
         document.addEventListener('DOMContentLoaded', async function() {
+            var vietmapApiKey = '{{ config('services.viet_map.key') }}'; // Sử dụng API key của Vietmap
             const provinceSelect = document.getElementById('province');
             const districtSelect = document.getElementById('district');
+                        // BẮT SỰ KIỆN THAY ĐỔI HUYỆN
+                districtSelect.addEventListener('change', async function () {
+                    const selectedDistrictCode = districtSelect.value;
+                    wardSelect.innerHTML = '<option value="">-- Chọn xã --</option>';
+                    wardSelect.disabled = true;
+
+                    if (!selectedDistrictCode) return;
+
+                    try {
+                        const wardsResponse = await fetch(`https://provinces.open-api.vn/api/d/${selectedDistrictCode}?depth=2`);
+                        const wardData = await wardsResponse.json();
+
+                        wardSelect.disabled = false;
+                        wardData.wards.forEach(ward => {
+                            const option = new Option(ward.name, ward.code);
+                            wardSelect.add(option);
+                        });
+
+                        // ✅ Cập nhật bản đồ sau khi chọn huyện
+                        setTimeout(updateMapWithAddress, 600);
+                    } catch (error) {
+                        console.error('Lỗi tải xã:', error);
+                        alert('Không thể tải danh sách xã.');
+                    }
+                });
             const wardSelect = document.getElementById('ward');
             const detailedAddressInput = document.getElementById('detailed_address');
             const oldProvince = '{{ old('province', $parsedAddress['province']) }}';
@@ -384,7 +410,7 @@
                     districtSelect.disabled = true;
                     wardSelect.innerHTML = '<option value="">-- Chọn xã --</option>';
                     wardSelect.disabled = true;
-                    detailedAddressInput.value = ''
+                    detailedAddressInput.value = '';
                     if (!selectedProvinceCode) return;
 
                     try {
@@ -424,37 +450,6 @@
 
                     districtSelect.innerHTML = '<option value="">-- Chọn huyện --</option>';
                     districtSelect.disabled = false;
-                    //  
-                    // Xử lý sự kiện khi thay đổi huyện để load lại xã
-                    districtSelect.addEventListener('change', async function() {
-                        const selectedDistrictCode = districtSelect.value;
-                        wardSelect.innerHTML = '<option value="">-- Chọn xã --</option>';
-                        wardSelect.disabled = true;
-                        detailedAddressInput.value = ''
-
-                        if (!selectedDistrictCode) return;
-
-                        try {
-                            const wardsResponse = await fetch(
-                                `https://provinces.open-api.vn/api/d/${selectedDistrictCode}?depth=2`
-                            );
-                            const districtData = await wardsResponse.json();
-
-                            districtData.wards.forEach(ward => {
-                                const option = new Option(ward.name, ward.code);
-                                wardSelect.add(option);
-                            });
-
-                            wardSelect.disabled = false;
-                            updateMapWithAddress(); // Cập nhật bản đồ
-                        } catch (error) {
-                            console.error('Lỗi tải xã:', error);
-                            alert('Không thể tải danh sách xã.');
-                        }
-                    });
-
-
-                    // 
                     let selectedDistrictCode = null;
                     districts.districts.forEach(district => {
                         const option = new Option(district.name, district.code);
@@ -468,11 +463,11 @@
                     if (selectedDistrictCode) {
                         const wardsResponse = await fetch(
                             `https://provinces.open-api.vn/api/d/${selectedDistrictCode}?depth=2`);
-                        if (!wardsResponse.ok) throw new Error('Lỗi tải xã');
                         const wards = await wardsResponse.json();
 
                         wardSelect.innerHTML = '<option value="">-- Chọn xã --</option>';
                         wardSelect.disabled = false;
+
                         wards.wards.forEach(ward => {
                             const option = new Option(ward.name, ward.code);
                             if (ward.name === oldWard) {
@@ -493,17 +488,81 @@
                 alert('Lỗi tải danh sách địa phương. Vui lòng thử lại sau.');
             }
 
+            // Khởi tạo bản đồ Vietmap
             let map = L.map('map').setView([{{ old('latitude', $property->latitude) }},
                 {{ old('longitude', $property->longitude) }}
             ], 13);
             let marker = L.marker([{{ old('latitude', $property->latitude) }},
                 {{ old('longitude', $property->longitude) }}
-            ]).addTo(map);
-            const apiKey = '{{ config('services.locationiq.key') }}';
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
+            ], {
+                draggable: true
             }).addTo(map);
+
+            // Thêm tile layer từ Vietmap
+            L.tileLayer(`https://maps.vietmap.vn/api/tm/{z}/{x}/{y}.png?apikey=${vietmapApiKey}`, {
+                maxZoom: 18,
+                attribution: '&copy; <a href="https://www.vietmap.vn/">VietMap</a>'
+            }).addTo(map);
+
+            // Cập nhật bản đồ khi kéo marker
+            marker.on('dragend', function(e) {
+                const pos = marker.getLatLng();
+                map.setView(pos);
+                reverseGeocodeAndUpdateAddress(pos.lat, pos.lng);
+            });
+
+            // Hàm reverse geocoding với Vietmap
+           async function reverseGeocodeAndUpdateAddress(lat, lon) {
+    try {
+        const res = await fetch(`https://maps.vietmap.vn/api/reverse/v3?apikey=${vietmapApiKey}&point.lat=${lat}&point.lng=${lon}`);
+        const data = await res.json();
+
+        if (data && data.address) {
+            const addr = data.address;
+            detailedAddressInput.value = addr.address || addr.display || '';
+
+            // ===== Tìm tỉnh phù hợp =====
+            const matchedProvince = [...provinceSelect.options].find(opt =>
+                addr.city && opt.text.trim().includes(addr.city.trim())
+            );
+            if (matchedProvince) {
+                provinceSelect.value = matchedProvince.value;
+                await provinceSelect.dispatchEvent(new Event('change'));
+
+                // === Đợi tỉnh load xong huyện ===
+                setTimeout(async () => {
+                    const matchedDistrict = [...districtSelect.options].find(opt =>
+                        addr.district && opt.text.trim().includes(addr.district.trim())
+                    );
+                    if (matchedDistrict) {
+                        districtSelect.value = matchedDistrict.value;
+                        await districtSelect.dispatchEvent(new Event('change'));
+
+                        // === Đợi huyện load xong xã ===
+                        setTimeout(() => {
+                            const matchedWard = [...wardSelect.options].find(opt =>
+                                addr.ward && opt.text.trim().includes(addr.ward.trim())
+                            );
+                            if (matchedWard) {
+                                wardSelect.value = matchedWard.value;
+                            }
+                        }, 600); // đợi ward load
+                    }
+                }, 600); // đợi district load
+            }
+
+            // Cập nhật lại tọa độ
+            document.querySelector('#latitude').value = lat;
+            document.querySelector('#longitude').value = lon;
+        }
+    } catch (error) {
+        console.error('Lỗi reverse geocode:', error);
+        // alert('Không thể định vị địa chỉ bạn vừa kéo.');
+    }
+}
+
+
+
 
             function updateMapWithAddress() {
                 let detail = detailedAddressInput.value.trim();
@@ -519,34 +578,53 @@
                 if (fullAddress.length < 10) return;
 
                 fetch(
-                        `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${encodeURIComponent(fullAddress)}&format=json`
-                    )
+                        `https://maps.vietmap.vn/api/search/v3?apikey=${vietmapApiKey}&text=${encodeURIComponent(fullAddress)}`)
                     .then(response => response.json())
                     .then(data => {
-                        if (data.length > 0) {
-                            let lat = parseFloat(data[0].lat);
-                            let lon = parseFloat(data[0].lon);
-                            if (marker) map.removeLayer(marker);
-                            marker = L.marker([lat, lon]).addTo(map);
-                            map.setView([lat, lon], 16);
-                            document.querySelector('#latitude').value = lat;
-                            document.querySelector('#longitude').value = lon;
+                        if (data.length > 0 && data[0].ref_id) {
+                            let refId = data[0].ref_id;
+                            return fetch(
+                                    `https://maps.vietmap.vn/api/place/v3?apikey=${vietmapApiKey}&refid=${refId}`
+                                    )
+                                .then(res => res.json())
+                                .then(place => {
+                                    if (place.lat && place.lng) {
+                                        const lat = parseFloat(place.lat);
+                                        const lon = parseFloat(place.lng);
+
+                                        if (marker) map.removeLayer(marker);
+                                        marker = L.marker([lat, lon], {
+                                            draggable: true
+                                        }).addTo(map);
+                                        map.setView([lat, lon], 16);
+
+                                        document.querySelector('#latitude').value = lat;
+                                        document.querySelector('#longitude').value = lon;
+
+                                        // Gắn lại sự kiện kéo marker sau khi thêm mới
+                                        marker.on('dragend', function() {
+                                            const pos = marker.getLatLng();
+                                            map.setView(pos);
+                                            reverseGeocodeAndUpdateAddress(pos.lat, pos.lng);
+                                        });
+                                    } else {
+                                        throw new Error("Không tìm thấy tọa độ.");
+                                    }
+                                });
                         } else {
-                            document.querySelector('#latitude').value =
-                                {{ old('latitude', $property->latitude) }};
-                            document.querySelector('#longitude').value =
-                                {{ old('longitude', $property->longitude) }};
-                            alert("Không tìm thấy vị trí với địa chỉ bạn nhập.");
+                            throw new Error("Không tìm thấy ref_id.");
                         }
                     })
-                    .catch(() => {
+                    .catch(err => {
+                        console.error("Lỗi định vị:", err);
                         document.querySelector('#latitude').value =
                             {{ old('latitude', $property->latitude) }};
                         document.querySelector('#longitude').value =
                             {{ old('longitude', $property->longitude) }};
-                        alert("Đã xảy ra lỗi khi định vị bản đồ.");
+                        // alert("Không tìm thấy vị trí với địa chỉ bạn nhập.");
                     });
             }
+
 
             // Cập nhật bản đồ khi load trang
             provinceSelect.addEventListener('change', function() {
@@ -556,16 +634,21 @@
                 setTimeout(updateMapWithAddress, 500);
             });
             wardSelect.addEventListener('change', function() {
-                detailedAddressInput.value = ''; // 👉 Reset địa chỉ cụ thể khi đổi xã
-                updateMapWithAddress();
+                detailedAddressInput.value = ''; // Reset địa chỉ cụ thể khi đổi xã
+                setTimeout(updateMapWithAddress, 800); 
+                // updateMapWithAddress();
             });
-
 
             let debounceTimer;
             detailedAddressInput.addEventListener('input', function() {
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(updateMapWithAddress, 1500);
             });
+
+            // Cập nhật ban đầu khi load trang
+            if (oldDetailedAddress || oldProvince || oldDistrict || oldWard) {
+                setTimeout(updateMapWithAddress, 1000);
+            }
         });
     </script>
 @endsection
