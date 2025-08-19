@@ -331,7 +331,7 @@
                                 <div class="row g-3">
                                     <!-- Check In Date -->
                                     <div class="col-12">
-                                        <label for="checkIn" class="form-label">Check In</label>
+                                        <label for="checkIn" class="form-label">Chọn ngày đặt lịch</label>
                                         <div class="input-group">
                                             <span class="input-group-text" id="calendarTrigger" style="cursor: pointer;">
                                                 <i class="fas fa-calendar-alt"></i>
@@ -358,21 +358,31 @@
 
                                         <div class="col-12">
                                             <label for="guestPhone" class="form-label">Số điện thoại</label>
-                                            <input type="text" id="guestPhone" name="phone" class="form-control"
-                                                required>
+                                            <input type="tel" id="guestPhone" name="phone" class="form-control"
+                                                pattern="^(0\d{9}|\+84\d{9})$"
+                                                title="Số điện thoại phải bắt đầu bằng 0 hoặc +84 và có 10 chữ số."
+                                                placeholder="Nhập số điện thoại của bạn" required>
+
                                         </div>
+                                        <div class="col-12">
+                                            <label for="guestEmail" class="form-label">Email</label>
+                                            <input type="email" id="guestEmail" name="email" class="form-control"
+                                                placeholder="Nhập email của bạn" required>
+                                        </div>
+
+
                                     @endguest
 
                                     <div class="col-12">
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <span>Total Payment</span>
+                                            <span>Tổng số tiền thanh toán</span>
                                             <h4 class="text-primary mb-0">${{ number_format($post->price, 2) }}</h4>
                                         </div>
                                     </div>
 
                                     <div class="col-12">
-                                        <button type="submit" class="btn btn-primary rounded-pill w-100">Book
-                                            Now</button>
+                                        <button type="submit" class="btn btn-primary rounded-pill w-100">Đặt lịch
+                                            ngay</button>
                                     </div>
                                 </div>
                             </form>
@@ -438,9 +448,12 @@
         const calendarIcon = document.getElementById('calendarTrigger');
 
         const picker = flatpickr(checkInInput, {
-            dateFormat: "d/m/Y",
+            enableTime: true, // Cho phép chọn giờ
+            time_24hr: true, // Hiển thị giờ 24h
+            dateFormat: "d/m/Y H:i", // Ngày + Giờ
             minDate: "today",
-            defaultDate: @json(\Carbon\Carbon::today()->format('Y-m-d'))
+            defaultDate: new Date()
+
         });
 
         calendarIcon.addEventListener('click', function() {
@@ -969,4 +982,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {{-- <script src="https://unpkg.com/@turf/polyline@6.x.x/dist/polyline.min.js"></script> --}}
 
+
+<script>
+     document.addEventListener('DOMContentLoaded', function() {
+        const phoneInput = document.getElementById('guestPhone');
+        if (phoneInput) {
+            const form = phoneInput.closest('form');
+            form.addEventListener('submit', function(e) {
+                // Regex kiểm tra số điện thoại VN: bắt đầu bằng 0 hoặc +84, sau đó là 9 số
+                const phonePattern = /^(0[1-9][0-9]{8}|\+84[1-9][0-9]{8})$/;
+                if (!phonePattern.test(phoneInput.value.trim())) {
+                    e.preventDefault();
+                    alert(
+                        'Số điện thoại không hợp lệ! Hãy nhập theo định dạng: 0xxxxxxxxx hoặc +84xxxxxxxxx'
+                    );
+                    phoneInput.focus();
+                }
+            });
+        }
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        const phoneInput = document.getElementById('guestPhone');
+        const emailInput = document.getElementById('guestEmail');
+        if (phoneInput || emailInput) {
+            const form = (phoneInput || emailInput).closest('form');
+            form.addEventListener('submit', function(e) {
+                // Regex kiểm tra số điện thoại VN
+                const phonePattern = /^(0[1-9][0-9]{8}|\+84[1-9][0-9]{8})$/;
+
+                // Regex kiểm tra email hợp lệ
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (phoneInput && !phonePattern.test(phoneInput.value.trim())) {
+                    e.preventDefault();
+                    alert(
+                        'Số điện thoại không hợp lệ! Hãy nhập theo định dạng: 0xxxxxxxxx hoặc +84xxxxxxxxx');
+                    phoneInput.focus();
+                    return;
+                }
+
+                if (emailInput && !emailPattern.test(emailInput.value.trim())) {
+                    e.preventDefault();
+                    alert('Email không hợp lệ! Hãy nhập theo định dạng: example@gmail.com');
+                    emailInput.focus();
+                    return;
+                }
+            });
+        }
+    });
+</script>
 

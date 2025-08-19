@@ -5,11 +5,19 @@ namespace App\Http\Controllers\Renter;
 use App\Http\Controllers\Controller;
 use App\Models\Landlord\Staff\Rooms\RoomBill;
 use App\Models\Landlord\Staff\Rooms\RoomBillService;
+
+
+// use App\Models\Landlord\Staff\Rooms\RoomBill;
+// use App\Models\Landlord\Staff\Rooms\RoomBillService;
+
 use App\Models\Complaint;
 use App\Models\UserInfo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+
+use Carbon\Carbon;
+
 
 class DashboardRenterController extends Controller
 {
@@ -82,7 +90,7 @@ class DashboardRenterController extends Controller
             //  dd($billIds->toArray());
             if ($billIds->isNotEmpty()) {
                 $totalCost = RoomBill::whereIn('id', $billIds)->sum('total');
-$complaintCount = Complaint::where('room_id', $roomId)
+                $complaintCount = Complaint::where('room_id', $roomId)
                     ->whereYear('created_at', $year)
                     ->whereMonth('created_at', $month)
                     ->count();
@@ -135,7 +143,7 @@ $complaintCount = Complaint::where('room_id', $roomId)
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->pluck('id');
-      
+
         if ($billIds->isEmpty()) {
             return collect();
         }

@@ -42,8 +42,8 @@
                             class="list-group-item list-group-item-action d-flex align-items-center gap-2">
                             <i class="bi bi-key-fill fs-5"></i> Đổi mật khẩu
                         </a>
-                        <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
-                            <i class="bi bi-receipt-cutoff fs-5"></i> Lịch sử thanh toán
+                        <a href="{{ route('home.profile.tenants.history') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                            <i class="bi bi-receipt-cutoff fs-5"></i> Lịch sử thanh toán các hóa đơn
                         </a>
                         <a href="{{ route('home.complaints.index') }}"
                             class="list-group-item list-group-item-action d-flex align-items-center gap-2">
@@ -52,6 +52,10 @@
                         <a href="{{ route('home.profile.tenants.dashboard') }}"
                             class="list-group-item list-group-item-action d-flex align-items-center gap-2">
                             <i class="bi bi-receipt-cutoff fs-5"></i> Thống kê chi tiết
+                        </a>
+                        <a href="{{ route('home.roomleave.deposits') }}"
+                            class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                            <i class="bi bi-receipt-cutoff fs-5"></i> Cọc tiền nhà 
                         </a>
                     </ul>
                 </div>

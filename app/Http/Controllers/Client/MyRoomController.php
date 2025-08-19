@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Landlord\ContractRenewal;
 use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Staff\Rooms\RoomBill;
-
 use App\Models\Landlord\Staff\Rooms\RoomStaff;
 
 
@@ -24,51 +23,40 @@ class MyRoomController extends Controller
         $user = Auth::user();
         $today = Carbon::today();
 
-        // Lấy room_id từ info
         $roomId = $user->info?->room_id;
-
         if (!$roomId) {
             return redirect()->back()->with('error', 'Bạn chưa được gán vào phòng nào.');
         }
 
-        // Kiểm tra đã rời phòng chưa
         $hasLeftRoom = RoomLeaveLog::where('user_id', $user->id)
             ->where('room_id', $roomId)
             ->where('status', 'Approved')
             ->whereDate('leave_date', '<=', $today)
             ->exists();
 
-        // Nếu đã rời phòng thì không lấy thông tin chi tiết nữa
-       $room = $hasLeftRoom ? null : Room::with(['property', 'currentUserInfos'])->find($roomId);
-
-        // Nếu không tìm thấy phòng và cũng không phải người đã rời phòng → lỗi
+        $room = $hasLeftRoom ? null : Room::with(['property', 'currentUserInfos'])->find($roomId);
         if (!$room && !$hasLeftRoom) {
             return redirect()->back()->with('error', 'Không tìm thấy thông tin phòng.');
         }
 
-        // Lấy danh sách hóa đơn (nếu có phòng)
         $bills = $room ? RoomBill::where('room_id', $room->room_id)->orderByDesc('month')->get() : collect();
 
-        // Lấy hợp đồng đang hoạt động
         $contract = $room ? RentalAgreement::where('room_id', $room->room_id)
             ->where('status', 'active')
             ->latest('end_date')
             ->first() : null;
-        // dd($contract);
 
         $alert = null;
         $alertType = null;
         $showRenewButtons = false;
-        $alertType = null;
+
         if ($contract) {
             $today = Carbon::today();
             $endDate = Carbon::parse($contract->end_date);
-           $monthsRemaining = round($today->floatDiffInMonths($endDate));
+            $monthsRemaining = round($today->floatDiffInMonths($endDate));
             $endDateFormatted = $endDate->format('d/m/Y');
-            // dd($monthsRemaining);
 
             if ($monthsRemaining == 2) {
-                // dd("đã vào đây");
                 $alert = "⚠️ Hợp đồng phòng sắp hết hạn! Còn 2 tháng nữa ($endDateFormatted).";
                 $alertType = 'warning';
             } elseif ($monthsRemaining == 1) {
@@ -78,15 +66,18 @@ class MyRoomController extends Controller
             }
         }
 
-      $hasRenewalPending = $room->contractRenewals()
-    ->where('user_id', auth()->id())
-    ->where('status', 'pending')
-    ->exists();
-        // dd($hasRenewalPending);
-        // Kiểm tra cảnh báo hóa đơn chưa thanh toán
+        // Tránh lỗi khi $room = null
+        $hasRenewalPending = $room ? $room->contractRenewals()
+            ->where('user_id', auth()->id())
+            ->where('status', 'pending')
+            ->exists() : false;
+
+        // Nhắc nhở hóa đơn
         $showBillReminder = false;
         $billReminderType = null;
-        $today = Carbon::create(2025,8,5);
+
+        // Lưu ý: bạn đang set cứng ngày để test
+        $today = Carbon::create(2025, 8, 5);
         $day = $today->day;
 
         $unpaidBill = $room ? RoomBill::where('room_id', $room->room_id)

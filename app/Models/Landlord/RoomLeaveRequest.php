@@ -28,7 +28,9 @@ class RoomLeaveRequest extends Model
         'handled_at', // Timestamp when the request was handled
         'new_renter_id', // ID of the new renter if this is a transfer request
         'reject_reason', // Reason for rejection if applicable
-         'created_at',
+        'deposit_qr_image',
+        'proof_image',
+        'created_at',
         'updated_at',
 
     ];
