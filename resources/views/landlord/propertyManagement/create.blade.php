@@ -173,10 +173,10 @@
                             <div class="col-12">
                                 <label class="form-label">Xác định vị trí trên bản đồ</label>
                                 <div id="map" style="height: 350px; border: 1px solid #ccc;"></div>
-                                <input id="autocompleteResults" class="form-control mt-2"
+                                {{-- <input id="autocompleteResults" class="form-control mt-2"
                                     style="display:none; position:absolute; z-index:9999;" />
                                 <div id="autocomplete-list" class="list-group position-absolute w-50 bg-white border"
-                                    style="z-index: 1000; display:none;"></div>
+                                    style="z-index: 1000; display:none;"></div> --}}
 
                                 <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude') }}">
                                 <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude') }}">

@@ -41,6 +41,9 @@ $user = Auth::user(); ?>
             <ul class="nav nav-sm flex-column">
                 @if ($user->role === 'Landlord')
                     <li class="nav-item"><a href="{{ route('landlords.rooms.index') }}" class="nav-link">Danh sách phòng</a></li>
+                    <li class="nav-item"><a href="{{ route('landlords.services.index') }}" class="nav-link">Danh sách dịch vụ</a></li>
+                    <li class="nav-item"><a href="{{ route('landlords.facilities.index') }}" class="nav-link">Danh sách tiện nghi</a></li>
+
                 @endif
 
                 @if ($user->role === 'Staff')

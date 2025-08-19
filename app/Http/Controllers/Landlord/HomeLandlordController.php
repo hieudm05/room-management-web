@@ -29,11 +29,7 @@ class HomeLandLordController extends Controller
             Log::debug("Revenue for property {$property->name}: {$revenue}"); // Log để debug
             return $revenue;
         });
-        // dd($total_revenue);
-        $total_profit = Property::with(['rooms.bills'])->get()->sum(function ($property) {
-            $bills = $property->rooms->flatMap->bills;
-            return $bills->sum('total') - ($bills->sum('electric_total') + $bills->sum('water_total') + $bills->sum('other_total'));
-        });
+        
         $total_complaints = Property::with(['rooms.complaints'])->get()->sum(function ($property) {
             return $property->rooms->flatMap->complaints->count();
         });
@@ -52,14 +48,12 @@ class HomeLandLordController extends Controller
                 $electric_cost = $bills->sum('electric_total');
                 $water_cost = $bills->sum('water_total');
                 $other_cost = $bills->sum('other_total');
-                $profit = $revenue - ($electric_cost + $water_cost + $other_cost);
 
-                Log::debug("Property {$property->name}: revenue = {$revenue}, profit = {$profit}"); // Log để debug
+                Log::debug("Property {$property->name}: revenue = {$revenue}"); // Log để debug
 
                 return [
                     'name' => $property->name,
                     'revenue' => $revenue ?? 0, // Đảm bảo không trả về null
-                    'profit' => $profit ?? 0,
                     'total_rooms' => $total_rooms,
                     'rented_rooms' => $rented_rooms,
                     'empty_rooms' => $empty_rooms,
@@ -74,7 +68,7 @@ class HomeLandLordController extends Controller
                 ];
             })->values();
 
-            // Lấy dữ liệu lợi nhuận 12 tháng
+            // Lấy dữ liệu doanh thu 12 tháng
            $monthlyRevenue = collect(range(1, 12))->map(function ($month) {
                 $bills = RoomBill::whereMonth('month', $month)
                     ->whereYear('month', now()->year)
@@ -82,13 +76,10 @@ class HomeLandLordController extends Controller
                 return $bills->sum('total'); // chỉ lấy doanh thu
             });
 
-            // dd($monthlyRevenue);
-
             $revenueChartData = [
                 'labels' => collect(range(1, 12))->map(fn($m) => 'Tháng ' . $m)->toArray(),
-                'profits' => $monthlyRevenue->toArray()
+                'revenue' => $monthlyRevenue->toArray()
             ];
-
 
             $incomeExpenseStats = [
                 'labels' => $propertyStats->pluck('name')->toArray(),
@@ -102,11 +93,10 @@ class HomeLandLordController extends Controller
             'total_rented',
             'total_empty',
             'total_revenue',
-            'total_profit',
             'total_complaints',
             'propertyStats',
-            'incomeExpenseStats'
-            ,'revenueChartData'
+            'incomeExpenseStats',
+            'revenueChartData'
         ));
     }
 
@@ -171,14 +161,10 @@ class HomeLandLordController extends Controller
                 $electric_cost = $bills->sum('electric_total');
                 $water_cost = $bills->sum('water_total');
                 $other_cost = $bills->sum('other_total');
-                $profit = $revenue - ($electric_cost + $water_cost + $other_cost);
-
-                // Log::debug("Property {$property->name}: revenue = {$revenue}, bills count = {$bills->count()}");
 
                 return [
                     'name' => $property->name,
                     'revenue' => $revenue ?? 0,
-                    'profit' => $profit ?? 0,
                     'total_rooms' => $total_rooms,
                     'rented_rooms' => $rented_rooms,
                     'empty_rooms' => $empty_rooms,
@@ -197,15 +183,12 @@ class HomeLandLordController extends Controller
                 'expense' => $propertyStats->pluck('expense')->toArray(),
             ];
 
-
-
             // Tính tổng hợp
             $summary = [
                 'total_rooms' => $propertyStats->sum('total_rooms'),
                 'total_rented' => $propertyStats->sum('rented_rooms'),
                 'total_empty' => $propertyStats->sum('empty_rooms'),
                 'total_revenue' => $propertyStats->sum('revenue'),
-                'total_profit' => $propertyStats->sum('profit'),
                 'total_complaints' => $propertyStats->sum('complaints'),
             ];
 
@@ -215,7 +198,7 @@ class HomeLandLordController extends Controller
                 'incomeExpenseStats' => $incomeExpenseStats,
                 'revenueChartData' => [
                 'labels' => collect(range(1, 12))->map(fn($m) => 'Tháng ' . $m)->toArray(),
-                'profits' => collect(range(1, 12))->map(function ($month) {
+                'revenue' => collect(range(1, 12))->map(function ($month) {
                     $bills = RoomBill::whereMonth('month', $month)
                         ->whereYear('month', now()->year)
                         ->get();

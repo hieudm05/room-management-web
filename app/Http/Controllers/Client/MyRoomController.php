@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Models\Notification;
+use App\Models\RoomLeaveLog;
 use Illuminate\Http\Request;
 use App\Models\Landlord\Room;
 use Illuminate\Support\Carbon;
@@ -10,7 +12,10 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Landlord\ContractRenewal;
 use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Staff\Rooms\RoomBill;
-use App\Models\RoomLeaveLog;
+
+use App\Models\Landlord\Staff\Rooms\RoomStaff;
+
+
 
 class MyRoomController extends Controller
 {
@@ -51,7 +56,6 @@ class MyRoomController extends Controller
             ->first() : null;
         // dd($contract);
 
-        
         $alert = null;
         $alertType = null;
         $showRenewButtons = false;
@@ -111,28 +115,85 @@ class MyRoomController extends Controller
     }
 
     public function renew(Request $request, $roomId)
-    {
-        $room = Room::findOrFail($roomId);
 
-        if ($request->input('action') === 'accept') {
-            $exists = ContractRenewal::where('room_id', $room->room_id)
-                ->where('user_id', auth()->id())
-                ->where('status', 'pending')
-                ->exists();
+{
+    if (!$roomId) {
+        return back()->with('error', 'Yêu cầu không hợp lệ.');
+    }
+    
+    $room = Room::findOrFail($roomId);
 
-            if ($exists) {
-                return back()->with('error', 'Bạn đã gửi yêu cầu tái ký rồi.');
-            }
-
-            ContractRenewal::create([
-                'room_id' => $room->room_id,
-                'user_id' => auth()->id(),
-                'status' => 'pending',
-            ]);
-
-            return back()->with('success', 'Gửi yêu cầu tái ký thành công.');
-        }
-
+    if ($request->input('action') !== 'accept') {
         return back();
     }
+
+    // 1️⃣ Lấy người nhận
+    $receiverId = null;
+
+    // Kiểm tra nhân viên phụ trách
+    $staffRecord = RoomStaff::where('room_id', $room->room_id)->first();
+    if ($staffRecord) {
+        $receiverId = $staffRecord->staff_id;
+    } else {
+        // Nếu không có nhân viên → lấy landlord từ hợp đồng hiện tại
+        $agreement = RentalAgreement::where('room_id', $room->room_id)
+            ->where('status', 'active')
+            ->latest('end_date')
+            ->first();
+
+        if ($agreement) {
+            $receiverId = $agreement->landlord_id;
+        }
+    }
+
+    // Nếu không xác định được người nhận → báo lỗi
+    if (!$receiverId) {
+        return back()->with('renewal_error', 'Không xác định được người nhận thông báo.');
+    }
+
+    // 2️⃣ Kiểm tra đã gửi yêu cầu tái ký chưa
+    $exists = ContractRenewal::where('room_id', $room->room_id)
+        ->where('user_id', auth()->id())
+        ->where('status', 'pending')
+        ->exists();
+
+    if ($exists) {
+        return back()->with('renewal_error', 'Bạn đã gửi yêu cầu tái ký rồi.');
+    }
+
+    // 3️⃣ Lưu yêu cầu tái ký
+    ContractRenewal::create([
+        'room_id'     => $room->room_id,
+        'user_id'     => auth()->id(), // Người gửi
+        'receiver_id' => $receiverId,  // Người nhận
+        'status'      => 'pending',
+    ]);
+
+    // 4️⃣ Tạo thông báo
+    $notification = Notification::create([
+        'title'      => 'Yêu cầu tái ký hợp đồng',
+        'message'    => 'Người thuê ' . auth()->user()->name . ' đã gửi yêu cầu tái ký cho phòng ' . $room->name,
+        'type'       => 'user', // Vì người gửi là user
+        'link'       => route('staff.contract.renewals.index'), // Link xử lý
+        'expired_at' => now()->addDays(7),
+        'is_global'  => false,
+    ]);
+
+    // 5️⃣ Gắn người nhận thông báo vào bảng notification_user
+    $notification->users()->attach($receiverId, [
+        'is_read'     => false,
+        'received_at' => now(),
+        'created_at'  => now(),
+        'updated_at'  => now(),
+    ]);
+
+    // 6️⃣ Trả về thông báo thành công
+    return back()->with('renewal_success', 'Gửi yêu cầu tái ký thành công.');
 }
+
+}
+
+
+   
+
+

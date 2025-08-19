@@ -18,6 +18,7 @@ class PostController extends Controller
         }
 
         $post->load(['category', 'features', 'property']);
+        // dd($post);
         return view('home.detailPost', compact('post'));
     }
 

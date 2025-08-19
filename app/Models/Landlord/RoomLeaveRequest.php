@@ -51,4 +51,10 @@ class RoomLeaveRequest extends Model
     {
         return $this->belongsTo(User::class, 'new_renter_id');
     }
+
+    public function landlord()
+{
+    return $this->belongsTo(User::class, 'landlord_id');
+}
+
 }
