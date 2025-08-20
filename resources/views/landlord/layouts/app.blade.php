@@ -118,7 +118,7 @@
     </div>
 
     <!-- JAVASCRIPT -->
-    
+
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -131,6 +131,7 @@
     @yield('scripts')
     @stack('scripts') {{-- JS từ các view --}}
 
+    {{-- <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"> --}}
 
 
 </body>

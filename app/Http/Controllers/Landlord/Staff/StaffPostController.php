@@ -8,6 +8,7 @@ use App\Models\StaffPost;
 use App\Models\Category;
 use App\Models\Feature;
 use App\Models\Landlord\Property as LandlordProperty;
+use App\Models\Landlord\Room;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -28,8 +29,9 @@ class StaffPostController extends Controller
         $features = Feature::all();
         $landlords = User::where('role', 'landlord')->get();
         $properties = LandlordProperty::all();
+        $rooms = Room::all();
 
-        return view('staff.posts.create', compact('categories', 'features', 'landlords', 'properties'));
+        return view('staff.posts.create', compact('categories', 'features', 'landlords', 'properties', 'rooms'));
     }
 
     // Lưu bài viết
@@ -41,11 +43,13 @@ class StaffPostController extends Controller
             'price' => 'required|string|max:255',
             'area' => 'required|integer',
             'address' => 'required|string|max:255',
-            'province' => 'required|string|max:255', // Form gửi lên là province
+            'province' => 'required|string|max:255',
             'district' => 'required|string|max:255',
             'ward' => 'required|string|max:255',
             'landlord_id' => 'required|exists:users,id',
             'property_id' => 'required|exists:properties,property_id',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg',
             'gallery.*' => 'nullable|image|mimes:jpeg,png,jpg',
         ]);
@@ -55,17 +59,17 @@ class StaffPostController extends Controller
         $post->staff_id = auth()->id();
         $post->landlord_id = $request->landlord_id;
         $post->property_id = $request->property_id;
+        $post->room_id = $request->room_id;
         $post->title = $request->title;
         $post->slug = Str::slug($request->title) . '-' . time();
         $post->price = $request->price;
         $post->area = $request->area;
         $post->address = $request->address;
-
-        // Gán vùng địa lý (giữ nguyên DB cũ)
         $post->district = $request->district;
         $post->ward = $request->ward;
-        $post->city = $request->province; // Map từ province vào city
-
+        $post->city = $request->province;
+        $post->latitude = $request->latitude;
+        $post->longitude = $request->longitude;
         $post->description = $request->description;
 
         // Upload thumbnail

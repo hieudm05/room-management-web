@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Landlord\Approval;
 use App\Models\Landlord\RentalAgreement;
 use App\Models\Landlord\Room;
+use App\Models\Landlord\RoomUsers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;

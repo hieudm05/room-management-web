@@ -3,226 +3,206 @@
 @section('title', 'Chi tiết phòng')
 
 @section('content')
-    <style>
-        .badge.bg-purple {
-            background-color: #6f42c1 !important;
-            color: #fff !important;
-        }
-    </style>
-    <div class="container mt-4">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0 fw-bold">🔍 Chi tiết phòng</h5>
-            </div>
-            <div class="card-body">
+<style>
+    .badge.bg-purple {
+        background-color: #6f42c1 !important;
+        color: #fff !important;
+    }
 
-                {{-- Khu trọ --}}
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Khu trọ</label>
+    .room-photo {
+        width: 150px;
+        height: auto;
+        object-fit: cover;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="bg-primary text-white fw-bold px-3 py-2 rounded-top fs-4">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            🏠 Thông tin chi tiết phòng <span class="text-warning">#{{ $room->room_number }}</span>
+        </div>
+
+        <div class="card-body">
+
+            {{-- Thông tin cơ bản --}}
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="section-title">Khu trọ</label>
                     <input type="text" class="form-control" value="{{ $room->property->name }}" disabled>
                 </div>
-
-                {{-- Số phòng --}}
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Số phòng</label>
+                <div class="col-md-3">
+                    <label class="section-title">Số phòng</label>
                     <input type="text" class="form-control" value="{{ $room->room_number }}" disabled>
                 </div>
-
-                {{-- Diện tích --}}
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Diện tích (m²)</label>
+                <div class="col-md-3">
+                    <label class="section-title">Diện tích (m²)</label>
                     <input type="text" class="form-control" value="{{ $room->area }}" disabled>
                 </div>
-
-                {{-- Giá thuê --}}
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Giá thuê (VNĐ)</label>
+                <div class="col-md-6">
+                    <label class="section-title">Giá thuê</label>
                     <input type="text" class="form-control"
                         value="{{ number_format($room->rental_price) }} VNĐ (Đã sửa {{ $room->price_edit_count ?? 0 }} lần)"
                         disabled>
                 </div>
-
-
-                {{-- Tiền cọc --}}
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Tiền cọc</label>
+                <div class="col-md-6">
+                    <label class="section-title">Tiền cọc</label>
                     <input type="text" class="form-control"
                         value="{{ number_format($room->deposit_price) }} VNĐ (Đã sửa {{ $room->deposit_edit_count ?? 0 }} lần)"
                         disabled>
                 </div>
-
-
-
-                {{-- Trạng thái --}}
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Trạng thái</label>
+                <div class="col-md-6">
+                    <label class="section-title">Trạng thái</label>
                     <input type="text" class="form-control" value="{{ $room->status }}" disabled>
                 </div>
+            </div>
 
-                {{-- Tiện nghi --}}
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Tiện nghi</label>
-                    <ul class="list-group">
-                        @forelse ($room->facilities as $facility)
-                            <li class="list-group-item">{{ $facility->name }}</li>
-                        @empty
-                            <li class="list-group-item text-muted">Không có tiện nghi</li>
-                        @endforelse
-                    </ul>
-                </div>
+            {{-- Tiện nghi --}}
+            <div class="mb-4">
+                <label class="section-title">Tiện nghi</label>
+                <ul class="list-group">
+                    @forelse ($room->facilities as $facility)
+                    <li class="list-group-item">{{ $facility->name }}</li>
+                    @empty
+                    <li class="list-group-item text-muted">Không có tiện nghi</li>
+                    @endforelse
+                </ul>
+            </div>
 
-                {{-- Người thuê / Số người ở --}}
-                <div class="mb-3">
-                    {{-- <label class="form-label fw-bold">Người thuê đại diện (từ hợp đồng)</label> --}}
-                    @if ($room->currentAgreementValid && !$room->is_contract_locked)
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Người thuê</label>
-                            <input type="text" class="form-control mb-2"
-                                value="{{ $room->renter?->info?->full_name ?? ($room->renter?->name ?? 'Chưa có tên') }}"
-                                disabled>
-                            <input type="text" class="form-control mb-2"
-                                value="SĐT: {{ $room->renter->phone_number ?? 'Chưa có số điện thoại' }}" disabled>
-
-                            <input type="text" class="form-control mb-2"
-                                value="Email: {{ $room->renter->email ?? 'Chưa có email' }}" disabled>
-
-                            <input type="text" class="form-control"
-                                value="CCCD/CMND: {{ $room->renter->identity_number ?? 'Chưa có CCCD' }}" disabled>
-                        </div>
-                    @else
-                        <p class="text-muted">Chưa có người thuê đại diện trong hợp đồng.</p>
-                    @endif
-
-                </div>
-
-                {{-- Dịch vụ --}}
-                @if ($room->services->count())
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Dịch vụ</label>
-                        <ul class="list-group">
-                            @foreach ($room->services as $service)
-                                @php
-                                    $unit = $service->pivot->unit;
-                                    $isFree = $service->pivot->is_free;
-                                    $price = $service->pivot->price ?? 0;
-                                    $occupants = $room->occupants ?? 0;
-                                    $rightText = '';
-                                    $description = '';
-                                    $badgeClass = 'purple';
-
-                                    if ($isFree) {
-                                        $rightText = 'Miễn phí';
-                                        $description = '<small class="text-muted">Không tính phí</small>';
-                                    } elseif ($service->service_id == 2) {
-                                        // Nước
-                                        if ($unit === 'per_person') {
-                                            $total = $occupants * $price;
-                                            $rightText = number_format($total) . ' VNĐ';
-                                            $description =
-                                                'Tính theo đầu người<br><small class="text-muted">Tổng: ' .
-                                                number_format($total) .
-                                                ' VNĐ (' .
-                                                $occupants .
-                                                ' người x ' .
-                                                number_format($price) .
-                                                ' VNĐ)</small>';
-                                        } elseif ($unit === 'per_m3') {
-                                            $rightText = number_format($price) . ' VNĐ / m³';
-                                            $description = '<small class="text-muted">Tính theo khối</small>';
-                                        } else {
-                                            $rightText = number_format($price) . ' VNĐ';
-                                            $description = '<small class="text-muted">Không rõ đơn vị tính</small>';
-                                        }
-                                    } elseif ($service->service_id == 3) {
-                                        // Wifi
-                                        if ($unit === 'per_person') {
-                                            $total = $occupants * $price;
-                                            $rightText = number_format($total) . ' VNĐ';
-                                            $description =
-                                                'Tính theo đầu người<br><small class="text-muted">Tổng: ' .
-                                                number_format($total) .
-                                                ' VNĐ (' .
-                                                $occupants .
-                                                ' người x ' .
-                                                number_format($price) .
-                                                ' VNĐ)</small>';
-                                        } elseif ($unit === 'per_room') {
-                                            $rightText = number_format($price) . ' VNĐ';
-                                            $description =
-                                                '<small class="text-muted">Tính theo phòng (giá cố định)</small>';
-                                        } else {
-                                            $rightText = number_format($price) . ' VNĐ';
-                                            $description = '<small class="text-muted">Không rõ đơn vị tính</small>';
-                                        }
-                                    } else {
-                                        // Dịch vụ khác
-                                        $rightText = number_format($price) . ' VNĐ';
-                                        $description = '<small class="text-muted">Dịch vụ tính phí cố định</small>';
-                                    }
-                                @endphp
-
-                                <li class="list-group-item d-flex justify-content-between align-items-start">
-                                    <div class="ms-2 me-auto">
-                                        <div class="fw-bold">{{ $service->name }}</div>
-                                        <div>{!! $description !!}</div>
-                                    </div>
-                                    <span class="badge bg-{{ $badgeClass }} fs-6">
-                                        {{ $rightText }}
-                                    </span>
-                                </li>
-                            @endforeach
-                        </ul>
+            {{-- Người thuê --}}
+            <div class="mb-4">
+                <label class="section-title">Người thuê</label>
+                @if ($room->currentAgreementValid && !$room->is_contract_locked)
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control"
+                            value="{{ $room->renter?->info?->full_name ?? ($room->renter?->name ?? 'Chưa có tên') }}"
+                            disabled>
                     </div>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control"
+                            value="SĐT: {{ $room->renter->phone_number ?? 'Chưa có số điện thoại' }}" disabled>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control"
+                            value="Email: {{ $room->renter->email ?? 'Chưa có email' }}" disabled>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control"
+                            value="CCCD/CMND: {{ $room->renter->identity_number ?? 'Chưa có CCCD' }}" disabled>
+                    </div>
+                </div>
                 @else
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Dịch vụ</label>
-                        <p class="text-muted">Không có dịch vụ nào.</p>
-                    </div>
+                <p class="text-muted">Chưa có người thuê đại diện trong hợp đồng.</p>
                 @endif
+            </div>
 
-                {{-- Ảnh phòng --}}
-                @if ($room->photos->count())
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Ảnh phòng</label>
-                        <div class="d-flex flex-wrap gap-2">
-                            @foreach ($room->photos as $photo)
-                                <div class="border p-1">
-                                    <img src="{{ $photo->image_url }}" width="150" class="rounded shadow-sm">
-                                </div>
-                            @endforeach
+            {{-- Dịch vụ --}}
+            <div class="mb-4">
+                <label class="section-title">Dịch vụ</label>
+                @if ($room->services->count())
+                <ul class="list-group">
+                    @foreach ($room->services as $service)
+                    @php
+                    $unit = $service->pivot->unit;
+                    $isFree = $service->pivot->is_free;
+                    $price = $service->pivot->price ?? 0;
+                    $occupants = $room->occupants ?? 0;
+                    $description = '';
+                    $rightText = $isFree ? 'Miễn phí' : number_format($price) . ' VNĐ';
+
+                    if (!$isFree) {
+                    if ($unit === 'per_person') {
+                    $total = $occupants * $price;
+                    $rightText = number_format($total) . ' VNĐ';
+                    $description =
+                    "Tính theo đầu người ({$occupants} người x " .
+                    number_format($price) .
+                    ' VNĐ)';
+                    } elseif ($unit === 'per_m3') {
+                    $description = 'Tính theo khối (m³)';
+                    $rightText = number_format($price) . ' VNĐ / m³';
+                    } elseif ($unit === 'per_room') {
+                    $description = 'Tính theo phòng (giá cố định)';
+                    }
+                    } else {
+                    $description = 'Không tính phí';
+                    }
+                    @endphp
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-bold">{{ $service->name }}</div>
+                            <small class="text-muted">{{ $description }}</small>
                         </div>
-                    </div>
+                        <span class="badge bg-purple fs-6">{{ $rightText }}</span>
+                    </li>
+                    @endforeach
+                </ul>
+                @else
+                <p class="text-muted">Không có dịch vụ nào.</p>
                 @endif
+            </div>
 
-                @if ($room->contract_pdf_file || $room->contract_word_file)
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Hợp đồng mẫu</label><br>
-
-                        @if ($room->contract_pdf_file)
-                            <a href="{{ route('landlords.rooms.contract.pdf', $room) }}" class="btn btn-outline-success"
-                                target="_blank">
-                                👁️ Xem hợp đồng mẫu PDF
-                            </a>
-                            <a href="{{ route('landlords.rooms.contract.download', $room) }}"
-                                class="btn btn-outline-primary ms-2">
-                                📄 Tải hợp đồng PDF
-                            </a>
-                        @endif
-
-                        @if ($room->contract_word_file)
-                            <a href="{{ route('landlords.rooms.contract.word', $room) }}"
-                                class="btn btn-outline-warning ms-2">
-                                📝 Tải hợp đồng Word (.docx)
-                            </a>
-                        @endif
+            {{-- Ảnh phòng --}}
+            @if ($room->photos->count())
+            <div class="mb-4">
+                <label class="section-title">Ảnh phòng</label>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach ($room->photos as $photo)
+                    <div class="border p-1 rounded">
+                        <img src="{{ $photo->image_url }}" class="room-photo rounded shadow-sm">
                     </div>
-                @endif
-
-                {{-- Nút quay lại --}}
-                <div class="text-start mt-4">
-                    <a href="{{ route('landlords.rooms.index') }}" class="btn btn-secondary">🔙 Quay lại danh sách</a>
+                    @endforeach
                 </div>
+            </div>
+            @endif
+
+            {{-- Hợp đồng mẫu --}}
+            @if ($room->contract_pdf_file || $room->contract_word_file)
+            <div class="mb-4">
+                <label class="section-title">Hợp đồng mẫu</label><br>
+                @if ($room->contract_pdf_file)
+                <a href="{{ route('landlords.rooms.contract.pdf', $room) }}"
+                    class="btn btn-outline-success " target="_blank">
+                    👁️ Xem PDF
+                </a>
+                <a href="{{ route('landlords.rooms.contract.download', $room) }}"
+                    class="btn btn-outline-primary ">
+                    📄 Tải PDF
+                </a>
+                <a href="{{ route('landlords.rooms.contract.contractIndex', $room) }}"
+                    class="btn btn-outline-primary">📄 Hợp
+                    đồng</a>
+                @endif
+                @if ($room->contract_word_file)
+                <a href="{{ route('landlords.rooms.contract.word', $room) }}"
+                    class="btn btn-outline-warning ">
+                    📝 Tải Word (.docx)
+                </a>
+                @endif
+                {{-- Đặt cọc --}}
+                @if($room->status === 'Available')
+                    <a href="{{ route('landlords.rooms.deposit.form', $room) }}"
+                        class="btn btn-outline-info">
+                        💰 Đặt cọc
+                    </a>
+                @endif
+            </div>
+            @endif
+
+            {{-- Nút quay lại --}}
+            <div class="text-start mt-4">
+                <a href="{{ route('landlords.rooms.index') }}" class="btn btn-secondary">
+                    🔙 Quay lại danh sách
+                </a>
             </div>
         </div>
     </div>
+</div>
 @endsection

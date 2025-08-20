@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             AttachAllServicesToRoomsSeeder::class,
             BankAccountsTableSeeder::class,
             CommonIssueSeeder::class,
+            RoomBillSeeder::class,
 
 
         ]);
