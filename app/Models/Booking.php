@@ -2,25 +2,29 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Landlord\Room;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Booking extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'post_id',
-        'user_id',
-        'check_in',
-        'note',
-        'status',
-        'confirmed_by',
-        'proof_image',
-        'guest_name',
-        'phone',
-        'room_id',
-    ];
+    'post_id',
+    'user_id',
+    'check_in',
+    'note',
+    'status',
+    'confirmed_by',
+    'proof_image',
+    'guest_name',
+    'phone',
+    'email',
+    'room_id',
+    'created_at',
+];
+
 
     protected $casts = [
         'check_in' => 'datetime',
@@ -28,8 +32,17 @@ class Booking extends Model
 
     public function post()
     {
-        return $this->belongsTo(StaffPost::class);
+        return $this->belongsTo(StaffPost::class, 'post_id', 'post_id');
     }
+
+    public function room()
+{
+    return $this->belongsTo(Room::class, 'room_id');
+}
+
+
+
+
 
     public function user()
     {

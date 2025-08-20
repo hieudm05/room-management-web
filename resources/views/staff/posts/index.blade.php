@@ -6,9 +6,11 @@
             <h2 class="fw-bold text-primary display-5">
                 <i class="bi bi-list-ul me-2"></i> Danh sách bài đăng
             </h2>
-            <a href="{{ route('staff.posts.create') }}" class="btn btn-gradient-primary px-5 py-3 rounded-pill fw-bold">
+            <a href="{{ Auth::user()->role === 'Landlord' ? route('landlord.posts.create') : route('staff.posts.create') }}"
+                class="btn btn-gradient-primary px-5 py-3 rounded-pill fw-bold">
                 <i class="bi bi-plus-circle-fill me-2"></i> Tạo bài đăng mới
             </a>
+
         </div>
 
         @if (session('success'))
@@ -21,8 +23,14 @@
         <!-- Tabs Navigation -->
         <ul class="nav nav-tabs mb-4 border-0" id="postsTab" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold text-dark" id="pending-tab" data-bs-toggle="tab"
-                    data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="true">
+                <button class="nav-link active fw-bold text-dark" id="all-tab" data-bs-toggle="tab" data-bs-target="#all"
+                    type="button" role="tab" aria-controls="all" aria-selected="true">
+                    <i class="bi bi-list-ul me-2"></i> Tất cả
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-dark" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending"
+                    type="button" role="tab" aria-controls="pending" aria-selected="false">
                     <i class="bi bi-hourglass-split me-2"></i> Chờ duyệt
                 </button>
             </li>
@@ -42,8 +50,75 @@
 
         <!-- Tabs Content -->
         <div class="tab-content" id="postsTabContent">
+            <!-- All Posts Tab -->
+            <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+                @if ($posts->count() > 0)
+                    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">#</th>
+                                        <th>Tiêu đề</th>
+                                        <th>Giá thuê</th>
+                                        <th>Diện tích</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ngày đăng</th>
+                                        <th class="text-end pe-4">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($posts as $key => $post)
+                                        <tr>
+                                            <td class="ps-4">{{ $key + 1 }}</td>
+                                            <td>{{ Str::limit($post->title, 40) }}</td>
+                                            <td>{{ number_format((float) $post->price, 0, ',', '.') }} VNĐ</td>
+                                            <td>{{ $post->area }} m²</td>
+                                            <td>
+                                                @if ($post->status == 0)
+                                                    <span class="badge bg-warning text-dark px-3 py-2">Chờ duyệt</span>
+                                                @elseif ($post->status == 1)
+                                                    <span class="badge bg-success px-3 py-2">Đã duyệt</span>
+                                                @else
+                                                    <span class="badge bg-danger px-3 py-2">Từ chối</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $post->created_at->format('d/m/Y H:i') }}</td>
+                                            <td class="text-end pe-4">
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ route('staff.posts.show', $post->post_id) }}"
+                                                        class="btn btn-outline-primary btn-sm rounded-start-pill">
+                                                        <i class="bi bi-eye-fill me-1"></i> Xem
+                                                    </a>
+                                                    @if ($post->status == 0)
+                                                        <form action="{{ route('staff.posts.destroy', $post->post_id) }}"
+                                                            method="POST" class="d-inline-block"
+                                                            onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài đăng này?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="btn btn-outline-danger btn-sm rounded-end-pill">
+                                                                <i class="bi bi-trash3-fill me-1"></i> Xóa
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @else
+                    <div class="alert alert-info shadow-lg rounded-4" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i> Không có bài đăng nào.
+                    </div>
+                @endif
+            </div>
+
             <!-- Pending Tab -->
-            <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+            <div class="tab-pane fade" id="pending" role="tabpanel" aria-labelledby="pending-tab">
                 @if ($posts->where('status', 0)->count() > 0)
                     <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
                         <div class="table-responsive">
@@ -194,23 +269,27 @@
 
     <style>
         .btn-gradient-primary {
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            background-color: orangered;
+            /* Màu xanh dương cơ bản */
             color: #fff;
             border: none;
+            border-radius: 3px;
+            /* Giảm bo tròn lại */
             transition: all 0.2s ease-in-out;
             font-weight: 600;
             letter-spacing: 0.5px;
         }
 
         .btn-gradient-primary:hover {
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            background-color: white;
+            /* Màu hover đậm hơn */
             transform: translateY(-1px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
         }
 
         .table {
             background-color: #fff;
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
         }
 
@@ -293,5 +372,4 @@
             color: #fff;
         }
     </style>
-
 @endsection

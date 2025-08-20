@@ -14,13 +14,13 @@
     @endif
 
     {{-- ✅ Thông báo khi thao tác thành công --}}
-    @if (session('success'))
+    {{-- @if (session('success'))
         <script>
             window.onload = function() {
                 alert("{{ session('success') }}");
             };
         </script>
-    @endif
+    @endif --}}
 
     <div class="col-xl-12">
         <div class="card mb-3">
@@ -29,10 +29,12 @@
                     {{-- Tìm kiếm --}}
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Tìm kiếm</label>
-                        <input type="text" name="search" class="form-control"
-                            placeholder="🔍 Tìm tên phòng, khu trọ, tiện nghi..." value="{{ request('search') }}">
+                        <div class="input-group">
+                            <span class="input-group-text">🔍</span>
+                            <input type="text" name="search" class="form-control"
+                                placeholder="Tên phòng, khu trọ, tiện nghi..." value="{{ request('search') }}">
+                        </div>
                     </div>
-
                     {{-- Lọc theo khu trọ --}}
                     <div class="col-md-3">
                         <label class="form-label fw-bold">Khu trọ</label>
@@ -93,8 +95,11 @@
         {{-- Bảng danh sách phòng --}}
         <div class="card">
             <div class="card-header d-flex justify-content-between">
-                <h4 class="card-title mb-0">Danh sách phòng</h4>
-                <a href="{{ route('landlords.rooms.create') }}" class="btn btn-success btn-sm">+ Thêm phòng</a>
+                <h4 class="card-title mb-0">📋Danh sách phòng</h4>
+                <a href="{{ route('landlords.rooms.create') }}" class="btn btn-success">
+                    ➕ Thêm phòng mới
+                </a>
+
             </div>
 
             <div class="card-body">
@@ -104,7 +109,7 @@
                             <tr>
                                 <th>Khu trọ</th>
                                 <th>Số phòng</th>
-                                <th>Số người</th>
+                                <th>Số người ở tối đa</th>
                                 <th>Diện tích</th>
                                 <th>Giá thuê</th>
                                 <th>Trạng thái</th>
@@ -142,13 +147,19 @@
                                             @foreach ($room->services->take(2) as $service)
                                                 <span class="badge bg-secondary">{{ $service->name }}</span>
                                             @endforeach
+
+                                            @if ($room->services->count() > 2)
+                                                <span
+                                                    class="badge bg-light text-dark">+{{ $room->services->count() - 2 }}</span>
+                                            @endif
                                         @else
                                             <span class="text-muted">Không có</span>
                                         @endif
                                     </td>
                                     <td>
                                         @if ($room->photos->first())
-                                            <img src="{{ asset($room->photos->first()->image_url) }}" width="50">
+                                            <img src="{{ asset($room->photos->first()->image_url) }}"
+                                                class="rounded shadow-sm" width="50">
                                         @else
                                             <span class="text-muted">Chưa có ảnh</span>
                                         @endif
@@ -187,7 +198,7 @@
                                                     <button type="submit" class="btn btn-danger btn-sm">🔒</button>
                                                 </form>
                                             @endif
-                                            <a href="{{ route('landlords.rooms.stats', $room) }}"
+                                            <a href="{{ route('landlords.rooms.statistics', $room) }}"
                                                 class="btn btn-sm btn-outline-secondary">📊</a>
                                         </div>
 
@@ -226,3 +237,20 @@
         </script>
     @endsection
 @endsection
+
+@push('scripts')
+    {{-- SweetAlert2 CDN (chỉ cần nếu layout chưa có) --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {{-- Hiển thị thông báo SweetAlert2 nếu có --}}
+    @if(session('success'))
+        <script>
+            Swal.fire({
+                title: "Thành công!",
+                text: "{{ session('success') }}",
+                icon: "success",
+                confirmButtonText: "OK"
+            });
+        </script>
+    @endif
+@endpush

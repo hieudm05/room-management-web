@@ -55,6 +55,10 @@ class Property extends Model
             ->withTimestamps();
 
     }
+   public function assignedStaff()
+{
+    return $this->belongsTo(User::class, 'staff_id'); // hoặc model Staff nếu bạn dùng riêng
+}
 
 
 }

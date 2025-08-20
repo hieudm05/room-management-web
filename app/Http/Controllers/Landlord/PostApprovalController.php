@@ -51,17 +51,21 @@ class PostApprovalController extends Controller
             abort(403, 'Bạn không có quyền duyệt bài viết này.');
         }
 
+        // Chỉ cần cập nhật trạng thái bài được duyệt
         $post->update([
             'status' => 1,
-            'is_public' => true, // Đánh dấu public cho client
+            'is_public' => 1, // vẫn để true nếu bạn dùng để lọc bài public
             'approved_by' => Auth::id(),
-            'approved_at' => Carbon::now(),
+            'approved_at' => now(),
             'rejected_reason' => null,
-            'published_at' => Carbon::now(), // Thêm trường published_at
+            'published_at' => now(),
         ]);
 
-        return redirect()->route('landlord.posts.approval.index')->with('success', 'Bài viết đã được duyệt và đẩy ra ngoài thành công.');
+        return redirect()->route('landlord.posts.approval.index')
+            ->with('success', 'Bài viết đã được duyệt.');
     }
+
+
 
 
     // Từ chối bài đăng

@@ -23,8 +23,7 @@ class Category extends Model
     }
 
     public function posts()
-{
-    return $this->staffPosts();
-}
-
+    {
+        return $this->staffPosts();
+    }
 }

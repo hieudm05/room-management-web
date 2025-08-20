@@ -2,15 +2,17 @@
 
 namespace App\Models\Landlord;
 
-use App\Models\Landlord\Facility;
-use App\Models\Landlord\Staff\Rooms\RoomBill;
-use App\Models\Landlord\Staff\Rooms\RoomUtility;
 use App\Models\User;
-
-use App\Models\RentalAgreement;
+use App\Models\Booking;
 use App\Models\RoomUser;
 use App\Models\UserInfo;
+
+use App\Models\RentalAgreement;
+use App\Models\Landlord\Facility;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Landlord\ContractRenewal;
+use App\Models\Landlord\Staff\Rooms\RoomBill;
+use App\Models\Landlord\Staff\Rooms\RoomUtility;
 
 class Room extends Model
 {
@@ -106,7 +108,12 @@ class Room extends Model
 {
     return $this->hasMany(UserInfo::class, 'room_id', 'room_id');
 }
-
+  public function currentUserInfos()
+{
+    return $this->hasMany(UserInfo::class, 'room_id', 'room_id')
+                ->where('active', 1)
+                ->whereNull('left_at');
+}
 
     public function utilities()
     {
@@ -137,17 +144,33 @@ class Room extends Model
     public function complaints()
 {
     return $this->hasMany(\App\Models\Complaint::class, 'room_id', 'room_id');
-
 }
+
+
  // RoomUtilityPhoto.php
 public function roomBill()
 {
     return $this->belongsTo(RoomBill::class, 'room_bill_id');
 
 }
+public function leaveRequests()
+{
+    return $this->hasMany(RoomLeaveRequest::class, 'room_id');
+}
+
    public function roomUsers()
     {
         return $this->hasMany(RoomUser::class, 'room_id', 'room_id');
     }
 
+    public function contractRenewals()
+{
+    return $this->hasMany(ContractRenewal::class, 'room_id', 'room_id');
 }
+public function bookings()
+{
+    return $this->hasMany(Booking::class, 'room_id');
+}
+
+}
+

@@ -2,7 +2,9 @@
 
 namespace App\Models\Landlord\Staff\Rooms;
 
+use App\Models\Complaint;
 use App\Models\Landlord\BankAccount;
+use App\Models\Landlord\BillService;
 use App\Models\Landlord\Room;
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,7 +32,7 @@ class RoomBill extends Model
     // ✅ 3. Quan hệ với dịch vụ của hóa đơn
     public function services()
     {
-        return $this->hasMany(RoomBillService::class, 'room_bill_id');
+        return $this->hasMany(BillService::class, 'bill_id');
     }
 
 
@@ -51,5 +53,10 @@ class RoomBill extends Model
     {
         return $this->status === 'paid';
     }
+    public function complaints()
+{
+    return $this->hasMany(Complaint::class, 'room_bill_id');
+}
+
     
 }

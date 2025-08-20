@@ -7,6 +7,8 @@
             --danger-color: #fff3f3;
         }
 
+
+
         .border-dashed {
             border: 1px dashed red;
             transition: border-color 0.3s ease;
@@ -109,7 +111,7 @@
                                                 class="text-danger">*</span></label>
                                         <input type="hidden" id="rules" name="rules" value="{{ old('rules') }}"
                                             class="form-control @error('rules') is-invalid @enderror" required>
-                                        <div id="quill-editor" class="snow-editor" style="height: 350px"></div>
+                                        <div id="quill-editor" style="height: 350px"></div>
                                         @error('rules')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
@@ -171,6 +173,11 @@
                             <div class="col-12">
                                 <label class="form-label">Xác định vị trí trên bản đồ</label>
                                 <div id="map" style="height: 350px; border: 1px solid #ccc;"></div>
+                                {{-- <input id="autocompleteResults" class="form-control mt-2"
+                                    style="display:none; position:absolute; z-index:9999;" />
+                                <div id="autocomplete-list" class="list-group position-absolute w-50 bg-white border"
+                                    style="z-index: 1000; display:none;"></div> --}}
+
                                 <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude') }}">
                                 <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude') }}">
                             </div>
@@ -219,6 +226,10 @@
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+    <!-- MapLibre GL -->
+    <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+
 
     <script>
         // Bootstrap validation
@@ -262,34 +273,74 @@
         });
 
         // Document previews
-        function updateDocumentPreviews() {
-            const documentPreviews = document.getElementById('documentPreviews');
-            documentPreviews.innerHTML = '';
-            const documentFiles = document.querySelectorAll('input[name="document_files[]"]');
-            documentFiles.forEach((input, index) => {
-                if (input.files.length > 0) {
-                    const file = input.files[0];
-                    const typeSelect = input.closest('.document-row').querySelector(
-                        'select[name="document_types[]"]').value;
-                    const div = document.createElement('div');
-                    div.classList.add('document-preview');
-                    div.innerHTML =
-                        `Giấy tờ: ${typeSelect || 'Chưa chọn'} - Tệp: ${file.name} <span class="remove-btn" data-index="${index}">Xóa</span>`;
-                    documentPreviews.appendChild(div);
-                }
-            });
+        // Document previews
+function updateDocumentPreviews() {
+    const documentPreviews = document.getElementById('documentPreviews');
+    documentPreviews.innerHTML = '';
+    const documentFiles = document.querySelectorAll('input[name="document_files[]"]');
 
-            document.querySelectorAll('.remove-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const index = this.getAttribute('data-index');
-                    const documentRows = document.querySelectorAll('.document-row');
-                    if (documentRows[index]) {
-                        documentRows[index].remove();
-                        updateDocumentPreviews();
-                    }
-                });
-            });
+    documentFiles.forEach((input, index) => {
+        if (input.files.length > 0) {
+            const file = input.files[0];
+            const typeSelect = input.closest('.document-row').querySelector('select[name="document_types[]"]').value;
+            const div = document.createElement('div');
+            div.classList.add('document-preview');
+            div.style.position = 'relative'; // Để căn chỉnh nút xóa
+
+            // Kiểm tra loại file và tạo preview
+            if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.style.maxWidth = '200px';
+                img.style.maxHeight = '200px';
+                img.style.objectFit = 'cover';
+                div.appendChild(img);
+            } else if (file.type === 'application/pdf') {
+                const pdfIcon = document.createElement('span');
+                pdfIcon.textContent = '📄 PDF: ' + file.name;
+                pdfIcon.style.display = 'block';
+                div.appendChild(pdfIcon);
+            } else {
+                div.textContent = `Hỗ trợ ảnh hoặc PDF chỉ. Tệp: ${file.name}`;
+                div.appendChild(document.createElement('br'));
+            }
+
+            // Thêm thông tin loại giấy tờ
+            const typeInfo = document.createElement('span');
+            typeInfo.textContent = ` (Loại: ${typeSelect || 'Chưa chọn'})`;
+            div.appendChild(typeInfo);
+
+            // Nút xóa
+            const removeBtn = document.createElement('span');
+            removeBtn.classList.add('remove-btn');
+            removeBtn.innerHTML = 'Xóa';
+            removeBtn.setAttribute('data-index', index);
+            removeBtn.style.position = 'absolute';
+            removeBtn.style.top = '5px';
+            removeBtn.style.right = '5px';
+            removeBtn.style.background = 'rgba(255, 255, 255, 0.8)';
+            removeBtn.style.padding = '2px 5px';
+            removeBtn.style.borderRadius = '3px';
+            removeBtn.style.cursor = 'pointer';
+            removeBtn.style.color = 'red';
+            div.appendChild(removeBtn);
+
+            documentPreviews.appendChild(div);
         }
+    });
+
+    // Xử lý sự kiện xóa
+    document.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const index = this.getAttribute('data-index');
+            const documentRows = document.querySelectorAll('.document-row');
+            if (documentRows[index]) {
+                documentRows[index].remove();
+                updateDocumentPreviews();
+            }
+        });
+    });
+}
 
         // Add new document field
         document.getElementById('addDocument').addEventListener('click', function() {
@@ -369,9 +420,10 @@
                 console.log('Rules value before submit:', rulesInput.value);
 
                 // ✅ LẤY TÂM BẢN ĐỒ HIỆN TẠI TRƯỚC KHI SUBMIT
-                const center = map.getCenter();
-                document.getElementById('latitude').value = center.lat;
-                document.getElementById('longitude').value = center.lng;
+                const pos = marker.getLatLng();
+                document.getElementById('latitude').value = pos.lat;
+                document.getElementById('longitude').value = pos.lng;
+
 
                 const documentTypes = document.querySelectorAll('select[name="document_types[]"]');
                 const documentFiles = document.querySelectorAll('input[name="document_files[]"]');
@@ -404,14 +456,65 @@
             });
         });
 
+        var vietmapApiKey = "{{ config('services.viet_map.key') }}"; // hoặc hardcode key khi test
         // Map and address
         document.addEventListener('DOMContentLoaded', async function() {
+            let userIsEditingAddress = false;
             const provinceSelect = document.getElementById('province');
             const districtSelect = document.getElementById('district');
             const wardSelect = document.getElementById('ward');
-            const oldProvince = '{{ old('province') }}';
-            const oldDistrict = '{{ old('district') }}';
-            const oldWard = '{{ old('ward') }}';
+            let oldProvince = '{{ old('province') }}';
+            let oldDistrict = '{{ old('district') }}';
+            let oldWard = '{{ old('ward') }}';
+
+            const addressInput = document.querySelector('#detailed_address');
+            const suggestionBox = document.createElement('div');
+            suggestionBox.classList.add('autocomplete-list');
+            suggestionBox.id = 'autocomplete-suggestions';
+            addressInput.parentNode.appendChild(suggestionBox);
+            // const vietmapApiKey = "{{ config('services.viet_map.key') }}"; // Lấy từ config
+
+            addressInput.addEventListener('input', async function() {
+                if (userIsEditingAddress)
+                    return; // Không hiển thị gợi ý khi người dùng đang chỉnh sửa
+                suggestionBox.innerHTML = '';
+                suggestionBox.style.display = 'none';
+                // const vietmapApiKey = "{{ config('services.viet_map.key') }}"; // Lấy từ config
+                const query = this.value.trim();
+                if (!query) return;
+
+                const res = await fetch(
+                    `https://maps.vietmap.vn/api/search/v3?apikey=${vietmapApiKey}&text=${encodeURIComponent(query)}`
+                );
+                const data = await res.json();
+
+                suggestionBox.innerHTML = '';
+                suggestionBox.style.display = 'block';
+
+                data.slice(0, 5).forEach(suggest => {
+                    const item = document.createElement('div');
+                    item.classList.add('list-group-item', 'list-group-item-action');
+                    // Cắt phần chi tiết từ display_name trước dấu phẩy đầu tiên
+                    let detailOnly = suggest.display.split(',')[0];
+                    item.textContent = detailOnly;
+
+                    item.addEventListener('click', () => {
+                        addressInput.value = detailOnly;
+                        userIsEditingAddress = false;
+                        marker.setLatLng([suggest.lat, suggest.lon]);
+                        map.setView([suggest.lat, suggest.lon], 16);
+                        document.getElementById('latitude').value = suggest.lat;
+                        document.getElementById('longitude').value = suggest.lon;
+                        suggestionBox.style.display = 'none';
+                    });
+                    suggestionBox.appendChild(item);
+                });
+            });
+
+            document.addEventListener('click', () => {
+                suggestionBox.style.display = 'none';
+            });
+
 
             try {
                 const provinces = await fetch("https://provinces.open-api.vn/api/p/").then(res => {
@@ -484,6 +587,7 @@
                 wardSelect.addEventListener('change', updateMapWithAddress);
 
                 if (oldProvince) {
+
                     await provinceSelect.dispatchEvent(new Event('change'));
                 }
                 if (oldDistrict) {
@@ -495,57 +599,182 @@
             }
 
             let map = L.map('map').setView([21.028511, 105.804817], 13);
-            let marker = null;
-            const apiKey = '{{ config('services.locationiq.key') }}';
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
+            // Tạo marker có thể kéo
+            let marker = L.marker([21.028511, 105.804817], {
+                draggable: true
             }).addTo(map);
 
+            // Khi kéo mũi tên, cập nhật địa chỉ hành chính
+            marker.on('dragend', function(e) {
+                const pos = marker.getLatLng();
+                map.setView(pos);
+                reverseGeocodeAndUpdateAddress(pos.lat, pos.lng);
+            });
+
+            // Khi người dùng zoom/di chuyển map → tự động reverse
+            map.on('moveend', function() {
+                const pos = marker.getLatLng();
+                marker.setLatLng(pos);
+                reverseGeocodeAndUpdateAddress(pos.lat, pos.lng);
+            });
+
+            // Hàm reverse geocoding
+            async function reverseGeocodeAndUpdateAddress(lat, lon) {
+                try {
+                    const res = await fetch(
+                        `https://maps.vietmap.vn/api/reverse/v3?apikey=${vietmapApiKey}&point.lat=${lat}&point.lng=${lon}`
+                    );
+                    const data = await res.json();
+                    if (!data || !data.address) return;
+
+                    const addr = data.address;
+
+                    // Địa chỉ chi tiết
+                    if (!userIsEditingAddress || !document.querySelector('#detailed_address').value
+                        .trim()) {
+                        document.querySelector('#detailed_address').value = addr.road || addr
+                            .display_name || '';
+                    }
+
+                    const provinceText = addr.state;
+                    const districtText = addr.county;
+                    const wardText = addr.suburb || addr.village;
+
+                    // --- Cập nhật tỉnh ---
+                    let provinceMatched = [...provinceSelect.options].find(opt => provinceText && opt.text
+                        .includes(provinceText.trim()));
+                    if (!provinceMatched) return;
+
+                    provinceSelect.value = provinceMatched.value;
+                    await provinceSelect.dispatchEvent(new Event('change'));
+
+                    // --- Đợi huyện tải về rồi mới gán huyện ---
+                    const waitForDistrictOptions = () => new Promise(resolve => {
+                        const interval = setInterval(() => {
+                            if (districtSelect.options.length > 1) {
+                                clearInterval(interval);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                    await waitForDistrictOptions();
+
+                    let districtMatched = [...districtSelect.options].find(opt => districtText && opt.text
+                        .includes(districtText.trim()));
+                    if (districtMatched) {
+                        provinceSelect.value = provinceMatched.value;
+
+                        // ✅ GÁN LẠI GIÁ TRỊ "OLD" để hệ thống hiểu là bạn đã chọn lại
+                        // ⚠️ PHẢI khai báo let thay vì const ở phía trên!
+                        oldProvince = provinceMatched.value;
+                        oldDistrict = '';
+                        oldWard = '';
+
+                        await provinceSelect.dispatchEvent(new Event('change'));
+
+                    }
+
+                    // --- Đợi xã tải về rồi mới gán xã ---
+                    const waitForWardOptions = () => new Promise(resolve => {
+                        const interval = setInterval(() => {
+                            if (wardSelect.options.length > 1) {
+                                clearInterval(interval);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                    await waitForWardOptions();
+
+                    let wardMatched = [...wardSelect.options].find(opt => wardText && opt.text.includes(
+                        wardText.trim()));
+                    if (wardMatched) {
+                        wardSelect.value = wardMatched.value;
+                    }
+
+                    // Gán lat lon
+                    document.querySelector('#latitude').value = lat;
+                    document.querySelector('#longitude').value = lon;
+                } catch (error) {
+                    console.error('Reverse geocoding error:', error);
+                }
+            }
+            L.tileLayer(`https://maps.vietmap.vn/api/tm/{z}/{x}/{y}.png?apikey=${vietmapApiKey}`, {
+                maxZoom: 18,
+                attribution: '&copy; <a href="https://www.vietmap.vn/">VietMap</a>'
+            }).addTo(map);
             function updateMapWithAddress() {
                 let detail = document.querySelector('#detailed_address').value.trim();
                 let provinceText = provinceSelect.options[provinceSelect.selectedIndex]?.text;
                 let districtText = districtSelect.options[districtSelect.selectedIndex]?.text;
                 let wardText = wardSelect.options[wardSelect.selectedIndex]?.text;
 
-                if (!detail && (!wardText || wardText === '-- Chọn xã --')) return;
+                if (
+                    !provinceText || provinceText.includes('Chọn') ||
+                    !districtText || districtText.includes('Chọn') ||
+                    !wardText || wardText.includes('Chọn')
+                ) return;
 
-                let fullAddress =
-                    `${detail ? detail + ', ' : ''}${wardText}, ${districtText}, ${provinceText}, Việt Nam`;
+                let parts = [];
+                if (detail) parts.push(detail);
+                if (wardText) parts.push(wardText);
+                if (districtText) parts.push(districtText);
+                if (provinceText) parts.push(provinceText);
+                parts.push("Việt Nam");
+
+                let fullAddress = parts.join(', ');
 
                 if (fullAddress.length < 10) return;
 
+                // Gọi search API
                 fetch(
-                        `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${encodeURIComponent(fullAddress)}&format=json`
-                        )
-                    .then(response => response.json())
+                        `https://maps.vietmap.vn/api/search/v3?apikey=${vietmapApiKey}&text=${encodeURIComponent(fullAddress)}`)
+                    .then(res => res.json())
                     .then(data => {
-                        if (data.length > 0) {
-                            let lat = parseFloat(data[0].lat);
-                            let lon = parseFloat(data[0].lon);
-                            if (marker) map.removeLayer(marker);
-                            marker = L.marker([lat, lon]).addTo(map);
-                            map.setView([lat, lon], 16);
-                            document.querySelector('#latitude').value = lat;
-                            document.querySelector('#longitude').value = lon;
-                        } else {
-                            document.querySelector('#latitude').value = 21.028511;
-                            document.querySelector('#longitude').value = 105.804817;
-                            alert("Không tìm thấy vị trí với địa chỉ bạn nhập.");
-                        }
+                        if (!data.length) throw new Error("Không tìm thấy kết quả");
+
+                        const refId = data[0].ref_id;
+
+                        // Gọi tiếp place API để lấy tọa độ
+                        return fetch(
+                            `https://maps.vietmap.vn/api/place/v3?apikey=${vietmapApiKey}&refid=${encodeURIComponent(refId)}`
+                            );
                     })
-                    .catch(() => {
+                    .then(res => res.json())
+                    .then(place => {
+                        const lat = parseFloat(place.lat);
+                        const lon = parseFloat(place.lng);
+
+                        if (marker) {
+                            marker.setLatLng([lat, lon]);
+                        } else {
+                            marker = L.marker([lat, lon], {
+                                draggable: true
+                            }).addTo(map);
+                        }
+
+                        map.setView([lat, lon], 16);
+                        document.querySelector('#latitude').value = lat;
+                        document.querySelector('#longitude').value = lon;
+                    })
+                    .catch(err => {
+                        console.error("Lỗi khi định vị:", err);
+                        alert("Không thể định vị địa chỉ bạn nhập.");
                         document.querySelector('#latitude').value = 21.028511;
                         document.querySelector('#longitude').value = 105.804817;
-                        alert("Đã xảy ra lỗi khi định vị bản đồ.");
                     });
             }
 
+
+
             let debounceTimer;
             document.querySelector('#detailed_address').addEventListener('input', function() {
+                userIsEditingAddress = true;
                 clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(updateMapWithAddress, 1000);
+                debounceTimer = setTimeout(() => {
+                    updateMapWithAddress(); // Đã có sẵn rồi
+                }, 2500); // giảm xuống cho mượt hơn
             });
+
         });
     </script>
 @endsection

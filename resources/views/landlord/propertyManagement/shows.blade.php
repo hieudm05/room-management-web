@@ -8,10 +8,6 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bage-primary text-white d-flex align-items-center justify-content-between">
                 <h3 class="card-title mb-0">{{ $property->name }}</h3>
-                <span
-                    class="badge fs-6 bg-{{ $property->status === 'Approved' ? 'success' : ($property->status === 'Pending' ? 'warning' : 'secondary') }}">
-                    {{ $property->status === 'Approved' ? 'Đã duyệt' : ($property->status === 'Pending' ? 'Chờ duyệt' : 'Tạm dừng') }}
-                </span>
             </div>
             <div class="card-body">
                 <div class="row align-items-center">
@@ -178,75 +174,6 @@
                 </div>
             </div>
 
-
-            {{-- Thêm chức năng xuất Excel tổng hợp hóa đơn theo tháng --}}
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <form class="row g-2 align-items-end mb-3" method="GET" action="">
-                        <div class="col-auto">
-                            <label for="month" class="form-label mb-0">Chọn tháng:</label>
-                            <input type="month" class="form-control" id="month" name="month"
-                                value="{{ request('month', now()->format('Y-m')) }}">
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-primary">Xem tổng hợp hóa đơn</button>
-                            <a href="{{ route('landlords.properties.bills.export', ['property' => $property->property_id, 'month' => request('month', now()->format('Y-m'))]) }}"
-                                class="btn btn-success">
-                                <i class="bi bi-file-earmark-excel"></i> Xuất Excel
-                            </a>
-                        </div>
-                    </form>
-
-                    @if (isset($bills) && count($bills))
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped align-middle">
-                                <thead class="table-warning">
-                                    <tr>
-                                        <th>STT</th>
-                                        <th>Phòng</th>
-                                        <th>Điện cũ</th>
-                                        <th>Điện mới</th>
-                                        <th>Số điện</th>
-                                        <th>Số nước</th>
-                                        <th>Tiền phòng</th>
-                                        <th>Tiền điện</th>
-                                        <th>Tiền nước</th>
-                                        <th>Dịch vụ</th>
-                                        <th>Tổng cộng</th>
-                                        <th>Thanh toán</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php $tong = 0; @endphp
-                                    @foreach ($bills as $i => $item)
-                                        @php $tong += $item['total'] ?? 0; @endphp
-                                        <tr>
-                                            <td>{{ $i + 1 }}</td>
-                                            <td>{{ $item['room']->room_number ?? $item['room']->room_name }}</td>
-                                            <td>{{ $item['bill']->electric_start }}</td>
-                                            <td>{{ $item['bill']->electric_end }}</td>
-                                            <td>{{ $item['bill']->electric_kwh }}</td>
-                                            <td>{{ $item['bill']->water_m3 }}</td>
-                                            <td>{{ number_format($item['bill']->rent_price) }}</td>
-                                            <td>{{ number_format($item['bill']->electric_total) }}</td>
-                                            <td>{{ number_format($item['bill']->water_total) }}</td>
-                                            <td>{{ number_format($item['service_total']) }}</td>
-                                            <td>{{ number_format($item['total']) }}</td>
-                                            <td>
-                                                {{ $item['bill']->status == 'unpaid' ? 'Chưa thanh toán' : 'Đã thanh toán' }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                    <tr class="table-success fw-bold">
-                                        <td colspan="10" class="text-end">TỔNG DOANH THU</td>
-                                        <td colspan="2">{{ number_format($tong) }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
-                </div>
-            </div>
         </div>
 
     </div>
