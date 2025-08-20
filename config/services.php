@@ -36,7 +36,13 @@ return [
     ],
     'locationiq' => [
     'key' => env('LOCATIONIQ_API_KEY'),
-    
+
+],
+ 'maptiler' => [
+    'key' => env('MAPTILER_KEY'),
+ ],
+    'viet_map' => [
+    'key' => env('VIET_MAP_API_KEY'),
 ],
  'maptiler' => [
     'key' => env('MAPTILER_KEY'),

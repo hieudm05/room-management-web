@@ -23,6 +23,7 @@ class RentalAgreement extends Model
         'end_date',
         'rental_price',
         'deposit',
+        'deposit_id',
         'status',
         'contract_file',
         'agreement_terms',
@@ -37,8 +38,6 @@ class RentalAgreement extends Model
     {
         return $this->belongsTo(Room::class, 'room_id', 'room_id');
     }
-
-
     public function renter()
     {
         return $this->belongsTo(User::class, 'renter_id');

@@ -2,25 +2,206 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Models\Landlord\Property;
-use App\Http\Controllers\Controller;
-use App\Models\Landlord\RentalAgreement;
-use App\Models\Landlord\Room;
-use Illuminate\Support\Facades\Auth;
-use App\Models\UserInfo;
-use Illuminate\Support\Str;
-use App\Models\Landlord\PendingRoomUser;
-use App\Models\RoomUser;
-use Illuminate\Http\Request;
 use App\Models\User;
-use PhpOffice\PhpWord\IOFactory;
-use Illuminate\Support\Facades\DB;
+use App\Models\RoomUser;
+use App\Models\UserInfo;
 use App\Models\StaffPost;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\Landlord\Room;
+use PhpOffice\PhpWord\IOFactory;
+use App\Models\Landlord\Property;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use App\Models\Landlord\PendingRoomUser;
+use App\Models\Landlord\RentalAgreement;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class HomeController extends Controller
 {
-    public function renter()
+    /**
+     * Hiển thị trang chủ với form tìm kiếm
+     */
+private function removeVietnameseAccents($str)
+{
+    $str = preg_replace("/[àáạảãâầấậẩẫăằắặẳẵ]/u", "a", $str);
+    $str = preg_replace("/[èéẹẻẽêềếệểễ]/u", "e", $str);
+    $str = preg_replace("/[ìíịỉĩ]/u", "i", $str);
+    $str = preg_replace("/[òóọỏõôồốộổỗơờớợởỡ]/u", "o", $str);
+    $str = preg_replace("/[ùúụủũưừứựửữ]/u", "u", $str);
+    $str = preg_replace("/[ỳýỵỷỹ]/u", "y", $str);
+    $str = preg_replace("/[đ]/u", "d", $str);
+    return $str;
+}
+public function index(Request $request)
+{
+    $posts = $this->filterPosts($request)->latest()->paginate(10);
+    return view('home.render', compact('posts'));
+}
+
+    /**
+     * Xử lý tìm kiếm
+     */
+public function search(Request $request)
+{
+    // Lấy keyword và chuẩn hóa
+    $keyword = trim(preg_replace('/\s+/', ' ', $request->input('keyword')));
+
+    // Tách theo dấu phẩy để người dùng có thể nhập nhiều phần
+    $parts = array_map('trim', explode(',', $keyword));
+
+    $posts = StaffPost::query()
+        ->when($parts, function ($query) use ($parts) {
+            foreach ($parts as $part) {
+                $query->where(function ($sub) use ($part) {
+                    $sub->orWhere('city', 'like', "%{$part}%")
+                        ->orWhere('district', 'like', "%{$part}%")
+                        ->orWhere('ward', 'like', "%{$part}%")
+                        ->orWhere('title', 'like', "%{$part}%")
+                        ->orWhere('description', 'like', "%{$part}%");
+                });
+            }
+        })
+        ->latest()
+        ->paginate(10);
+
+    return view('home.search', [
+        'posts' => $posts,
+        'keyword' => $keyword,
+    ]);
+}    /**
+     * Lọc bài đăng dựa trên input tìm kiếm
+     */
+   private function filterPosts(Request $request)
+    {
+        $query = StaffPost::query();
+
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $keywordNormalized = $this->removeVietnameseAccents(strtolower($keyword));
+            $query->where(function($q) use ($keyword, $keywordNormalized) {
+                $q->whereRaw('LOWER(title) LIKE ?', ["%{$keyword}%"])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ["%{$keyword}%"])
+                  ->orWhereRaw('LOWER(city) LIKE ?', ["%{$keyword}%"])
+                  ->orWhereRaw('LOWER(district) LIKE ?', ["%{$keyword}%"])
+                  ->orWhereRaw('LOWER(ward) LIKE ?', ["%{$keyword}%"]);
+            });
+        }
+
+        return $query;
+    }
+
+// public function apiSuggestions(Request $request)
+// {
+//     $query = trim($request->input('query'));
+
+//     try {
+//         // Lấy dữ liệu từ cache, ưu tiên data.json đầy đủ phường/xã
+//         $locations = Cache::remember('vn_locations_full', 86400, function() {
+//             $endpoints = [
+//                 'https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json', // full
+//                 'https://provinces.open-api.vn/api/?depth=3'
+//             ];
+
+//             foreach ($endpoints as $endpoint) {
+//                 try {
+//                     \Log::info("Trying endpoint: " . $endpoint);
+//                     $response = Http::timeout(30)->get($endpoint);
+
+//                     if ($response->successful()) {
+//                         $data = $response->json();
+//                         if (!empty($data)) {
+//                             \Log::info("Success with endpoint: " . $endpoint);
+//                             return $data;
+//                         }
+//                     }
+//                 } catch (\Exception $e) {
+//                     \Log::error("Failed endpoint {$endpoint}: " . $e->getMessage());
+//                     continue;
+//                 }
+//             }
+
+//             \Log::error("All API endpoints failed");
+//             return [];
+//         });
+
+//         if (empty($locations)) {
+//             \Log::error("No location data available");
+//             return response()->json([]);
+//         }
+
+//         $suggestions = [];
+
+//         foreach ($locations as $province) {
+//             // Tên tỉnh
+//             $provinceName = $province['name'] ?? $province['Name'] ?? '';
+//             if (!empty($provinceName)) $suggestions[] = $provinceName;
+
+//             $districts = $province['districts'] ?? $province['Districts'] ?? $province['district'] ?? [];
+//             foreach ($districts as $district) {
+//                 // Tên huyện/quận
+//                 $districtName = $district['name'] ?? $district['Name'] ?? '';
+//                 if (!empty($districtName)) $suggestions[] = $districtName;
+
+//                 // Lấy phường/xã
+//                 $wards = [];
+//                 if (!empty($district['wards']) && is_array($district['wards'])) $wards = $district['wards'];
+//                 elseif (!empty($district['xas']) && is_array($district['xas'])) $wards = $district['xas'];
+//                 elseif (!empty($district['communes']) && is_array($district['communes'])) $wards = $district['communes'];
+//                 elseif (!empty($district['xaPhuong']) && is_array($district['xaPhuong'])) $wards = $district['xaPhuong'];
+
+//                 foreach ($wards as $ward) {
+//                     $wardName = $ward['name'] ?? $ward['Name'] ?? $ward['title'] ?? '';
+//                     if (!empty($wardName)) $suggestions[] = $wardName;
+//                 }
+//             }
+//             // \Log::info('Sample ward:', $wards[0] ?? 'empty');
+//         }
+
+//         // Loại bỏ trùng rỗng
+//         $suggestions = array_values(array_unique(array_filter($suggestions)));
+
+//         // Nếu có query, filter và sort
+//         if ($query) {
+//             $queryNormalized = $this->removeVietnameseAccents(strtolower($query));
+
+//             $filteredSuggestions = array_filter($suggestions, function($item) use ($queryNormalized) {
+//                 $itemNormalized = $this->removeVietnameseAccents(strtolower($item));
+//                 return stripos($itemNormalized, $queryNormalized) !== false;
+//             });
+
+//             // Sort theo vị trí query xuất hiện, rồi độ dài
+//             usort($filteredSuggestions, function($a, $b) use ($queryNormalized) {
+//                 $aNormalized = $this->removeVietnameseAccents(strtolower($a));
+//                 $bNormalized = $this->removeVietnameseAccents(strtolower($b));
+
+//                 $posA = stripos($aNormalized, $queryNormalized);
+//                 $posB = stripos($bNormalized, $queryNormalized);
+
+//                 if ($posA === $posB) return strlen($a) - strlen($b);
+//                 return $posA - $posB;
+//             });
+
+//             $suggestions = array_slice($filteredSuggestions, 0, 10);
+//         } else {
+//             $suggestions = array_slice($suggestions, 0, 10);
+//         }
+
+//         return response()->json(array_values($suggestions));
+
+//     } catch (\Exception $e) {
+//         \Log::error("Lỗi gợi ý API: " . $e->getMessage());
+//         return response()->json([]);
+//     }
+// }
+
+    /** =========================
+     *        RENTER
+     *  ========================= */
+    public function renter(Request $request)
     {
         $rooms = Room::latest()->paginate(6);
 
@@ -48,13 +229,15 @@ class HomeController extends Controller
             $currentPage,
             ['path' => request()->url(), 'query' => request()->query()]
         );
-
         return view('home.render', [
             'posts' => $pagedPosts,
             'rooms' => $rooms,
         ]);
     }
 
+    /** =========================
+     *        FAVORITES
+     *  ========================= */
     public function favorites()
     {
         $favorites = Auth::user()->favorites()->get();
@@ -79,6 +262,9 @@ class HomeController extends Controller
         }
     }
 
+    /** =========================
+     *        AGREEMENT
+     *  ========================= */
     public function StausAgreement()
     {
         $user = Auth::user();
@@ -110,7 +296,6 @@ class HomeController extends Controller
             ]);
         }
 
-        // Đọc file Word
         $text = '';
         try {
             $phpWord = IOFactory::load($fullPath);
@@ -125,7 +310,6 @@ class HomeController extends Controller
             $text = 'Không thể đọc file Word: ' . $e->getMessage();
         }
 
-        // Trích thông tin
         preg_match('/Họ tên:\s*(.*)/i', $text, $nameMatch);
         preg_match('/Email:\s*([^\s]+)/i', $text, $emailMatch);
 
@@ -139,6 +323,9 @@ class HomeController extends Controller
         ]);
     }
 
+    /** =========================
+     *        CREATE USER
+     *  ========================= */
     public function create(Request $request)
     {
         $roomId = $request->input('room_id');
@@ -158,18 +345,14 @@ class HomeController extends Controller
             'rental_id' => 'required|exists:rental_agreements,rental_id',
         ]);
 
-        RoomUser::create([
-            'room_id' => $validated['room_id'],
-            'name' => $validated['name'],
-            'phone' => $validated['phone'],
-            'cccd' => $validated['cccd'],
-            'email' => $validated['email'],
-            'rental_id' => $validated['rental_id'],
-        ]);
+        RoomUser::create($validated);
 
         return redirect()->back()->with('success', 'Đăng ký thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất có thể.');
     }
 
+    /** =========================
+     *        MY ROOM
+     *  ========================= */
     public function myRoom()
     {
         $user = Auth::user();
@@ -177,6 +360,9 @@ class HomeController extends Controller
         return view('home.my-room', compact('rooms'));
     }
 
+    /** =========================
+     *        STOP RENT
+     *  ========================= */
     public function stopRentForm()
     {
         $user = auth()->user();
@@ -187,7 +373,7 @@ class HomeController extends Controller
             ->first();
 
         if (!$rentalAgreement || !$rentalAgreement->room) {
-            return view('home.stopRentForm', ['roomUsers' => collect()]);
+            return view('home.roomleave.stopRentForm', ['roomUsers' => collect()]);
         }
 
         $roomUsers = RentalAgreement::with('renter')
@@ -195,7 +381,7 @@ class HomeController extends Controller
             ->where('is_active', true)
             ->get();
 
-        return view('home.stopRentForm', compact('roomUsers'));
+        return view('home.roomleave.stopRentForm', compact('roomUsers'));
     }
 
     public function stopUserRental(Request $request, $id)

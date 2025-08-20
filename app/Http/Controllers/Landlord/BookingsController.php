@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Landlord;
 
+use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -33,10 +34,13 @@ class BookingsController extends Controller
         }
 
         $booking->status = 'approved';
+        $booking->confirmed_by = $booking->post->staff_id;
         $booking->save();
 
         return response()->json(['success' => true]);
     }
+
+
 
     public function reject($id)
     {
