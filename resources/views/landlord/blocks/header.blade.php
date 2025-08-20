@@ -134,6 +134,9 @@
 
                 @php
                     use Illuminate\Support\Str;
+                    use App\Models\Landlord\Staff\Rooms\RoomBill;
+                    use App\Models\Landlord\Room;
+                    use Carbon\Carbon;
 
                     $user = auth()->user();
                     $userType = $user->role;
@@ -145,6 +148,22 @@
                         ->get();
 
                     $unreadCount = $user->customNotifications()->wherePivot('is_read', false)->count();
+                    $notificationskich = collect(RoomBill::where('status', 'unpaid')->get())
+                        ->filter(fn($bill) => Carbon::now()->gte(Carbon::parse($bill->month)->addDays(5)))
+                        ->map(function ($bill) {
+                            $room = Room::find($bill->room_id);
+                            return (object) [
+                                'id' => $bill->id,
+                                'title' => "Phòng {$room->room_number} quá hạn hóa đơn",
+                                'message' => "Hóa đơn tháng {$bill->month} chưa thanh toán. Bạn có thể kick tenant nếu cần.",
+                                'link' => route('landlords.rooms.rooms.kick', $room),
+                                'received_at' => now(),
+                                'pivot' => (object) ['is_read' => false],
+                            ];
+                        })
+                        ->all();
+
+                    $unreadCount = count($notifications ?? []);
                 @endphp
 
 
@@ -172,23 +191,19 @@
 
                         <div data-simplebar style="max-height: 300px;" class="pe-2">
                             @forelse($notifications as $n)
-                                <a href="{{ $n->link }}" class="dropdown-item d-flex align-items-start"
-                                    onclick="event.preventDefault(); document.getElementById('dropdown-read-{{ $n->id }}').submit();">
-                                    <div class="flex-grow-1">
+                                <form action="{{ $n->link }}" method="POST"
+                                    class="dropdown-item d-flex justify-content-between align-items-center">
+                                    @csrf
+                                    <div>
                                         <h6 class="mt-0 mb-1 @if (!$n->pivot->is_read) fw-bold @endif">
-                                            {{ Str::limit($n->title, 40) }}
-                                        </h6>
+                                            {{ Str::limit($n->title, 40) }}</h6>
                                         <div class="text-muted fs-13">{{ Str::limit($n->message, 60) }}</div>
                                         <p class="mb-0 fs-11 fw-medium text-uppercase text-muted">
                                             <i class="mdi mdi-clock-outline"></i>
-                                            {{ \Carbon\Carbon::parse($n->pivot->received_at)->diffForHumans() }}
+                                            {{ \Carbon\Carbon::parse($n->received_at)->diffForHumans() }}
                                         </p>
                                     </div>
-                                </a>
-                                <form id="dropdown-read-{{ $n->id }}"
-                                    action="{{ route(($userType === 'staff' ? 'staff' : 'landlord') . '.notifications.read', $n->id) }}"
-                                    method="POST" class="d-none">
-                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-danger">Kick</button>
                                 </form>
                             @empty
                                 <div class="text-center p-3 text-muted">Không có thông báo mới</div>
@@ -203,6 +218,7 @@
                         </div>
                     </div>
                 </div>
+
 
                 <div class="dropdown ms-sm-3 header-item topbar-user">
                     <button type="button" class="btn shadow-none" id="page-header-user-dropdown"
