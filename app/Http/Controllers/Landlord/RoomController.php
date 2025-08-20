@@ -1,31 +1,34 @@
 <?php
 
 namespace App\Http\Controllers\Landlord;
-
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
+use App\Models\User;
+use App\Models\RoomUser;
+use App\Models\userInfo;
+use Illuminate\Support\Str;
+use App\Models\RoomLeaveLog;
+use Illuminate\Http\Request;
+use Smalot\PdfParser\Parser;
+use App\Models\Landlord\Room;
+use Illuminate\Support\Carbon;
+use App\Models\RentalAgreement;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Landlord\Service;
+use PhpOffice\PhpWord\IOFactory;
 use App\Models\Landlord\Facility;
 use App\Models\Landlord\Property;
-use App\Models\Landlord\Room;
-use App\Models\Landlord\RoomEditRequest;
 use App\Models\Landlord\RoomPhoto;
-use App\Models\Landlord\Service;
-use App\Models\RentalAgreement;
-use App\Models\RoomUser;
-use App\Models\User;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
+use PhpOffice\PhpWord\Writer\HTML;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\TemplateProcessor;
-use PhpOffice\PhpWord\Writer\HTML;
-use Smalot\PdfParser\Parser;
 use App\Mail\RoomUpdatedNotification;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Landlord\RoomEditRequest;
+use Illuminate\Support\Facades\Response;
+use PhpOffice\PhpWord\TemplateProcessor;
+use App\Models\Landlord\Staff\Rooms\RoomBill;
 
 
 
@@ -90,13 +93,12 @@ class RoomController extends Controller
         foreach ($rooms as $room) {
             $status = $room->currentAgreement->status ?? null;
             $room->currentAgreementValid = in_array($status, ['Active', 'Signed']);
-        }
-
         // Tất cả khu trọ để filter
         $allProperties = \App\Models\Landlord\Property::all();
 
         return view('landlord.rooms.index', compact('rooms', 'allProperties'));
     }
+}
 
     public function create()
     {
@@ -871,5 +873,132 @@ class RoomController extends Controller
         $rooms = Room::where('property_id', $property_id)->get(['room_id', 'room_number']);
         return response()->json(['rooms' => $rooms]);
     }
+
+
+public function kickTenants(Room $room)
+{
+    try {
+        Log::info("Bắt đầu kick tenants cho phòng_id: {$room->room_id}");
+
+        // Lấy tất cả tenants trong phòng
+        $tenants = userInfo::where('room_id', $room->room_id)->get();
+        Log::info("Danh sách tenants:", $tenants->toArray());
+
+        // Kiểm tra điều kiện kick
+        if ($tenants->isEmpty()) {
+            Log::info("Phòng hiện không có người thuê.");
+            return back()->with('error', 'Phòng hiện không có người thuê, không thể kick.');
+        }
+
+        // Lấy hóa đơn chưa thanh toán gần nhất của phòng
+        $bill = RoomBill::where('room_id', $room->room_id)
+                        ->where('status', 'unpaid')
+                        ->orderByDesc('month')
+                        ->first();
+
+        if (!$bill) {
+            Log::info("Phòng này chưa có hóa đơn chưa thanh toán.");
+            return back()->with('error', 'Phòng này chưa có hóa đơn chưa thanh toán, không thể kick.');
+        }
+
+        Log::info("Hóa đơn gần nhất chưa thanh toán:", $bill->toArray());
+
+        // Kiểm tra quá hạn 5 ngày
+        $dueDatePlus5 = Carbon::parse($bill->month)->addDays(5);
+        Log::info("Ngày quá hạn 5 ngày: {$dueDatePlus5}, hiện tại: " . Carbon::now());
+
+        if (Carbon::now()->lt($dueDatePlus5)) {
+            Log::info("Hóa đơn chưa quá hạn 5 ngày, không thể kick tenant.");
+            return back()->with('error', 'Hóa đơn chưa quá hạn 5 ngày, không thể kick tenant.');
+        }
+
+        // Bắt đầu kick tenant
+        $kickedCount = 0;
+
+        foreach ($tenants as $tenant) {
+            Log::info("Xử lý tenant_id: {$tenant->user_id}");
+
+            // Terminate hợp đồng nếu có
+            $rental = RentalAgreement::where('room_id', $room->room_id)
+                        ->where('room_id', $room->room_id)
+                        ->where('status', '!=', 'terminated')
+                        ->first();
+
+            if ($rental) {
+                $rental->status = 'terminated';
+                $rental->save();
+                Log::info("Đã terminate hợp đồng rental_id: {$rental->id}");
+            } else {
+                Log::info("Không tìm thấy hợp đồng để terminate cho tenant_id: {$tenant->user_id}");
+            }
+
+            // Lưu log kick
+            RoomLeaveLog::create([
+                'user_id' => $tenant->user_id,
+                'room_id' => $room->room_id,
+                'rental_id' => $rental->rental_id ?? null,
+                'leave_date' => Carbon::now()->toDateString(),
+                'action_type' => 'Kick',
+                'previous_renter_id' => $tenant->user_id,
+                'new_renter_id' => null,
+                'reason' => 'Quá hạn thanh toán > 5 ngày',
+                'status' => 'Cancelled',
+                'handled_by' => Auth::id(),
+            ]);
+            // Log::info("Đã tạo RoomLeaveLog và Notification cho tenant_id: {$tenant->user_id}");
+
+            // Kick tenant khỏi phòng
+            $tenant->room_id = null;
+            $tenant->save();
+            Log::info("Đã kick tenant khỏi phòng, tenant_id: {$tenant->user_id}");
+
+            // Cập nhật trạng thái user
+            $tenant->user->status = 'kicked';
+            $tenant->user->save();
+            Log::info("Cập nhật trạng thái user thành 'kicked', tenant_id: {$tenant->user_id}");
+
+            $kickedCount++;
+        }
+
+        Log::info("Hoàn tất kick tenants. Tổng số tenants bị kick: {$kickedCount}");
+
+        return back()->with('success', "Đã kick $kickedCount tenant, terminate hợp đồng và lưu log.");
+
+    } catch (\Exception $e) {
+        Log::error("Có lỗi xảy ra khi kick tenants: " . $e->getMessage(), [
+            'room_id' => $room->room_id,
+            'stack' => $e->getTraceAsString()
+        ]);
+
+        return back()->withErrors(['kick' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
+    }
+}
+
+
+public function dashboard()
+{
+    $overdueBills = RoomBill::where('status', 'unpaid')->get()
+        ->filter(fn($bill) => Carbon::now()->gte(Carbon::parse($bill->month)->addDays(5)));
+
+    $notifications = [];
+
+    foreach ($overdueBills as $bill) {
+        $room = Room::find($bill->room_id);
+        $notifications[] = (object)[
+            'id' => $bill->id,
+            'title' => "Phòng {$room->room_number} quá hạn hóa đơn",
+            'message' => "Hóa đơn tháng {$bill->month} chưa thanh toán. Bạn có thể kick tenant nếu cần.",
+            'link' => route('landlords.rooms.rooms.kick', $room),
+            'received_at' => now(),
+            'pivot' => (object)['is_read' => false],
+        ];
+    }
+
+    $unreadCount = count($notifications);
+
+    return view('landlord.layouts.app', compact('notifications', 'unreadCount'));
+}
+
+
 
 }
