@@ -214,10 +214,10 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::get('/bills', [LandlordBillController::class, 'index'])->name('bills.index');
     Route::get('/bills/{bill}', [LandlordBillController::class, 'show'])->name('bills.show');
     Route::get('/bills/export', [LandlordBillController::class, 'export'])->name('bills.export');
-    
+
     Route::get('/bills', [LandlordBillController::class, 'index'])->name('bills.index');
     Route::get('/bills/{bill}', [LandlordBillController::class, 'show'])->name('bills.show');
-    Route::get('/bills/exportproperty/{month}', [LandlordBillController::class, 'exportAllBills'])->name('bills.exportproperty'); 
+    Route::get('/bills/exportproperty/{month}', [LandlordBillController::class, 'exportAllBills'])->name('bills.exportproperty');
     // Nhập hoá đơn của chủ trọ
     Route::prefix('payment')->name('payment.')->group(function () {
     Route::get('/', [BillController::class, 'list'])->name('list');
@@ -226,7 +226,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::get('/{room}/export', [BillController::class, 'exportExcel'])->name('exportExcel');
     Route::post('/room-bills/{id}/update-status', [BillController::class, 'updateStatus']);
     });
-   
+
     // Staff yêu cầu chỉnh sửa phòng
     Route::prefix('staff/rooms')->name('staff.rooms.')->group(function () {
         Route::get('/{room}/edit', [StaffRoomEditController::class, 'edit'])->name('edit');
@@ -251,7 +251,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
                 ['is_read' => true, 'read_at' => now()]
             );
         return back()->with('success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
-    })->name('staff.notifications.markAsRead'); 
+    })->name('staff.notifications.markAsRead');
 });
 
 
@@ -566,7 +566,8 @@ Route::middleware(['auth', 'role:Landlord'])->prefix('landlord')->group(function
 Route::prefix('search')->group(function () {
    Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [HomeController::class, 'search'])->name('search.results');
-Route::get('/districts/{city}', [HomeController::class, 'getDistricts'])->name('districts');
-Route::get('/wards/{district}', [HomeController::class, 'getWards'])->name('wards');
-Route::post('/posts/suggest-nearby', [HomeController::class, 'suggestNearby'])->name('posts.suggestNearby');
+Route::get('/search/api-suggestions', [HomeController::class, 'apiSuggestions'])->name('search.api-suggestions');
+
 });
+// Trong routes/web.php hoặc routes/api.php
+Route::get('/debug-api-structure', [HomeController::class, 'debugApiStructure']);
