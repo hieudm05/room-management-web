@@ -9,6 +9,7 @@
 <div class="container-fluid px-4 py-6">
     <h2 class="text-3xl font-bold mb-6">📊 Dashboard người thuê phòng</h2>
 
+
     {{-- Bộ lọc theo thời gian --}}
     <form method="GET" action="{{ route('home.profile.tenants.dashboard') }}" class="row g-3 mb-5">
         <div class="col-md-3">
@@ -199,6 +200,7 @@
                                     <td>{{ ucfirst($service) }}</td>
                                     <td class="text-end">{{ number_format($amount) }}</td>
                                 </tr>
+
                             @endforeach
                         </tbody>
                     </table>
@@ -250,6 +252,7 @@
                     </table>
                 </div>
             </div>
+
 
             <div class="mt-4">
                 <canvas id="compareChart" height="100"></canvas>
