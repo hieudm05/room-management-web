@@ -282,6 +282,12 @@
                                                 placeholder="Nhập số điện thoại của bạn" required>
 
                                         </div>
+                                        <div class="col-12">
+                                            <label for="guestEmail" class="form-label">Email</label>
+                                            <input type="email" id="guestEmail" name="email" class="form-control"
+                                                placeholder="Nhập email của bạn" required>
+                                        </div>
+
 
                                     @endguest
 
@@ -386,6 +392,35 @@
                         'Số điện thoại không hợp lệ! Hãy nhập theo định dạng: 0xxxxxxxxx hoặc +84xxxxxxxxx'
                     );
                     phoneInput.focus();
+                }
+            });
+        }
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        const phoneInput = document.getElementById('guestPhone');
+        const emailInput = document.getElementById('guestEmail');
+        if (phoneInput || emailInput) {
+            const form = (phoneInput || emailInput).closest('form');
+            form.addEventListener('submit', function(e) {
+                // Regex kiểm tra số điện thoại VN
+                const phonePattern = /^(0[1-9][0-9]{8}|\+84[1-9][0-9]{8})$/;
+
+                // Regex kiểm tra email hợp lệ
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (phoneInput && !phonePattern.test(phoneInput.value.trim())) {
+                    e.preventDefault();
+                    alert(
+                        'Số điện thoại không hợp lệ! Hãy nhập theo định dạng: 0xxxxxxxxx hoặc +84xxxxxxxxx');
+                    phoneInput.focus();
+                    return;
+                }
+
+                if (emailInput && !emailPattern.test(emailInput.value.trim())) {
+                    e.preventDefault();
+                    alert('Email không hợp lệ! Hãy nhập theo định dạng: example@gmail.com');
+                    emailInput.focus();
+                    return;
                 }
             });
         }

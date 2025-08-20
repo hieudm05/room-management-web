@@ -11,18 +11,20 @@ class Booking extends Model
     use HasFactory;
 
     protected $fillable = [
-        'post_id',
-        'user_id',
-        'check_in',
-        'note',
-        'status',
-        'confirmed_by',
-        'proof_image',
-        'guest_name',
-        'phone',
-        'room_id',
-        'created_at',
-    ];
+    'post_id',
+    'user_id',
+    'check_in',
+    'note',
+    'status',
+    'confirmed_by',
+    'proof_image',
+    'guest_name',
+    'phone',
+    'email',
+    'room_id',
+    'created_at',
+];
+
 
     protected $casts = [
         'check_in' => 'datetime',

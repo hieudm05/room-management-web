@@ -71,15 +71,6 @@
                 </div>
             @endforelse
         </div>
-        {{-- Phân trang --}}
-        <div class="row mt-5">
-            <div class="col-lg-12 col-md-12 col-sm-12 text-center">
-                {{ $posts->links() }}
-            </div>
-        </div>
-
-
-
         <!-- Gợi ý bài viết gần bạn -->
         <div class="row justify-content-center mt-5">
             <div class="col-lg-7 col-md-10 text-center">
@@ -92,15 +83,12 @@
         <div class="row g-4" id="suggested-posts">
             <!-- Render từ JS -->
         </div>
-
-
-
+        {{-- Phân trang --}}
         <div class="row mt-5">
             <div class="col-lg-12 col-md-12 col-sm-12 text-center">
                 {{ $posts->links() }}
             </div>
         </div>
-
     </div>
 @endsection
 @push('scripts')

@@ -52,6 +52,7 @@
                         <th>STT</th>
                         <th>Người đặt</th>
                         <th>📞 SĐT</th>
+                        <th>📧 Email</th>
                         <th>🏠 Phòng</th>
                         <th>📅 Ngày nhận</th>
                         <th>🖼️ Minh chứng</th>
@@ -67,9 +68,16 @@
                             <td class="fw-semibold">{{ $booking->user->name ?? $booking->guest_name }}</td>
                             <td>
                                 @if ($booking->user)
-                                    {{ $booking->user->info->phone ?? 'Không xác định' }}
+                                    {{ $booking->user->phone_number ?? 'Không xác định' }}
                                 @else
                                     {{ $booking->phone ?? 'Không xác định' }}
+                                @endif
+                            </td>
+                            <td>
+                                @if ($booking->user)
+                                    {{ $booking->user->email ?? 'Không xác định' }}
+                                @else
+                                    {{ $booking->email ?? 'Không xác định' }}
                                 @endif
                             </td>
                             <td>{{ $booking->room->room_number ?? 'Không xác định' }}</td>

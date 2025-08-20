@@ -25,264 +25,178 @@ class HomeController extends Controller
     /**
      * Hiển thị trang chủ với form tìm kiếm
      */
-    public function index(Request $request)
-    {
-        $cities = $this->getCitiesFromApi();
-        $posts = $this->filterPosts($request)->latest()->paginate(10);
-        return view('home.render', compact('posts', 'cities'));
-    }
+private function removeVietnameseAccents($str)
+{
+    $str = preg_replace("/[àáạảãâầấậẩẫăằắặẳẵ]/u", "a", $str);
+    $str = preg_replace("/[èéẹẻẽêềếệểễ]/u", "e", $str);
+    $str = preg_replace("/[ìíịỉĩ]/u", "i", $str);
+    $str = preg_replace("/[òóọỏõôồốộổỗơờớợởỡ]/u", "o", $str);
+    $str = preg_replace("/[ùúụủũưừứựửữ]/u", "u", $str);
+    $str = preg_replace("/[ỳýỵỷỹ]/u", "y", $str);
+    $str = preg_replace("/[đ]/u", "d", $str);
+    return $str;
+}
+public function index(Request $request)
+{
+    $posts = $this->filterPosts($request)->latest()->paginate(10);
+    return view('home.render', compact('posts'));
+}
 
     /**
      * Xử lý tìm kiếm
      */
-    public function search(Request $request)
-    {
-        $posts = $this->filterPosts($request)->latest()->paginate(10);
-        $cities = $this->getCitiesFromApi();
-        return view('home.render', compact('posts', 'cities'));
-    }
+public function search(Request $request)
+{
+    // Lấy keyword và chuẩn hóa
+    $keyword = trim(preg_replace('/\s+/', ' ', $request->input('keyword')));
 
-    /**
+    // Tách theo dấu phẩy để người dùng có thể nhập nhiều phần
+    $parts = array_map('trim', explode(',', $keyword));
+
+    $posts = StaffPost::query()
+        ->when($parts, function ($query) use ($parts) {
+            foreach ($parts as $part) {
+                $query->where(function ($sub) use ($part) {
+                    $sub->orWhere('city', 'like', "%{$part}%")
+                        ->orWhere('district', 'like', "%{$part}%")
+                        ->orWhere('ward', 'like', "%{$part}%")
+                        ->orWhere('title', 'like', "%{$part}%")
+                        ->orWhere('description', 'like', "%{$part}%");
+                });
+            }
+        })
+        ->latest()
+        ->paginate(10);
+
+    return view('home.search', [
+        'posts' => $posts,
+        'keyword' => $keyword,
+    ]);
+}    /**
      * Lọc bài đăng dựa trên input tìm kiếm
      */
-    private function filterPosts(Request $request)
+   private function filterPosts(Request $request)
     {
         $query = StaffPost::query();
 
-        if ($request->filled('city')) {
-            $query->where('city', $request->city);
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $keywordNormalized = $this->removeVietnameseAccents(strtolower($keyword));
+            $query->where(function($q) use ($keyword, $keywordNormalized) {
+                $q->whereRaw('LOWER(title) LIKE ?', ["%{$keyword}%"])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ["%{$keyword}%"])
+                  ->orWhereRaw('LOWER(city) LIKE ?', ["%{$keyword}%"])
+                  ->orWhereRaw('LOWER(district) LIKE ?', ["%{$keyword}%"])
+                  ->orWhereRaw('LOWER(ward) LIKE ?', ["%{$keyword}%"]);
+            });
         }
-        if ($request->filled('district')) {
-            $query->where('district', $request->district);
-        }
-        if ($request->filled('ward')) {
-            $query->where('ward', $request->ward);
-        }
+
         return $query;
     }
 
-    /**
-     * Lấy danh sách tỉnh/thành từ API
-     */
-    private function getCitiesFromApi()
-    {
-        return Cache::remember('cities', now()->addHours(24), function () {
-            try {
-                $response = Http::get('https://provinces.open-api.vn/api/p/');
-                if ($response->successful()) {
-                    $cities = collect($response->json())->pluck('name')->sort()->values();
-                    \Log::info("Danh sách tỉnh/thành từ API:", ['cities' => $cities->toArray()]);
-                    return $cities;
-                }
-                \Log::warning("API tỉnh/thành trả về không thành công: " . $response->status());
-                return collect([]);
-            } catch (\Exception $e) {
-                \Log::error("Lỗi khi gọi API tỉnh/thành: " . $e->getMessage());
-                return collect([]);
-            }
-        });
-    }
+// public function apiSuggestions(Request $request)
+// {
+//     $query = trim($request->input('query'));
 
-    /**
-     * Lấy danh sách quận/huyện dựa trên tỉnh/thành
-     */
-    public function getDistricts($city)
-    {
-        try {
-            \Log::info("Yêu cầu lấy quận/huyện cho tỉnh/thành: " . $city);
+//     try {
+//         // Lấy dữ liệu từ cache, ưu tiên data.json đầy đủ phường/xã
+//         $locations = Cache::remember('vn_locations_full', 86400, function() {
+//             $endpoints = [
+//                 'https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json', // full
+//                 'https://provinces.open-api.vn/api/?depth=3'
+//             ];
 
-            // Chuẩn hóa tên tỉnh/thành
-            $normalizedCity = $this->normalizeCityName($city);
-            \Log::info("Tên tỉnh/thành sau chuẩn hóa: " . $normalizedCity);
+//             foreach ($endpoints as $endpoint) {
+//                 try {
+//                     \Log::info("Trying endpoint: " . $endpoint);
+//                     $response = Http::timeout(30)->get($endpoint);
 
-            // Thử tìm mã tỉnh/thành bằng API search
-            $response = Http::get('https://provinces.open-api.vn/api/p/search/', [
-                'q' => $normalizedCity
-            ]);
-            $cityData = null;
-            if ($response->successful()) {
-                $cityData = collect($response->json())->firstWhere('name', $normalizedCity);
-                \Log::info("Kết quả tìm tỉnh/thành qua API search:", ['cityData' => $cityData]);
-            } else {
-                \Log::warning("API tìm tỉnh/thành trả về không thành công: " . $response->status());
-            }
+//                     if ($response->successful()) {
+//                         $data = $response->json();
+//                         if (!empty($data)) {
+//                             \Log::info("Success with endpoint: " . $endpoint);
+//                             return $data;
+//                         }
+//                     }
+//                 } catch (\Exception $e) {
+//                     \Log::error("Failed endpoint {$endpoint}: " . $e->getMessage());
+//                     continue;
+//                 }
+//             }
 
-            // Nếu API search thất bại, tra cứu trực tiếp từ danh sách tỉnh/thành
-            if (!$cityData || !isset($cityData['code'])) {
-                \Log::info("Thử tra cứu tỉnh/thành trực tiếp từ API /p/");
-                $response = Http::get('https://provinces.open-api.vn/api/p/');
-                if ($response->successful()) {
-                    $cityData = collect($response->json())->firstWhere('name', $normalizedCity);
-                    \Log::info("Kết quả tra cứu trực tiếp:", ['cityData' => $cityData]);
-                }
-            }
+//             \Log::error("All API endpoints failed");
+//             return [];
+//         });
 
-            if (!$cityData || !isset($cityData['code'])) {
-                \Log::warning("Không tìm thấy mã tỉnh/thành cho: " . $normalizedCity);
-                return response()->json([], 404);
-            }
+//         if (empty($locations)) {
+//             \Log::error("No location data available");
+//             return response()->json([]);
+//         }
 
-            // Lấy danh sách quận/huyện (sử dụng depth=2 vì depth=3 có thể không cần thiết)
-            $districtsResponse = Http::get("https://provinces.open-api.vn/api/p/{$cityData['code']}?depth=2");
-            if ($districtsResponse->successful()) {
-                $districts = collect($districtsResponse->json()['districts'])->pluck('name')->sort()->values();
-                \Log::info("Danh sách quận/huyện:", ['districts' => $districts->toArray()]);
-                if ($districts->isEmpty()) {
-                    \Log::warning("Không có quận/huyện cho tỉnh/thành: " . $normalizedCity);
-                    return response()->json([], 404);
-                }
-                return response()->json($districts);
-            }
-            \Log::warning("API quận/huyện trả về không thành công: " . $districtsResponse->status());
-            return response()->json([], 404);
-        } catch (\Exception $e) {
-            \Log::error("Lỗi khi lấy quận/huyện cho thành phố {$city}: " . $e->getMessage());
-            return response()->json([], 500);
-        }
-    }
+//         $suggestions = [];
 
-   /**
- * Lấy danh sách phường/xã dựa trên quận/huyện
- */
-public function getWards($district)
-{
-    try {
-        \Log::info("Yêu cầu lấy phường/xã cho quận/huyện: " . $district);
+//         foreach ($locations as $province) {
+//             // Tên tỉnh
+//             $provinceName = $province['name'] ?? $province['Name'] ?? '';
+//             if (!empty($provinceName)) $suggestions[] = $provinceName;
 
-        // Chuẩn hóa tên quận/huyện
-        $normalizedDistrict = $this->normalizeDistrictName($district);
-        \Log::info("Tên quận/huyện sau chuẩn hóa: " . $normalizedDistrict);
+//             $districts = $province['districts'] ?? $province['Districts'] ?? $province['district'] ?? [];
+//             foreach ($districts as $district) {
+//                 // Tên huyện/quận
+//                 $districtName = $district['name'] ?? $district['Name'] ?? '';
+//                 if (!empty($districtName)) $suggestions[] = $districtName;
 
-        // Tìm mã quận/huyện bằng API search
-        $districtData = null;
-        $response = Http::get('https://provinces.open-api.vn/api/d/search/', [
-            'q' => $normalizedDistrict
-        ]);
-        if ($response->successful()) {
-            $districtData = collect($response->json())->firstWhere('name', $normalizedDistrict);
-            \Log::info("Kết quả tìm quận/huyện qua API search:", ['districtData' => $districtData]);
-        } else {
-            \Log::warning("API tìm quận/huyện thất bại: " . $response->status() . " - " . $response->body());
-        }
+//                 // Lấy phường/xã
+//                 $wards = [];
+//                 if (!empty($district['wards']) && is_array($district['wards'])) $wards = $district['wards'];
+//                 elseif (!empty($district['xas']) && is_array($district['xas'])) $wards = $district['xas'];
+//                 elseif (!empty($district['communes']) && is_array($district['communes'])) $wards = $district['communes'];
+//                 elseif (!empty($district['xaPhuong']) && is_array($district['xaPhuong'])) $wards = $district['xaPhuong'];
 
-        // Nếu không tìm thấy qua search, thử tra cứu tất cả quận/huyện
-        if (!$districtData || !isset($districtData['code'])) {
-            \Log::info("Thử tra cứu quận/huyện trực tiếp từ API /d/");
-            $response = Http::get('https://provinces.open-api.vn/api/d/');
-            if ($response->successful()) {
-                $districtData = collect($response->json())->firstWhere('name', $normalizedDistrict);
-                \Log::info("Kết quả tra cứu quận/huyện trực tiếp:", ['districtData' => $districtData]);
-            } else {
-                \Log::warning("API danh sách quận/huyện thất bại: " . $response->status() . " - " . $response->body());
-            }
-        }
+//                 foreach ($wards as $ward) {
+//                     $wardName = $ward['name'] ?? $ward['Name'] ?? $ward['title'] ?? '';
+//                     if (!empty($wardName)) $suggestions[] = $wardName;
+//                 }
+//             }
+//             // \Log::info('Sample ward:', $wards[0] ?? 'empty');
+//         }
 
-        // Nếu vẫn không tìm thấy mã quận/huyện
-        if (!$districtData || !isset($districtData['code'])) {
-            \Log::warning("Không tìm thấy mã quận/huyện cho: " . $normalizedDistrict);
-            return response()->json(['error' => 'Không tìm thấy quận/huyện'], 404);
-        }
+//         // Loại bỏ trùng rỗng
+//         $suggestions = array_values(array_unique(array_filter($suggestions)));
 
-        // Lấy danh sách phường/xã từ cache hoặc API
-        $cacheKey = "wards_{$districtData['code']}";
-        $wards = Cache::remember($cacheKey, now()->addHours(24), function () use ($districtData, $normalizedDistrict) {
-            \Log::info("Gọi API phường/xã cho mã quận/huyện: " . $districtData['code']);
-            // Thử với depth=2 trước
-            $wardsResponse = Http::get("https://provinces.open-api.vn/api/d/{$districtData['code']}?depth=2");
-            if ($wardsResponse->successful()) {
-                $wards = collect($wardsResponse->json()['wards'] ?? [])->pluck('name')->sort()->values();
-                \Log::info("Danh sách phường/xã từ API chính (depth=2):", ['wards' => $wards->toArray()]);
+//         // Nếu có query, filter và sort
+//         if ($query) {
+//             $queryNormalized = $this->removeVietnameseAccents(strtolower($query));
 
-                // Nếu danh sách phường rỗng, thử lại với depth=3 (bỏ điều kiện division_type sai)
-                if ($wards->isEmpty()) {
-                    \Log::info("Danh sách phường rỗng, thử lại với depth=3");
-                    $retryResponse = Http::get("https://provinces.open-api.vn/api/d/{$districtData['code']}?depth=2");
-                    if ($retryResponse->successful()) {
-                        $wards = collect($retryResponse->json()['wards'] ?? [])->pluck('name')->sort()->values();
-                        \Log::info("Danh sách phường/xã từ API retry (depth=3):", ['wards' => $wards->toArray()]);
-                    }
-                }
+//             $filteredSuggestions = array_filter($suggestions, function($item) use ($queryNormalized) {
+//                 $itemNormalized = $this->removeVietnameseAccents(strtolower($item));
+//                 return stripos($itemNormalized, $queryNormalized) !== false;
+//             });
 
-                // Nếu vẫn rỗng, thử API dự phòng (bao gồm kiểm tra mã 19)
-                if ($wards->isEmpty()) {
-                    \Log::info("Danh sách phường vẫn rỗng, thử API dự phòng cho: " . $normalizedDistrict);
-                    $wards = $this->getWardsFromFallbackApi($districtData['code']);
-                }
-                return $wards;
-            }
-            \Log::warning("API phường/xã thất bại: " . $wardsResponse->status() . " - " . $wardsResponse->body());
-            return $this->getWardsFromFallbackApi($districtData['code']);
-        });
+//             // Sort theo vị trí query xuất hiện, rồi độ dài
+//             usort($filteredSuggestions, function($a, $b) use ($queryNormalized) {
+//                 $aNormalized = $this->removeVietnameseAccents(strtolower($a));
+//                 $bNormalized = $this->removeVietnameseAccents(strtolower($b));
 
-        if ($wards->isEmpty()) {
-            \Log::info("Không có phường/xã cho quận/huyện: " . $normalizedDistrict);
-            return response()->json([], 200); // Trả về mảng rỗng với mã 200
-        }
+//                 $posA = stripos($aNormalized, $queryNormalized);
+//                 $posB = stripos($bNormalized, $queryNormalized);
 
-        return response()->json($wards);
-    } catch (\Exception $e) {
-        \Log::error("Lỗi khi lấy phường/xã cho quận/huyện {$district}: " . $e->getMessage() . " - Stack trace: " . $e->getTraceAsString());
-        return response()->json(['error' => 'Không thể tải danh sách phường/xã'], 500);
-    }
-}
+//                 if ($posA === $posB) return strlen($a) - strlen($b);
+//                 return $posA - $posB;
+//             });
 
-    /**
-     * API dự phòng để lấy danh sách phường/xã
-     */
+//             $suggestions = array_slice($filteredSuggestions, 0, 10);
+//         } else {
+//             $suggestions = array_slice($suggestions, 0, 10);
+//         }
 
-    /**
-     * Chuẩn hóa tên tỉnh/thành để khớp với API
-     */
-    private function normalizeCityName($city)
-    {
-        $cityMap = [
-            'Hà Nội' => 'Thành phố Hà Nội',
-            'Hồ Chí Minh' => 'Thành phố Hồ Chí Minh',
-            'Đà Nẵng' => 'Thành phố Đà Nẵng',
-            'Hải Phòng' => 'Thành phố Hải Phòng',
-            'Cần Thơ' => 'Thành phố Cần Thơ',
-        ];
-        return $cityMap[$city] ?? $city;
-    }
+//         return response()->json(array_values($suggestions));
 
-    /**
-     * Chuẩn hóa tên quận/huyện để khớp với API
-     */
-    private function normalizeDistrictName($district)
-    {
-        $districtMap = [
-            'Nam Từ Liêm' => 'Quận Nam Từ Liêm',
-            'Ba Vì' => 'Huyện Ba Vì',
-            'Hoàn Kiếm' => 'Quận Hoàn Kiếm',
-            'Cầu Giấy' => 'Quận Cầu Giấy',
-            // Thêm các ánh xạ khác nếu cần
-        ];
-        return $districtMap[$district] ?? $district;
-    }
-
-    /**
-     * Gợi ý bài viết gần vị trí người dùng
-     */
-    public function suggestNearby(Request $request)
-    {
-        $lat = $request->input('lat');
-        $lng = $request->input('lng');
-
-        try {
-            $posts = StaffPost::selectRaw("*,
-                (6371 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lng) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance",
-                [$lat, $lng, $lat])
-                ->having('distance', '<', 10)
-                ->orderBy('distance')
-                ->take(6)
-                ->get();
-
-            return response()->json($posts);
-        } catch (\Exception $e) {
-            \Log::error("Lỗi khi lấy bài viết gần bạn: " . $e->getMessage());
-            return response()->json([]);
-        }
-    }
+//     } catch (\Exception $e) {
+//         \Log::error("Lỗi gợi ý API: " . $e->getMessage());
+//         return response()->json([]);
+//     }
+// }
 
     /** =========================
      *        RENTER
@@ -315,13 +229,9 @@ public function getWards($district)
             $currentPage,
             ['path' => request()->url(), 'query' => request()->query()]
         );
-        $cities = $this->getCitiesFromApi();
-        $posts = $this->filterPosts($request)->latest()->paginate(10);
         return view('home.render', [
             'posts' => $pagedPosts,
             'rooms' => $rooms,
-            'cities' => $cities,
-            'posts' => $posts,
         ]);
     }
 

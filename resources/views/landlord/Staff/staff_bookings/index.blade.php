@@ -61,6 +61,7 @@
                         <th>STT</th>
                         <th>Người đặt</th>
                         <th>Số điện thoại</th>
+                        <th> Email</th>
                         <th>Phòng</th>
                         <th>Ngày nhận</th>
                         <th>Hình ảnh</th>
@@ -76,6 +77,13 @@
                             <td>{{ $booking->user->name ?? $booking->guest_name }}</td>
                             <td>
                                 {{ $booking->user->info->phone ?? ($booking->phone ?? 'Không xác định') }}
+                            </td>
+                            <td>
+                                @if ($booking->user)
+                                    {{ $booking->user->email ?? 'Không xác định' }}
+                                @else
+                                    {{ $booking->email ?? 'Không xác định' }}
+                                @endif
                             </td>
                             <td>{{ $booking->room->name ?? 'Không xác định' }}</td>
                             <td>{{ $booking->check_in->format('d/m/Y H:i') }}</td>
