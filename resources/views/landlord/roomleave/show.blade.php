@@ -13,6 +13,11 @@
             <p>📌 Loại: {{ $request->type === 'transfer' ? 'Nhượng quyền' : 'Rời phòng' }}</p>
             <p>📝 Ghi chú: {{ $request->reason ?? '(Không có)' }}</p>
 
+            <p>🏠 Phòng: {{ $request->room->room_number }}</p>
+            <p>📅 Ngày yêu cầu: {{ $request->leave_date }}</p>
+            <p>📌 Loại: {{ $request->action_type === 'transfer' ? 'Nhượng quyền' : 'Rời phòng' }}</p>
+            <p>📝 Ghi chú: {{ $request->note ?? '(Không có)' }}</p>
+
             <form action="{{ route('landlord.roomleave.approve', $request->id) }}" method="POST" class="d-inline">
                 @csrf
                 <button class="btn btn-success">✅ Duyệt</button>

@@ -3,24 +3,26 @@
 namespace App\Http\Controllers\Renter;
 
 use App\Http\Controllers\Controller;
+use App\Models\DepositRefund;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-
+use Illuminate\Support\Str;
+use App\Models\Notification;
+use App\Models\NotificationUser;
 use App\Models\UserInfo;
 use App\Models\RentalAgreement;
 use App\Models\Landlord\Room;
 use App\Models\Landlord\RoomLeaveRequest;
 use App\Models\RoomLeaveLog;
 use App\Models\User;
-
 class RoomLeaveController extends Controller
 {
     /**
      * Trang danh sách yêu cầu rời phòng
      */
-   public function index()
+  public function index()
 {
     $userId = Auth::id();
     $userInfo = UserInfo::where('user_id', $userId)->first();
@@ -31,16 +33,17 @@ class RoomLeaveController extends Controller
         ]);
     }
 
+    // Lấy phòng hiện tại
     $room = Room::with(['userInfos.user', 'rentalAgreement.renter'])->findOrFail($userInfo->room_id);
+
+
     $isContractOwner = optional($room->rentalAgreement)->renter_id === $userId;
 
     $leaveRequests = RoomLeaveRequest::where('room_id', $room->room_id)
         ->when(!$isContractOwner, fn ($q) => $q->where('user_id', $userId))
         ->latest()
-        ->get()
-        ->keyBy('user_id');
+        ->get();
 
-    // ✅ THÊM đoạn này để lấy yêu cầu chuyển nhượng tới bạn
     $incomingTransferRequest = RoomLeaveRequest::with('room.property', 'user')
         ->where('new_renter_id', $userId)
         ->where('status', 'waiting_new_renter_accept')
@@ -48,79 +51,110 @@ class RoomLeaveController extends Controller
         ->where('action_type', 'transfer')
         ->first();
 
-    // ✅ THÊM biến này vào compact()
     return view('home.roomleave.stopRentForm', compact(
         'room',
         'userId',
         'isContractOwner',
         'leaveRequests',
-        'incomingTransferRequest' // ← dòng này là quan trọng nhất
+        'incomingTransferRequest',
+
     ));
 }
 
+/**
+ * Gửi yêu cầu rời phòng
+ */
+public function sendLeaveRequest(Request $request)
+{
+    //  dd($request->file('qr_file'));
 
-    /**
-     * Gửi yêu cầu rời phòng
-     */
-    public function sendLeaveRequest(Request $request)
-      
-    {
-          
-        $userId = Auth::id();
+    $userId = Auth::id();
+       $room = Room::with(['rentalAgreement', 'property'])->findOrFail($request->room_id);
+    $isOwner = optional($room->rentalAgreement)->renter_id === $userId;
 
-        $request->validate([
-            'room_id'       => 'required|exists:rooms,room_id',
-            'leave_date'    => 'required|date|after_or_equal:today',
-            'note'        => 'nullable|string|max:255',
-            'action_type'   => 'required|in:leave,transfer',
-            'new_renter_id' => 'nullable|exists:users,id',
-        ]);
+    $request->validate([
+        'room_id'       => 'required|exists:rooms,room_id',
+        'leave_date'    => 'required|date|after_or_equal:today',
+        'note'          => 'nullable|string|max:255',
+        'action_type'   => 'required|in:leave,transfer',
+        'new_renter_id' => 'nullable|exists:users,id',
+        'deposit_qr_image' => [
+        $isOwner && $request->action_type === 'leave' ? 'required' : 'nullable',
+        'image',
+        'mimes:png,jpg,jpeg,webp',
+        'max:2048',
+    ],
+]);
 
-        if ($userId != $request->user_id) {
-            return back()->withErrors('Không thể gửi yêu cầu thay người khác.');
-        }
 
-        if ($request->action_type === 'transfer' && $request->new_renter_id == $userId) {
-            return back()->withErrors('Không thể chuyển nhượng cho chính bạn.');
-        }
+    // Chỉ bắt buộc QR khi CHỦ hợp đồng chọn "leave"
 
-        $userInfo = UserInfo::where('user_id', $userId)->firstOrFail();
-        $room = Room::with(['staffs', 'rentalAgreement'])->findOrFail($request->room_id);
 
-        $isOwner = $room->rentalAgreement && $room->rentalAgreement->renter_id == $userId;
-        if ($request->action_type === 'transfer' && !$isOwner) {
-            return back()->withErrors('Chỉ chủ hợp đồng mới có quyền nhượng hợp đồng.');
-        }
-
-        $hasPending = RoomLeaveRequest::where('user_id', $userId)
-            ->where('status', 'Pending')
-            ->exists();
-
-        if ($hasPending) {
-            return back()->withErrors('Bạn đã gửi yêu cầu và đang chờ xử lý.');
-        }
-
-        $staff = $room->staffs->first();
-
-        $leaveRequest = new RoomLeaveRequest([
-            
-            'user_id'       => $userId,
-            'room_id'       => $room->room_id,
-            'leave_date'    => $request->leave_date,
-            'note'        => $request->note,
-            'status'        => 'Pending',
-            'landlord_id'   => $room->landlord_id ?? null,
-            'staff_id'      => $staff?->id,
-            'action_type'   => $request->action_type,
-            'new_renter_id' => $request->action_type === 'transfer' ? $request->new_renter_id : null,
-            
-        ]);
-
-        $leaveRequest->save();
-
-        return redirect()->route('home.roomleave.stopRentForm')
-            ->with('success', '✅ Yêu cầu đã được gửi.');
+    // Không gửi thay người khác
+    if ($userId != $request->user_id) {
+        return back()->withErrors('Không thể gửi yêu cầu thay người khác.');
     }
+
+    // Không chuyển nhượng cho chính mình
+if ($request->action_type === 'transfer' && $request->new_renter_id == $userId) {
+        return back()->withErrors('Không thể chuyển nhượng cho chính bạn.');
+    }
+
+    $userInfo = UserInfo::where('user_id', $userId)->firstOrFail();
+    $room = Room::with(['rentalAgreement', 'property'])->findOrFail($request->room_id);
+
+    // Chỉ chủ hợp đồng mới được transfer
+    $isOwner = $room->rentalAgreement && $room->rentalAgreement->renter_id == $userId;
+    if ($request->action_type === 'transfer' && !$isOwner) {
+        return back()->withErrors('Chỉ chủ hợp đồng mới có quyền nhượng hợp đồng.');
+    }
+
+    // Kiểm tra yêu cầu đang chờ xử lý
+    $hasPending = RoomLeaveRequest::where('user_id', $userId)
+        ->where('status', 'pending')
+        ->exists();
+    if ($hasPending) {
+        return back()->withErrors('Bạn đã gửi yêu cầu và đang chờ xử lý.');
+    }
+
+    // Validate leave_date với hợp đồng
+    $depositImagePath = null;
+if ($request->hasFile('deposit_qr_image')) {
+    $depositImagePath = $request->file('deposit_qr_image')->store('deposits', 'public');
+
+}
+
+// Tạo yêu cầu rời phòng
+$leaveRequest = new RoomLeaveRequest([
+    'user_id'          => $userId,
+    'room_id'          => $room->room_id,
+    'leave_date'       => $request->leave_date,
+    'note'             => $request->note,
+    'status'           => 'pending',
+    'landlord_id'      => $room->property->landlord_id ?? null,
+    'action_type'      => $request->action_type,
+    'new_renter_id'    => $request->action_type === 'transfer' ? $request->new_renter_id : null,
+    'deposit_qr_image' =>   $depositImagePath, // đúng tên cột
+
+]);
+
+
+$leaveRequest->save();
+    // Gửi notification cho landlord
+    $landlord = $room->property->landlord ?? null;
+    if ($landlord) {
+        $this->sendNotificationToUser(
+            $landlord->id,
+            '📤 Yêu cầu rời phòng mới',
+            'Người thuê ' . auth()->user()->name . ' đã gửi yêu cầu rời phòng ' . $room->room_number,
+            route('landlord.roomleave.index', $leaveRequest->id)
+        );
+    }
+
+    return redirect()->route('home.roomleave.stopRentForm')
+        ->with('success', '✅ Yêu cầu đã được gửi.');
+}
+
 
     /**
      * Hủy yêu cầu
@@ -131,7 +165,7 @@ class RoomLeaveController extends Controller
 
         $request = RoomLeaveRequest::where('id', $id)
             ->where('user_id', $userId)
-            ->where('status', 'Pending')
+            ->where('status', 'pending')
             ->first();
 
         if (!$request) {
@@ -150,8 +184,7 @@ class RoomLeaveController extends Controller
     public function viewRequest($id)
     {
         $userId = Auth::id();
-
-        $request = RoomLeaveRequest::with(['room.property', 'newRenter'])
+$request = RoomLeaveRequest::with(['room.property', 'newRenter'])
             ->where('id', $id)
             ->where('user_id', $userId)
             ->first();
@@ -184,7 +217,7 @@ class RoomLeaveController extends Controller
             $userInfo = $request->userInfo;
 
             if ($request->action_type === 'transfer') {
-            
+
                 $contract = $request->room->rentalAgreement;
 
                 if ($contract && $contract->renter_id == $request->user_id) {
@@ -238,11 +271,11 @@ class RoomLeaveController extends Controller
             'room_id' => $request->room_id,
             'rental_id' => optional($request->room->rentalAgreement)->rental_id,
             'leave_date' => $request->leave_date,
-            'action_type' => $request->action_type ?? 'terminate',
+            'action_type' => $request->action_type ,
             'previous_renter_id' => $request->action_type === 'transfer' ? $request->user_id : null,
             'new_renter_id' => $request->new_renter_id ?? null,
             'reason' => $request->reason,
-            'status' => 'Approved',
+'status' => 'Approved',
             'handled_by' => $request->approved_by ?? null,
         ]);
 
@@ -268,7 +301,7 @@ class RoomLeaveController extends Controller
 
     $pending = RoomLeaveRequest::with('room.property', 'user')
         ->where('new_renter_id', $userId)
-        ->where('status', 'waiting_new_renter_accept') 
+        ->where('status', 'waiting_new_renter_accept')
         ->whereNull('transfer_accepted_at')
         ->where('action_type', 'transfer')
         ->first();
@@ -318,7 +351,34 @@ public function acceptTransfer(Request $request)
     return redirect()->route('home.roomleave.stopRentForm')
         ->with('success', 'Bạn đã nhận chuyển nhượng hợp đồng thành công!');
 }
- 
+ public function depositHistory()
+{
+    $userId = Auth::id();
+
+    $refunds = DepositRefund::where('user_id', $userId)
+        ->with('rental.room.property')
+        ->orderByDesc('refund_date')
+        ->get();
+
+    return view('home.roomleave.deposits', compact('refunds'));
+}
+  private function sendNotificationToUser($userId, $title, $message, $link = null)
+    {
+        $notification = Notification::create([
+            'title' => $title,
+            'message' => $message,
+'type' => 'user',
+            'link' => $link,
+            'created_at' => now(),
+            'expired_at' => now()->addDays(7),
+            'is_global' => false,
+        ]);
+
+        $notification->users()->attach($userId, [
+            'is_read' => false,
+            'received_at' => now(),
+        ]);
+    }
 
 
 }

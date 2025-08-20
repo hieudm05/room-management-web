@@ -28,7 +28,8 @@ use PhpOffice\PhpWord\TemplateProcessor;
 use PhpOffice\PhpWord\Writer\HTML;
 use Smalot\PdfParser\Parser;
 use App\Mail\RoomUpdatedNotification;
-use Illuminate\Support\Carbon;
+
+
 
 class RoomController extends Controller
 {
@@ -103,7 +104,7 @@ class RoomController extends Controller
     {
         $properties = Property::all();
         $facilities = Facility::where('name', '!=', 'Thang máy')->get();
-        $services = Service::all();
+        $services = Service::where('is_hidden', false)->get();
 
         return view('landlord.rooms.create', compact('facilities', 'properties', 'services'));
     }
@@ -207,7 +208,7 @@ class RoomController extends Controller
     public function edit(Room $room)
     {
         $facilities = Facility::where('name', '!=', 'Thang máy')->get();
-        $services = Service::all();
+        $services = Service::where('is_hidden', false)->get();
         $roomFacilities = $room->facilities->pluck('facility_id')->toArray();
         $roomServices = $room->services->mapWithKeys(function ($service) {
             return [
@@ -352,9 +353,6 @@ class RoomController extends Controller
         return redirect()->route('landlords.rooms.index', ['property_id' => $room->property_id])
             ->with('success', 'Cập nhật phòng thành công!');
     }
-
-
-
 
     public function downloadContractWord(Room $room)
     {
@@ -1007,26 +1005,27 @@ class RoomController extends Controller
         return back()->with('success', 'Phòng đã được khóa hợp đồng. Hợp đồng hiện tại bị vô hiệu hóa, cần tạo hợp đồng mới để tiếp tục thuê.');
     }
     // Hiển thị thống kê hợp đồng của phòng
-    public function showStats(Room $room)
-    {
-        $room->load('rentalAgreements');
+    // public function showStats(Room $room)
+    // {
+    //     $room->load('rentalAgreements');
 
-        $contracts = $room->rentalAgreements()
-            ->selectRaw('status, COUNT(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+    //     $contracts = $room->rentalAgreements()
+    //         ->selectRaw('status, COUNT(*) as total')
+    //         ->groupBy('status')
+    //         ->pluck('total', 'status');
 
-        // Nếu không có dữ liệu, gán giá trị mặc định để Chart.js không bị trắng
-        if ($contracts->isEmpty()) {
-            $contracts = collect(['Không có hợp đồng' => 0]);
-        }
+    //     // Nếu không có dữ liệu, gán giá trị mặc định để Chart.js không bị trắng
+    //     if ($contracts->isEmpty()) {
+    //         $contracts = collect(['Không có hợp đồng' => 0]);
+    //     }
 
-        return view('landlord.rooms.statistics', compact('room', 'contracts'));
-    }
+    //     return view('landlord.rooms.statistics', compact('room', 'contracts'));
+    // }
 
     public function getRoomsByProperty($property_id)
     {
-        $rooms = Room::where('property_id', $property_id)->get(['room_id']);
+        $rooms = Room::where('property_id', $property_id)->get(['room_id', 'room_number']);
         return response()->json(['rooms' => $rooms]);
     }
+
 }
