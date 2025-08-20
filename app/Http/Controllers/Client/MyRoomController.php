@@ -111,7 +111,7 @@ class MyRoomController extends Controller
     if (!$roomId) {
         return back()->with('error', 'Yêu cầu không hợp lệ.');
     }
-    
+
     $room = Room::findOrFail($roomId);
 
     if ($request->input('action') !== 'accept') {
@@ -185,6 +185,6 @@ class MyRoomController extends Controller
 }
 
 
-   
+
 
 

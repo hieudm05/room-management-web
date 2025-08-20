@@ -168,7 +168,7 @@
                                                     <div class="input-group">
                                                         @if (!empty($item['bill']))
                                                             <select
-                                                                class="form-control status-select 
+                                                                class="form-control status-select
                                        @if ($item['bill']->status == 'unpaid') border-warning shadow-sm @endif"
                                                                 data-id="{{ $item['id_bill'] }}"
                                                                 @if (!$item['bill']->status == 'pending') disabled @endif

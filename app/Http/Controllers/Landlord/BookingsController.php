@@ -34,10 +34,13 @@ class BookingsController extends Controller
         }
 
         $booking->status = 'approved';
+        $booking->confirmed_by = $booking->post->staff_id;
         $booking->save();
 
         return response()->json(['success' => true]);
     }
+
+
 
     public function reject($id)
     {

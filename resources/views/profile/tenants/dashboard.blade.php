@@ -98,7 +98,6 @@
         </div>
     </div>
 
-
     {{-- Biểu đồ chi tiết dịch vụ --}}
     <div class="card mb-5 shadow">
         <div class="card-body">
@@ -162,7 +161,7 @@
         <h5 class="card-title">📊 So sánh giữa 2 mốc thời gian</h5>
 
         <form method="GET" action="{{ route('home.profile.tenants.dashboard') }}" class="row g-3 mb-5">
-           
+
             <div class="col-md-3 d-flex align-items-end">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="compare" id="compareCheckbox" value="1" {{ request('compare') ? 'checked' : '' }}>

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Landlord;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Landlord\RoomLeaveRequest;
 use App\Models\RoomLeaveLog;
 use App\Models\Landlord\RentalAgreement;
@@ -45,7 +44,6 @@ class LandlordRoomLeaveController extends Controller
         $request = RoomLeaveRequest::with(['user', 'room'])->findOrFail($id);
         return view('landlord.roomleave.show', compact('request'));
     }
-
 
     // Duyệt yêu cầu
   public function approve(Request $request, $id)

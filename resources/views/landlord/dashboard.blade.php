@@ -118,6 +118,16 @@
         </div>
     </div>
 
+    <!-- Biểu đồ phân tán -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <span>Biểu đồ phân tán: Doanh thu vs Lợi nhuận</span>
+        </div>
+        <div class="card-body">
+            <div id="scatterChartMessage" class="alert alert-warning d-none">Không có dữ liệu để hiển thị. Vui lòng chọn ít nhất một tòa nhà.</div>
+            <canvas id="scatterChart"></canvas>
+        </div>
+    </div>
 
     <!-- Biểu đồ cột nhóm -->
     <div class="card mb-4 shadow-sm">
@@ -129,6 +139,16 @@
         </div>
     </div>
 
+    <!-- Biểu đồ xu hướng doanh thu và lợi nhuận -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-info text-white">
+            <span>Biểu đồ xu hướng: Doanh thu và Lợi nhuận theo thời gian</span>
+        </div>
+        <div class="card-body">
+            <div id="trendChartMessage" class="alert alert-warning d-none">Không có dữ liệu để hiển thị.</div>
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
 
     <!-- Biểu đồ tổng quan phòng + khiếu nại -->
     <div class="row g-3">
@@ -539,8 +559,8 @@ $(document).ready(function() {
         );
 
         const total_rented = initialPropertyStats.reduce((sum, stat) => sum + (stat.rented_rooms || 0), 0);
-        const total_empty = initialPropertyStats.reduce((sum, stat) => sum + (stat.total_rooms - (stat.rented_rooms || 0)), 0); 
-        
+        const total_empty = initialPropertyStats.reduce((sum, stat) => sum + (stat.total_rooms - (stat.rented_rooms || 0)), 0);
+
         initRoomOverviewChart(@json($total_rented), @json($total_empty));
     } else {
         $('#scatterChartMessage, #trendChartMessage, #occupancyChartMessage, #roomChartMessage').removeClass('d-none');

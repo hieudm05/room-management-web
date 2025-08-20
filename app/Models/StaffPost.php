@@ -33,6 +33,8 @@ class StaffPost extends Model
         'published_at',
         'ward',
         'expired_at',
+        'latitude',
+        'longitude',
         'description',
         'amenities',
         'furnitures',

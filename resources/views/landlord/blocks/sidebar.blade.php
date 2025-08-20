@@ -99,6 +99,8 @@ $user = Auth::user(); ?>
                                 viên</a>
                         </li>
                     @endif
+
+
                 </ul>
             </div>
         </li>
@@ -107,7 +109,7 @@ $user = Auth::user(); ?>
     <li class="nav-item">
         <a class="nav-link menu-link" href="#sidebarLeaveRoom" data-bs-toggle="collapse" role="button"
            aria-expanded="false" aria-controls="sidebarLeaveRoom">
-            <i class="ri-door-open-line"></i> 
+            <i class="ri-door-open-line"></i>
             <span data-key="t-leave-room">Rời Phòng</span>
         </a>
         <div class="collapse menu-dropdown" id="sidebarLeaveRoom">
@@ -118,7 +120,7 @@ $user = Auth::user(); ?>
                 <li class="nav-item">
                     <a href="{{ route('landlord.roomleave.processed') }}" class="nav-link">Lịch sử duyệt</a>
                 </li>
-              
+
             </ul>
         </div>
     </li>
@@ -265,18 +267,84 @@ $user = Auth::user(); ?>
                             <a href="{{ route('landlords.bills.index') }}" class="nav-link">Danh sách hoá đơn</a>
                         </li>
                     </ul>
-                     
+
                     <ul class="nav nav-sm flex-column">
                         <li class="nav-item"><a href="{{ route('landlords.payment.list') }}"
                          class="nav-link">Nhập hoá đơn</a></li>
                     </ul>
-               
+
                 </div>
             </li>
 
-          
+
         @endif
-        
+
+        @if ($user->role === 'Landlord')
+            <li class="nav-item">
+                <a class="nav-link menu-link" href="#sidebarBooking" data-bs-toggle="collapse" role="button"
+                    aria-expanded="false" aria-controls="sidebarBooking">
+                    <i class="mdi mdi-calendar-clock"></i>
+                    <span data-key="t-booking">Đặt Lịch xem phòng</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarBooking">
+                    <ul class="nav nav-sm flex-column">
+                        @if ($user->role === 'Landlord')
+                            <li class="nav-item">
+                                <a href="{{ route('landlord.bookings.index') }}" class="nav-link">Quản lý đặt lịch</a>
+                            </li>
+                        @endif
+                    </ul>
+                </div>
+            </li>
+        @endif
+            @if ($user->role === 'Staff')
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarBookingStaff" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarBookingStaff">
+                        <i class="mdi mdi-calendar-clock"></i>
+                        <span data-key="t-booking">Đặt lịch & Hợp đồng</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarBookingStaff">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{{ route('booking.index') }}" class="nav-link">Quản lý đặt lịch</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('landlord.staff.chart.index') }}" class="nav-link">Biểu đồ đặt lịch</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('staff.contract.renewals.index') }}" class="nav-link">Tiếp nhận tái ký</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('landlord.staff.roomleave.index') }}" class="nav-link">
+                                    Quản lý yêu cầu rời sửa phòng
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            @endif
+        <!-- Complaints (Landlord) -->
+        @if ($user->role === 'Landlord')
+            <li class="nav-item">
+                <a class="nav-link menu-link" href="#sidebarComplaints" data-bs-toggle="collapse" role="button"
+                    aria-expanded="false" aria-controls="sidebarComplaints">
+                    <i class="mdi mdi-alert-circle-outline"></i>
+                    <span data-key="t-complaints">Khiếu nại</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarComplaints">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('landlord.complaints.index') }}" class="nav-link">Danh sách khiếu
+                                nại</a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+
+        @endif
+
         @if ($user->role === 'Landlord')
             <li class="nav-item">
                 <a class="nav-link menu-link" href="#sidebarBooking" data-bs-toggle="collapse" role="button"

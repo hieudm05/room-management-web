@@ -490,7 +490,8 @@
                             wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
 
                             const districtResponse = await fetch(
-                                `https://provinces.open-api.vn/api/p/${province.code}?depth=2`);
+                                `https://provinces.open-api.vn/api/p/${province.code}?depth=2`
+                            );
                             const districtData = await districtResponse.json();
                             districtsData[province.code] = districtData.districts;
                             districtData.districts.forEach(district => {
@@ -508,7 +509,8 @@
                                 wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
 
                                 const wardResponse = await fetch(
-                                    `https://provinces.open-api.vn/api/d/${district.code}?depth=2`);
+                                    `https://provinces.open-api.vn/api/d/${district.code}?depth=2`
+                                );
                                 const wardData = await wardResponse.json();
                                 wardsData[district.code] = wardData.wards;
                                 wardData.wards.forEach(ward => {

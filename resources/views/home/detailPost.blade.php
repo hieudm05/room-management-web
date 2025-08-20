@@ -148,6 +148,8 @@
             }
         }
     </style>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 @endsection
 
 @section('content')
@@ -470,7 +472,7 @@ function checkGeolocationSupport() {
     console.log('Protocol:', window.location.protocol);
     console.log('Host:', window.location.host);
     console.log('User Agent:', navigator.userAgent);
-    
+
     // Kiểm tra permissions API
     if (navigator.permissions) {
         navigator.permissions.query({name: 'geolocation'}).then(result => {
@@ -480,21 +482,21 @@ function checkGeolocationSupport() {
             console.log('Permission query failed:', err);
         });
     }
-    
+
     return !!navigator.geolocation;
 }
 
 // 2. TEST ĐƠN GIẢN GEOLOCATION
 function testGeolocation() {
     console.log('🧪 BẮT ĐẦU TEST GEOLOCATION...');
-    
+
     if (!checkGeolocationSupport()) {
         alert('❌ Trình duyệt không hỗ trợ Geolocation');
         return;
     }
 
     const startTime = Date.now();
-    
+
     navigator.geolocation.getCurrentPosition(
         function(position) {
             const endTime = Date.now();
@@ -504,7 +506,7 @@ function testGeolocation() {
             console.log('Accuracy:', position.coords.accuracy, 'meters');
             console.log('Time taken:', (endTime - startTime), 'ms');
             console.log('Timestamp:', new Date(position.timestamp));
-            
+
             alert(`✅ Lấy vị trí thành công!\nLat: ${position.coords.latitude}\nLng: ${position.coords.longitude}\nAccuracy: ${position.coords.accuracy}m`);
         },
         function(error) {
@@ -513,7 +515,7 @@ function testGeolocation() {
             console.log('Error code:', error.code);
             console.log('Error message:', error.message);
             console.log('Time taken:', (endTime - startTime), 'ms');
-            
+
             let errorDetails = '';
             switch(error.code) {
                 case error.PERMISSION_DENIED:
@@ -543,7 +545,7 @@ UNKNOWN ERROR (${error.code}):
 - Lỗi không xác định
 - Message: ${error.message}`;
             }
-            
+
             console.error(errorDetails);
             alert('❌ Lỗi Geolocation:\n' + errorDetails);
         },
@@ -559,12 +561,12 @@ UNKNOWN ERROR (${error.code}):
 function checkHTTPS() {
     const isHTTPS = window.location.protocol === 'https:';
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
+
     console.log('🔒 HTTPS Check:');
     console.log('Protocol:', window.location.protocol);
     console.log('Is HTTPS:', isHTTPS);
     console.log('Is localhost:', isLocalhost);
-    
+
     if (!isHTTPS && !isLocalhost) {
         console.warn('⚠️ CẢNH BÁO: Geolocation cần HTTPS để hoạt động trên production!');
         return false;
@@ -576,10 +578,10 @@ function checkHTTPS() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 BẮT ĐẦU DEBUG GEOLOCATION...');
     console.log('==========================================');
-    
+
     checkHTTPS();
     checkGeolocationSupport();
-    
+
     // Thêm nút test vào trang
     const testButton = document.createElement('button');
     testButton.innerHTML = '🧪 Test Geolocation';
@@ -587,7 +589,7 @@ document.addEventListener('DOMContentLoaded', function() {
     testButton.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 9999;';
     testButton.onclick = testGeolocation;
     document.body.appendChild(testButton);
-    
+
     console.log('📋 Debug script loaded. Click "Test Geolocation" button to test.');
     console.log('==========================================');
 });
@@ -600,7 +602,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let userMarker = null;
     let routeLayer = null;
     let isSatellite = false;
-    
+
     const defaultLayer = L.tileLayer(
         `https://maps.vietmap.vn/api/tm/{z}/{x}/{y}.png?apikey={{ config('services.viet_map.key') }}`, {
             maxZoom: 22,
@@ -609,7 +611,7 @@ document.addEventListener('DOMContentLoaded', function() {
             attribution: '&copy; <a href="https://www.vietmap.vn/">VietMap</a>'
         }
     );
-    
+
     const satelliteLayer = L.tileLayer(
         `https://maps.vietmap.vn/api/satellite/{z}/{x}/{y}.png?apikey={{ config('services.viet_map.key') }}`, {
             maxZoom: 22,
@@ -621,18 +623,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function initializeVietMap() {
         console.log('🗺️ Bắt đầu khởi tạo VietMap...');
-        
+
         if (typeof L === 'undefined') {
             console.error('❌ Leaflet chưa được load');
             return false;
         }
-        
+
         const mapElement = document.getElementById('map');
         if (!mapElement) {
             console.error('❌ Không tìm thấy phần tử #map');
             return false;
         }
-        
+
         // Xóa bản đồ cũ nếu có
         if (vietMapInstance) {
             try {
@@ -643,7 +645,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             vietMapInstance = null;
         }
-        
+
         mapElement.innerHTML = '';
         mapElement.style.cssText = `
             width: 100% !important;
@@ -653,16 +655,16 @@ document.addEventListener('DOMContentLoaded', function() {
             background: #f8f9fa;
             border-radius: 8px;
         `;
-        
+
         const lat = {{ $post->latitude ?? 21.0278 }};
         const lng = {{ $post->longitude ?? 105.8342 }};
-        
+
         try {
             vietMapInstance = L.map('map').setView([lat, lng], 13);
             defaultLayer.addTo(vietMapInstance);
             L.control.zoom({ position: 'topright' }).addTo(vietMapInstance);
             L.control.scale().addTo(vietMapInstance);
-            
+
             const destinationMarker = L.marker([lat, lng]).addTo(vietMapInstance);
             destinationMarker.bindPopup(`
                 <div style="min-width: 200px;">
@@ -674,13 +676,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     </small>
                 </div>
             `).openPopup();
-            
+
             setTimeout(() => vietMapInstance.invalidateSize(), 500);
             window.addEventListener('resize', () => vietMapInstance.invalidateSize());
-            
+
             console.log('🎉 VietMap khởi tạo thành công!');
             return true;
-            
+
         } catch (error) {
             console.error('💥 Lỗi khởi tạo VietMap:', error);
             mapElement.innerHTML = `
@@ -698,7 +700,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getUserLocationAndDrawRoute() {
         console.log('🔍 Bắt đầu lấy vị trí người dùng...');
-        
+
         // Kiểm tra xem trình duyệt có hỗ trợ geolocation không
         if (!navigator.geolocation) {
             showLocationError('Trình duyệt của bạn không hỗ trợ Geolocation. Vui lòng sử dụng trình duyệt khác.');
@@ -723,23 +725,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
                 const accuracy = position.coords.accuracy;
-                
+
                 console.log(`📍 Vị trí hiện tại: ${userLat}, ${userLng} (độ chính xác: ${accuracy}m)`);
-                
+
                 // Reset button
                 getDirectionsBtn.innerHTML = originalText;
                 getDirectionsBtn.disabled = false;
-                
+
                 drawRoute(userLat, userLng);
             },
             // Error callback
             function(error) {
                 console.error('❌ Lỗi khi lấy vị trí:', error);
-                
+
                 // Reset button
                 getDirectionsBtn.innerHTML = originalText;
                 getDirectionsBtn.disabled = false;
-                
+
                 let message = '';
                 switch (error.code) {
                     case error.PERMISSION_DENIED:
@@ -792,7 +794,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', alertHtml);
-        
+
         // Tự động ẩn sau 10 giây
         setTimeout(() => {
             const alert = document.querySelector('.alert');
@@ -802,7 +804,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function drawRoute(userLat, userLng) {
         console.log('🗺️ Bắt đầu vẽ tuyến đường...');
-        
+
         // Xóa marker và route cũ
         if (userMarker) vietMapInstance.removeLayer(userMarker);
         if (routeLayer) vietMapInstance.removeLayer(routeLayer);
@@ -826,9 +828,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const vehicle = vehicleSelect ? vehicleSelect.value : 'motorcycle';
 
         const url = `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${apiKey}&point=${userLat},${userLng}&point=${destinationLat},${destinationLng}&vehicle=${vehicle}&points_encoded=true`;
-        
+
         console.log(`🔗 Gọi API VietMap: ${url}`);
-        
+
         // Hiển thị loading trong route info
         const routeInfoDiv = document.getElementById('routeInfo');
         routeInfoDiv.innerHTML = `
@@ -848,7 +850,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 console.log('📊 Dữ liệu từ VietMap API:', data);
-                
+
                 if (data.code === 'OK' && data.paths && data.paths.length > 0) {
                     const path = data.paths[0];
                     const distance = (path.distance / 1000).toFixed(2);
@@ -858,7 +860,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Hiển thị thông tin tuyến đường
                     routeInfoDiv.innerHTML = `
                         <h5>
-                            Thông tin tuyến đường 
+                            Thông tin tuyến đường
                             <button id="closeRouteInfo" class="btn btn-sm btn-danger float-end">×</button>
                         </h5>
                         <p><strong>Khoảng cách:</strong> <span id="distance">${distance} km</span></p>
@@ -878,9 +880,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (typeof polyline === 'undefined') {
                                 throw new Error('Polyline library chưa được load');
                             }
-                            
+
                             const decodedPoints = polyline.decode(path.points).map(coord => [coord[0], coord[1]]);
-                            
+
                             routeLayer = L.polyline(decodedPoints, {
                                 color: '#007bff',
                                 weight: 5,
@@ -891,9 +893,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Fit map để hiển thị toàn bộ tuyến đường
                             const bounds = L.latLngBounds([[userLat, userLng], [destinationLat, destinationLng]]);
                             vietMapInstance.fitBounds(bounds, { padding: [50, 50] });
-                            
+
                             console.log('✅ Vẽ tuyến đường thành công!');
-                            
+
                         } catch (decodeError) {
                             console.error('❌ Lỗi khi decode polyline:', decodeError);
                             routeInfoDiv.innerHTML += `<div class="alert alert-warning mt-2">Không thể vẽ tuyến đường trên bản đồ, nhưng thông tin đã được hiển thị ở trên.</div>`;
@@ -912,7 +914,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     `;
                 }
-                
+
                 // Thêm event listener cho nút đóng
                 const closeBtn = document.getElementById('closeRouteInfo');
                 if (closeBtn) {
@@ -920,7 +922,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         routeInfoDiv.style.display = 'none';
                     });
                 }
-                
+
             })
             .catch(error => {
                 console.error('💥 Lỗi khi gọi API:', error);
@@ -942,20 +944,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Khởi tạo khi DOM đã sẵn sàng
     document.addEventListener('DOMContentLoaded', function() {
         console.log('📋 DOM Content Loaded - Khởi tạo VietMap...');
-        
+
         // Đợi một chút để đảm bảo tất cả resources đã load
         setTimeout(() => {
             if (initializeVietMap()) {
                 // Thêm event listeners sau khi map đã khởi tạo thành công
                 const getDirectionsBtn = document.getElementById('getDirections');
                 const toggleSatelliteBtn = document.getElementById('toggleSatellite');
-                
+
                 if (getDirectionsBtn) {
                     getDirectionsBtn.addEventListener('click', getUserLocationAndDrawRoute);
                 } else {
                     console.warn('⚠️ Không tìm thấy nút getDirections');
                 }
-                
+
                 if (toggleSatelliteBtn) {
                     toggleSatelliteBtn.addEventListener('click', () => {
                         if (isSatellite) {

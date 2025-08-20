@@ -60,6 +60,8 @@ use App\Http\Controllers\Landlord\Staff\StaffRoomController;
 use App\Http\Controllers\Renter\RenterHistoryBillController;
 use App\Http\Controllers\Renter\RenterNotificationController;
 
+
+
 Route::get('/provinces', [AddressController::class, 'getProvinces']);
 Route::get('/districts/{provinceCode}', [AddressController::class, 'getDistricts']);
 Route::get('/wards/{districtCode}', [AddressController::class, 'getWards']);
@@ -170,12 +172,21 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/{room}', [RoomController::class, 'show'])->name('show');
         Route::get('/{room}/contract-pdf', [RoomController::class, 'streamContract'])->name('contract.pdf');
         Route::get('/{room}/contract-download', [RoomController::class, 'downloadContract'])->name('contract.download');
+        Route::get('/{room}/contract', [RoomController::class, 'contractIndex'])->name('contract.contractIndex');
+        Route::post('/{room}/contract-upload', [RoomController::class, 'uploadContract'])->name('contract.upload');
+        Route::post('/{room}/contract-confirm', [RoomController::class, 'confirmContract2'])->name('contract.confirm');
         Route::get('/{room}/contract-word', [RoomController::class, 'downloadContractWord'])->name('contract.word');
         Route::get('/{room}/contract-form', [RoomController::class, 'formShowContract'])->name('contract.info');
         Route::post('/{room}/contract-confirm-rentalAgreement', [RoomController::class, 'confirmStatusrentalAgreement'])->name('contract.confirmLG');
         Route::post('/room-users/{id}/suscess', [RoomController::class, 'ConfirmAllUser'])->name('room_users.suscess');
         Route::get('/{room}/staffs', [RoomStaffController::class, 'edit'])->name('staffs.edit');
         Route::post('/{room}/staffs', [RoomStaffController::class, 'update'])->name('staffs.update');
+        // Deposit (minh chứng đặt cọc)
+        Route::get('/{room}/deposit', [RoomController::class, 'showDepositForm'])
+            ->name('deposit.form');
+
+        Route::post('/{room}/deposit', [RoomController::class, 'uploadDeposit'])
+            ->name('deposit.upload');
     });
 
     // Staff quản lý phòng
@@ -185,9 +196,15 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
 
 
         Route::prefix('contract')->name('contract.')->group(function () {
-            Route::get('/{room}', [ContractController::class, 'index']);
+            Route::get('/{room}', [ContractController::class, 'index'])->name('index');
             Route::post('/{room}/upload', [ContractController::class, 'uploadAgreementFile'])->name('upload');
+            Route::post('/{room}/preview', [ContractController::class, 'preview'])->name('preview');
+            Route::post('/{room}/confirm', [ContractController::class, 'confirm'])->name('confirm');
         });
+
+        // Form upload đặt cọc
+        Route::get('/{room}/deposit', [StaffRoomController::class, 'depositForm'])->name('deposit.form');
+        Route::post('/{room}/deposit-upload', [StaffRoomController::class, 'depositUpload'])->name('deposit.upload');
 
         Route::prefix('services')->name('services.')->group(function () {
             Route::get('/{room}', [ServiceController::class, 'index']);
@@ -269,11 +286,7 @@ Route::post('/staff/notifications/mark-as-read', function () {
 
 
 // Các route ngoài landlords
-Route::prefix('rooms')->group(function () {
-    Route::post('/{room}/contracts/preview', [RoomController::class, 'previewContract'])->name('contracts.preview');
-    Route::post('/{room}/contracts/confirm', [RoomController::class, 'confirmContract'])->name('contracts.confirm');
-    Route::get('/{room}', [RoomController::class, 'show2'])->name('show2');
-});
+
 
 // Admin
 Route::prefix('admin')->name('admin.')->group(function () {

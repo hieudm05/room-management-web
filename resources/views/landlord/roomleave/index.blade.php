@@ -209,8 +209,4 @@
         @endforelse
     </div>
 @endsection
-<<<<<<< HEAD
 
-
-=======
->>>>>>> 483a3e81cd1c275e67241250987e97165fb59796
