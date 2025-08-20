@@ -149,7 +149,7 @@ class LandLordComplaintController extends Controller
                 $complaint->user_id,
                 'Khiếu nại đã bị huỷ xử lý',
                 'Chủ trọ đã đánh dấu khiếu nại của bạn là huỷ bỏ.',
-                route('landlord.complaint.show', $complaint->id)
+                route('landlord.complaints.show', $complaint->id)
             );
         }
 

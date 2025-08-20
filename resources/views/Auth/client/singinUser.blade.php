@@ -10,6 +10,9 @@
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesbrand" name="author" />
     <link rel="shortcut icon" href="{{ asset('assets/admin/images/favicon.ico') }}">
+    <script src="sweetalert2.min.js"></script>
+<link rel="stylesheet" href="sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="{{ asset('assets/admin/js/layout.js') }}"></script>
     <link href="{{ asset('assets/admin/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
@@ -41,7 +44,7 @@
                                         width="200">
                                 </a>
                             </div>
-                        <p class="mt-1 fs-15 fw-medium">Webside quản lý phòng trọ</p>
+                        <p class="mt-1 fs-15 fw-medium">Website quản lý phòng trọ</p>
                         </div>
                     </div>
                 </div>
@@ -70,7 +73,14 @@
                                                 name="email" placeholder="Enter username"
                                                 value="{{ old('email') }}">
                                             @error('email')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            <script>
+                                                 Swal.fire({
+                                                    title: "The Internet?",
+                                                    text: "That thing is still around?",
+                                                    icon: "question"
+                                                    });
+                                            </script>
+                                                {{-- <div class="invalid-feedback">{{ $message }}</div> --}}
                                             @enderror
                                         </div>
 

@@ -16,9 +16,7 @@
         .gallery-side {
             position: relative;
             width: 200px;
-            /* Độ rộng cố định */
             height: 200px;
-            /* Chiều cao tối đa */
         }
 
         .gallery-side img {
@@ -44,9 +42,7 @@
 
         .gallery-side img:nth-child(2) {
             top: 20px;
-            /* Lệch xuống */
             left: 20px;
-            /* Lệch phải */
             z-index: 2;
         }
 
@@ -56,6 +52,25 @@
             z-index: 1;
         }
 
+        #map {
+            height: 400px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .nearby-posts {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .nearby-posts .property-item {
+            transition: background-color 0.2s;
+        }
+
+        .nearby-posts .property-item:hover {
+            background-color: #f8f9fa;
+        }
+
         @media (max-width: 768px) {
             .gallery-main img {
                 max-height: 250px;
@@ -63,12 +78,16 @@
 
             .gallery-side {
                 display: none;
-                /* Ẩn ở mobile */
+            }
+
+            #map {
+                height: 300px;
             }
         }
     </style>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 @endsection
-
 
 @section('content')
     <!-- Hero Gallery Section -->
@@ -79,7 +98,7 @@
                     <div class="gallery-main">
                         <a href="{{ asset('storage/' . $post->thumbnail) }}" class="mfp-gallery">
                             <img src="{{ asset('storage/' . $post->thumbnail) }}" alt="{{ $post->title }}"
-                                class="img-fluid rounded w-100 object-fit-cover main-image" loading="lazy">
+                                class="img-fluid rounded w-100 object-fit-cover" loading="lazy">
                         </a>
                     </div>
                 </div>
@@ -90,8 +109,8 @@
                         @endphp
                         @foreach ($galleryImages as $image)
                             <a href="{{ asset('storage/' . $image) }}" class="mfp-gallery">
-                                <img src="{{ asset('storage/' . $image) }}" alt="Gallery Image"
-                                    class="img-fluid rounded side-image" loading="lazy">
+                                <img src="{{ asset('storage/' . $image) }}" alt="Gallery Image" class="img-fluid rounded"
+                                    loading="lazy">
                             </a>
                         @endforeach
                     </div>
@@ -129,53 +148,46 @@
                 <!-- Main Content -->
                 <div class="col-lg-8 col-md-12">
                     <!-- About Property -->
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-light">
-                            <h4 class="mb-0">About {{ $post->title }}</h4>
+                    <div class="card mb-4 shadow-sm border-0 rounded-3">
+                        <div class="card-header bg-light border-0 rounded-top-3">
+                            <h4 class="mb-0 fw-semibold text-primary">Thông tin: {{ $post->title }}</h4>
                         </div>
                         <div class="card-body">
                             <ul class="list-unstyled">
-                                <li><strong>Category:</strong> {{ $post->category->name }}</li>
-                                <li><strong>Price:</strong> ${{ number_format($post->price, 2) }}</li>
-                                <li><strong>Area:</strong> {{ $post->area }} sqm</li>
-                                <li><strong>Address:</strong> {{ $post->address }}, {{ $post->ward }},
+                                <li><strong>Loại Danh Mục:</strong> {{ $post->category->name }}</li>
+                                <li><strong>Loại bất động sản:</strong> {{ $post->property->name ?? 'Không xác định' }}
+                                </li>
+
+                                <li><strong>Tiền Phòng/tháng:</strong> {{ number_format($post->price, 2) }} VND</li>
+                                <li><strong>Diện Tích:</strong> {{ $post->area }} m²</li>
+                                <li><strong>Địa Chỉ:</strong> {{ $post->address }}, {{ $post->ward }},
                                     {{ $post->district }}, {{ $post->city }}</li>
-                                <li>
-                                    <strong>Published At:</strong>
-                                    @if ($post->published_at)
-                                        {{ $post->published_at->format('M d, Y') }}
-                                    @else
-                                        Chưa xác định
-                                    @endif
+                                <li><strong>Ngày đăng:</strong>
+                                    {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Chưa xác định' }}
                                 </li>
-                                <li>
-                                    <strong>Expires At:</strong>
-                                    @if ($post->expired_at)
-                                        {{ $post->expired_at->format('M d, Y') }}
-                                    @else
-                                        Không giới hạn
-                                    @endif
-                                </li>
+                                <li><strong>Hết hạn:</strong>
+                                    {{ $post->expired_at ? $post->expired_at->format('M d, Y') : 'Không giới hạn' }}</li>
                             </ul>
                         </div>
                     </div>
 
+
+                    <!-- Description -->
                     <div class="card mb-4 shadow-sm border-0 rounded-3">
                         <div class="card-header bg-light border-0 rounded-top-3">
-                            <h4 class="mb-0 fw-semibold text-primary">Description</h4>
+                            <h4 class="mb-0 fw-semibold text-primary">Mô Tả</h4>
                         </div>
                         <div class="card-body p-4">
-                            <div class="description-content lh-lg text-muted">
+                            <div class="description-content lh-lg text-black">
                                 {!! $post->description !!}
                             </div>
                         </div>
                     </div>
 
-
                     <!-- Amenities -->
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-light">
-                            <h4 class="mb-0">Amenities</h4>
+                    <div class="card mb-4 shadow-sm border-0 rounded-3">
+                        <div class="card-header bg-light border-0 rounded-top-3">
+                            <h4 class="mb-0 fw-semibold text-primary">Tiện Nghi</h4>
                         </div>
                         <div class="card-body">
                             <ul class="amenities-list list-unstyled row row-cols-2 row-cols-md-3 g-3">
@@ -193,26 +205,29 @@
                     </div>
 
                     <!-- Reviews -->
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-light">
-                            <h4 class="mb-0">Reviews</h4>
+                    <div class="card mb-4 shadow-sm border-0 rounded-3">
+                        <div class="card-header bg-light border-0 rounded-top-3">
+                            <h4 class="mb-0 fw-semibold text-primary">Đánh Giá</h4>
                         </div>
                         <div class="card-body">
-                            <p>No reviews available yet. Be the first to share your experience!</p>
+                            <p>Chưa có đánh giá. Hãy chia sẻ trải nghiệm của bạn!</p>
                         </div>
                     </div>
 
                     <!-- Write a Review -->
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-light">
-                            <h4 class="mb-0">Write a Review</h4>
+                    <div class="card shadow-sm border-0 rounded-3">
+                        <div class="card-header bg-light border-0 rounded-top-3">
+                            <h4 class="mb-0 fw-semibold text-primary">Viết Đánh Giá</h4>
                         </div>
                         <div class="card-body">
-                            <div class="mb-3">
-                                <label for="reviewMessage" class="form-label">Your Review</label>
-                                <textarea id="reviewMessage" name="review" class="form-control" rows="5" placeholder="Share your thoughts..."></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary rounded-pill">Submit Review</button>
+                            <form action="#" method="POST">
+                                @csrf
+                                <div class="mb-3">
+                                    <label for="reviewMessage" class="form-label">Đánh giá của bạn</label>
+                                    <textarea id="reviewMessage" name="review" class="form-control" rows="5" placeholder="Viết đánh giá..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary rounded-pill w-100">Gửi Đánh Giá</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -220,14 +235,15 @@
                 <!-- Sidebar -->
                 <div class="col-lg-4 col-md-12">
                     <!-- Booking Widget -->
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-primary text-white">
-                            <h4 class="mb-0">${{ number_format($post->price, 2) }}</h4>
+                    <div class="card mb-4 shadow-sm border-0 rounded-3">
+                        <div class="card-header bg-primary text-white border-0 rounded-top-3">
+                            <h4 class="mb-0">{{ number_format($post->price, 2) }} VND/tháng</h4>
                         </div>
                         <div class="card-body">
                             <form action="{{ route('bookings') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="post_id" value="{{ $post->post_id }}">
+                                <input type="hidden" name="room_id" value="{{ $post->room_id }}">
                                 <div class="row g-3">
 
                                     <!-- Check In Date -->
@@ -343,7 +359,7 @@
         const picker = flatpickr(checkInInput, {
             dateFormat: "d/m/Y",
             minDate: "today",
-            defaultDate: "{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
+            defaultDate: @json(\Carbon\Carbon::today()->format('Y-m-d'))
         });
 
         calendarIcon.addEventListener('click', function() {
@@ -351,3 +367,4 @@
         });
     });
 </script>
+
