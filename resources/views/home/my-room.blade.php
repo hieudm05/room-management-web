@@ -70,8 +70,9 @@
                 </div>
             @endif
         @endif
-
-        <h4 class="mt-4">📄 Hóa đơn</h4>
+       
+                
+        <h4>📄 Hóa đơn</h4>
 
         @if ($bills->isEmpty())
             <p class="text-muted">Chưa có hóa đơn nào.</p>

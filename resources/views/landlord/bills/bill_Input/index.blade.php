@@ -60,7 +60,7 @@
         <div class="card shadow-sm">
             <div class="card-header bage-primary text-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">Hóa đơn tiền phòng</h4>
-                <form id="filter-form" action="{{ route('landlords.staff.payment.index') }}" method="GET"
+                <form id="filter-form" action="{{ route('landlords.payment.index') }}" method="GET"
                     class="d-flex align-items-center">
                     <label for="month" class="form-label text-white me-2">Chọn tháng:</label>
                     <input type="month" id="month" name="month" class="form-control me-2"
@@ -112,7 +112,7 @@
                                 <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}"
                                     id="room-{{ $item['room_id'] }}" role="tabpanel"
                                     aria-labelledby="room-{{ $item['room_id'] }}-tab">
-                                    <form action="{{ route('landlords.staff.payment.store', $item['room_id']) }}"
+                                    <form action="{{ route('landlords.payment.store', $item['room_id']) }}"
                                         method="POST" class="bill-form" data-room-id="{{ $item['room_id'] }}"
                                         enctype="multipart/form-data">
                                         @csrf
@@ -518,7 +518,7 @@
                                             <button type="submit" class="btn btn-success"
                                                 {{ $item['is_bill_locked'] ? 'disabled' : '' }}>Lưu hóa đơn phòng
                                                 {{ $item['room_name'] }}</button>
-                                            <a href="{{ route('landlords.staff.payment.exportExcel', [$item['room_id'], 'month' => $item['month']]) }}"
+                                            <a href="{{ route('landlords.payment.exportExcel', [$item['room_id'], 'month' => $item['month']]) }}"
                                                 class="btn btn-primary">Xuất Excel</a>
                                         </div>
                                     </form>

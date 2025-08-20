@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Landlord;
 
+use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Notification;
 use Illuminate\Http\Request;

@@ -3,6 +3,16 @@
 @section('title', 'Dashboard')
 
 @section('content')
+<style>
+    /* Áp dụng cho tất cả biểu đồ */
+    .chart-container {
+        height: 350px; /* chỉnh chiều cao mong muốn */
+    }
+    .chart-container canvas {
+        max-height: 100%;
+    }
+</style>
+
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-12">
@@ -10,7 +20,6 @@
             <p class="text-muted">Thống kê tổng hợp các tòa nhà bạn đang quản lý. Lọc dữ liệu theo tháng, quý, năm hoặc chọn tòa nhà để xem chi tiết.</p>
         </div>
     </div>
-
     <!-- Bộ lọc chung -->
     <div class="card mb-4 shadow-sm">
         <div class="card-header bg-info text-white">
@@ -73,53 +82,53 @@
                     <div class="text-muted">Phòng trống</div>
                 </div>
                 <div class="col-md-2 mb-3">
-                    <div class="fs-2 fw-bold summary-total-revenue">{{ number_format($total_revenue) }}</div>
-                    <div class="text-muted">Doanh thu</div>
-                </div>
-                <div class="col-md-2 mb-3">
-                    <div class="fs-2 fw-bold summary-total-profit">{{ number_format($total_profit) }}</div>
-                    <div class="text-muted">Lợi nhuận</div>
-                </div>
-                <div class="col-md-2 mb-3">
                     <div class="fs-2 fw-bold text-danger summary-total-complaints">{{ $total_complaints }}</div>
                     <div class="text-muted">Khiếu nại</div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="fs-2 fw-bold summary-total-revenue">{{ number_format($total_revenue) }}</div>
+                    <div class="text-muted">Doanh thu</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Biểu đồ phân tán -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <span>Biểu đồ phân tán: Doanh thu vs Lợi nhuận</span>
+     <div class="row g-3">
+        <div class="col-12 col-lg-6">
+            <div class="card mb-4 shadow-sm h-100">
+                 <div class="card-header bg-dark text-white">
+            <span>Biểu đồ doanh thu</span>
         </div>
         <div class="card-body">
-            <div id="scatterChartMessage" class="alert alert-warning d-none">Không có dữ liệu để hiển thị. Vui lòng chọn ít nhất một tòa nhà.</div>
-            <canvas id="scatterChart"></canvas>
+            <canvas id="tiktokRevenueChart"></canvas>
+        </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+    <!-- Biểu đồ phân tán -->
+            <div class="card mb-4 shadow-sm h-100">
+                   <div class="card-header bg-primary text-white">
+            <span>Biểu đồ phân tán: Doanh thu vs Số phòng</span>
+        </div>
+            <div class="card-body ">
+                <div id="scatterChartMessage" class="alert alert-warning d-none">Không có dữ liệu để hiển thị. Vui lòng chọn ít nhất một tòa nhà.</div>
+                <canvas id="scatterChart"></canvas>
+            </div>
+            </div>
         </div>
     </div>
+
 
     <!-- Biểu đồ cột nhóm -->
     <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-success text-white">
-            <span>Biểu đồ cột: So sánh Doanh thu và Lợi nhuận</span>
+        <div class="card-header bg-info text-white">
+            <span>Biểu đồ Thu - Chi</span>
         </div>
         <div class="card-body">
-            <div id="groupedBarChartMessage" class="alert alert-warning d-none">Không có dữ liệu để hiển thị. Vui lòng chọn ít nhất một tòa nhà.</div>
-            <canvas id="groupedBarChart"></canvas>
+            <canvas id="incomeExpenseChart"></canvas>
         </div>
     </div>
 
-    <!-- Biểu đồ xu hướng doanh thu và lợi nhuận -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-info text-white">
-            <span>Biểu đồ xu hướng: Doanh thu và Lợi nhuận theo thời gian</span>
-        </div>
-        <div class="card-body">
-            <div id="trendChartMessage" class="alert alert-warning d-none">Không có dữ liệu để hiển thị.</div>
-            <canvas id="trendChart"></canvas>
-        </div>
-    </div>
 
     <!-- Biểu đồ tổng quan phòng + khiếu nại -->
     <div class="row g-3">
@@ -128,7 +137,7 @@
                 <div class="card-header bg-success text-white">
                     <span>Biểu đồ tổng quan phòng</span>
                 </div>
-                <div class="card-body">
+                <div class="card-body chart-container">
                     <div id="roomOverviewChartMessage" class="alert alert-warning d-none">Không có dữ liệu để hiển thị.</div>
                     <canvas id="roomOverviewChart"></canvas>
                 </div>
@@ -152,7 +161,7 @@
         <div class="card-header bg-warning text-dark">
             <span>Biểu đồ tỉ lệ lấp đầy các tòa nhà</span>
         </div>
-        <div class="card-body">
+        <div class="card-body chart-container">
             <div id="occupancyChartMessage" class="alert alert-warning d-none">Không có dữ liệu để hiển thị.</div>
             <canvas id="occupancyChart"></canvas>
         </div>
@@ -174,16 +183,16 @@ $(document).ready(function() {
         }
     });
 
-    let scatterChart, groupedBarChart, trendChart, occupancyChart, roomChart, roomOverviewChart;
+    let scatterChart, groupedBarChart, trendChart, occupancyChart, roomChart, roomOverviewChart, tiktokRevenueChart, incomeExpenseChart;
 
-    // Biểu đồ phân tán
+    // Biểu đồ phân tán - thay đổi để hiển thị doanh thu vs số phòng
     function initScatterChart(properties) {
         const ctxScatter = document.getElementById('scatterChart').getContext('2d');
         if (scatterChart) scatterChart.destroy();
         const data = properties.map(property => ({
             x: property.revenue,
-            y: property.profit,
-            r: Math.max(5, property.total_rooms / 10),
+            y: property.total_rooms,
+            r: Math.max(5, property.rented_rooms / 2),
             name: property.name,
             occupancy_rate: property.total_rooms > 0 ? (property.rented_rooms / property.total_rooms) * 100 : 0,
         }));
@@ -211,13 +220,8 @@ $(document).ready(function() {
                         }
                     },
                     y: {
-                        title: { display: true, text: 'Lợi nhuận (VND)' },
+                        title: { display: true, text: 'Số phòng' },
                         beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return new Intl.NumberFormat('vi-VN').format(value);
-                            }
-                        }
                     }
                 },
                 plugins: {
@@ -225,7 +229,7 @@ $(document).ready(function() {
                         callbacks: {
                             label: function(context) {
                                 const d = context.raw;
-                                return `${d.name}: Doanh thu ${new Intl.NumberFormat('vi-VN').format(d.x)}, Lợi nhuận ${new Intl.NumberFormat('vi-VN').format(d.y)}, Tỷ lệ lấp đầy: ${d.occupancy_rate.toFixed(2)}%`;
+                                return `${d.name}: Doanh thu ${new Intl.NumberFormat('vi-VN').format(d.x)}, Số phòng ${d.y}, Tỷ lệ lấp đầy: ${d.occupancy_rate.toFixed(2)}%`;
                             }
                         }
                     }
@@ -234,28 +238,24 @@ $(document).ready(function() {
         });
     }
 
-    // Biểu đồ cột nhóm
-    function initGroupedBarChart(properties) {
-        const ctxBar = document.getElementById('groupedBarChart').getContext('2d');
-        if (groupedBarChart) groupedBarChart.destroy();
-        const labels = properties.map(p => p.name);
-        const revenueData = properties.map(p => p.revenue || 0);
-        const profitData = properties.map(p => p.profit || 0);
+    function initIncomeExpenseChart(labels, incomeData, expenseData) {
+        const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
+        if (incomeExpenseChart) incomeExpenseChart.destroy();
 
-        groupedBarChart = new Chart(ctxBar, {
+        incomeExpenseChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: labels, // mảng tên tòa nhà
                 datasets: [
                     {
-                        label: 'Doanh thu',
-                        data: revenueData,
-                        backgroundColor: '#ffca07',
+                        label: 'Thu (Income)',
+                        data: incomeData,
+                        backgroundColor: '#28a745'  // màu xanh lá
                     },
                     {
-                        label: 'Lợi nhuận',
-                        data: profitData,
-                        backgroundColor: '#28a745',
+                        label: 'Chi (Expense)',
+                        data: expenseData,
+                        backgroundColor: '#dc3545'  // màu đỏ
                     }
                 ]
             },
@@ -264,7 +264,6 @@ $(document).ready(function() {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        title: { display: true, text: 'Giá trị (VND)' },
                         ticks: {
                             callback: function(value) {
                                 return new Intl.NumberFormat('vi-VN').format(value);
@@ -277,7 +276,7 @@ $(document).ready(function() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${new Intl.NumberFormat('vi-VN').format(context.raw)}`;
+                                return `${context.dataset.label}: ${new Intl.NumberFormat('vi-VN').format(context.parsed.y)} VND`;
                             }
                         }
                     }
@@ -286,51 +285,59 @@ $(document).ready(function() {
         });
     }
 
-    // Biểu đồ xu hướng (Line Chart)
-    function initTrendChart(labels, revenueData, profitData) {
-        const ctxTrend = document.getElementById('trendChart').getContext('2d');
-        if (trendChart) trendChart.destroy();
-        trendChart = new Chart(ctxTrend, {
+    // Biểu đồ doanh thu
+    function initTiktokRevenueChart(data) {
+        const ctx = document.getElementById('tiktokRevenueChart').getContext('2d');
+
+        const labels = (data && data.labels) ? data.labels : [];
+        const revenue = (data && data.revenue) ? data.revenue.map(v => Number(v) || 0) : [];
+
+        if (window.tiktokRevenueChartInstance) {
+            window.tiktokRevenueChartInstance.destroy();
+        }
+
+        // guard: nếu không có dữ liệu, tạo chart rỗng tránh lỗi Math.max/Math.min
+        let maxVal = 0, minVal = 0;
+        if (revenue.length > 0) {
+            maxVal = Math.max(...revenue);
+            minVal = Math.min(...revenue);
+        }
+
+        window.tiktokRevenueChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [
-                    {
-                        label: 'Doanh thu',
-                        data: revenueData,
-                        borderColor: '#0d6efd',
-                        fill: false,
-                    },
-                    {
-                        label: 'Lợi nhuận',
-                        data: profitData,
-                        borderColor: '#28a745',
-                        fill: false,
-                    }
-                ]
+                datasets: [{
+                    label: 'Doanh thu (VND)',
+                    data: revenue,
+                    fill: false,
+                    borderColor: '#4bc0c0',
+                    backgroundColor: '#4bc0c0',
+                    tension: 0.3,
+                    pointBackgroundColor: revenue.map((v) => {
+                        if (v === maxVal) return 'red';
+                        if (v === minVal) return 'blue';
+                        return '#4bc0c0';
+                    })
+                }]
             },
             options: {
                 responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Giá trị (VND)' },
-                        ticks: {
-                            callback: function(value) {
-                                return new Intl.NumberFormat('vi-VN').format(value);
-                            }
-                        }
-                    },
-                    x: {
-                        title: { display: true, text: 'Thời gian' }
-                    }
-                },
                 plugins: {
-                    legend: { display: true },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${new Intl.NumberFormat('vi-VN').format(context.raw)}`;
+                                return `Doanh thu: ${new Intl.NumberFormat('vi-VN').format(context.parsed.y)} VND`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('vi-VN').format(value);
                             }
                         }
                     }
@@ -447,12 +454,11 @@ $(document).ready(function() {
             data: data,
             success: function(response) {
                 // Ẩn tất cả thông báo lỗi
-                $('#summaryMessage, #scatterChartMessage, #groupedBarChartMessage, #trendChartMessage, #occupancyChartMessage, #roomChartMessage, #roomOverviewChartMessage').addClass('d-none');
+                $('#summaryMessage, #scatterChartMessage, #trendChartMessage, #occupancyChartMessage, #roomChartMessage, #roomOverviewChartMessage').addClass('d-none');
 
                 if (!response.propertyStats || response.propertyStats.length === 0) {
-                    $('#scatterChartMessage, #groupedBarChartMessage, #trendChartMessage, #occupancyChartMessage, #roomChartMessage').removeClass('d-none');
+                    $('#scatterChartMessage, #trendChartMessage, #occupancyChartMessage, #roomChartMessage').removeClass('d-none');
                     if (scatterChart) scatterChart.destroy();
-                    if (groupedBarChart) groupedBarChart.destroy();
                     if (trendChart) trendChart.destroy();
                     if (occupancyChart) occupancyChart.destroy();
                     if (roomChart) roomChart.destroy();
@@ -465,25 +471,30 @@ $(document).ready(function() {
                     $('.summary-total-rented').text(response.summary.total_rented || 0);
                     $('.summary-total-empty').text(response.summary.total_empty || 0);
                     $('.summary-total-revenue').text(new Intl.NumberFormat('vi-VN').format(response.summary.total_revenue || 0));
-                    $('.summary-total-profit').text(new Intl.NumberFormat('vi-VN').format(response.summary.total_profit || 0));
                     $('.summary-total-complaints').text(response.summary.total_complaints || 0);
                 } else {
                     $('#summaryMessage').removeClass('d-none');
                 }
 
+                // Biểu đồ doanh thu
+                initTiktokRevenueChart(response.revenueChartData || {
+                    labels: [],
+                    revenue: []
+                });
+
                 // Biểu đồ phân tán
                 initScatterChart(response.propertyStats);
 
-                // Biểu đồ cột nhóm
-                initGroupedBarChart(response.propertyStats);
-
-                // Biểu đồ xu hướng
-                const labels = response.propertyStats.map(stat => stat.name);
-                const revenueData = response.propertyStats.map(stat => stat.revenue || 0);
-                const profitData = response.propertyStats.map(stat => stat.profit || 0);
-                initTrendChart(labels, revenueData, profitData);
+                // *** Biểu đồ Thu - Chi ***
+                const incomeExpenseStats = response.incomeExpenseStats || { labels: [], income: [], expense: [] };
+                initIncomeExpenseChart(
+                    incomeExpenseStats.labels,
+                    incomeExpenseStats.income,
+                    incomeExpenseStats.expense
+                );
 
                 // Biểu đồ tỉ lệ lấp đầy
+                const labels = response.propertyStats.map(stat => stat.name);
                 const occupancyData = response.propertyStats.map(stat => {
                     return stat.total_rooms > 0 ? (stat.rented_rooms / stat.total_rooms * 100).toFixed(2) : 0;
                 });
@@ -512,12 +523,7 @@ $(document).ready(function() {
     const initialPropertyStats = @json($propertyStats->toArray());
     if (initialPropertyStats.length > 0) {
         initScatterChart(initialPropertyStats);
-        initGroupedBarChart(initialPropertyStats);
-        initTrendChart(
-            initialPropertyStats.map(stat => stat.name),
-            initialPropertyStats.map(stat => stat.revenue || 0),
-            initialPropertyStats.map(stat => stat.profit || 0)
-        );
+        initTiktokRevenueChart(@json($revenueChartData));
         initOccupancyChart(
             initialPropertyStats.map(stat => stat.name),
             initialPropertyStats.map(stat => stat.total_rooms > 0 ? (stat.rented_rooms / stat.total_rooms * 100).toFixed(2) : 0)
@@ -526,9 +532,18 @@ $(document).ready(function() {
             initialPropertyStats.map(stat => stat.name),
             initialPropertyStats.map(stat => stat.complaints || 0)
         );
+        initIncomeExpenseChart(
+            @json($incomeExpenseStats['labels']),
+            @json($incomeExpenseStats['income']),
+            @json($incomeExpenseStats['expense'])
+        );
+
+        const total_rented = initialPropertyStats.reduce((sum, stat) => sum + (stat.rented_rooms || 0), 0);
+        const total_empty = initialPropertyStats.reduce((sum, stat) => sum + (stat.total_rooms - (stat.rented_rooms || 0)), 0); 
+        
         initRoomOverviewChart(@json($total_rented), @json($total_empty));
     } else {
-        $('#scatterChartMessage, #groupedBarChartMessage, #trendChartMessage, #occupancyChartMessage, #roomChartMessage').removeClass('d-none');
+        $('#scatterChartMessage, #trendChartMessage, #occupancyChartMessage, #roomChartMessage').removeClass('d-none');
     }
 
     // Tự động submit form khi tải trang

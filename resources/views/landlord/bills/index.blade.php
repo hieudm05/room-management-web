@@ -22,8 +22,10 @@
         </div>
 
         <button type="submit" class="btn btn-primary mr-2">🔍 Lọc</button>
-        <a href="{{ route('landlords.bills.export', ['month' => $month, 'status' => $status]) }}" class="btn btn-success">⬇️ Xuất Excel</a>
+       
     </form>
+    
+    <a href="{{ route('landlords.bills.exportproperty', ['month' => $month, 'status' => $status]) }}" class="btn btn-success">⬇️ Xuất Excel</a>
 
     @foreach ($properties as $property)
         <div class="card mb-4 shadow-sm">
