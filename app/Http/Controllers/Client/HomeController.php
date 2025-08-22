@@ -2,25 +2,165 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Models\Landlord\Property;
-use App\Http\Controllers\Controller;
-use App\Models\Landlord\RentalAgreement;
-use App\Models\Landlord\Room;
-use Illuminate\Support\Facades\Auth;
-use App\Models\UserInfo;
-use Illuminate\Support\Str;
-use App\Models\Landlord\PendingRoomUser;
-use App\Models\RoomUser;
-use Illuminate\Http\Request;
 use App\Models\User;
-use PhpOffice\PhpWord\IOFactory;
-use Illuminate\Support\Facades\DB;
+use App\Models\RoomUser;
+use App\Models\UserInfo;
 use App\Models\StaffPost;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\Landlord\Room;
+use PhpOffice\PhpWord\IOFactory;
+use App\Models\Landlord\Property;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use App\Models\Landlord\PendingRoomUser;
+use App\Models\Landlord\RentalAgreement;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class HomeController extends Controller
 {
-    public function renter()
+    /**
+     * Hiển thị trang chủ với form tìm kiếm
+     */
+private function removeVietnameseAccents($str)
+{
+    $str = preg_replace("/[àáạảãâầấậẩẫăằắặẳẵ]/u", "a", $str);
+    $str = preg_replace("/[èéẹẻẽêềếệểễ]/u", "e", $str);
+    $str = preg_replace("/[ìíịỉĩ]/u", "i", $str);
+    $str = preg_replace("/[òóọỏõôồốộổỗơờớợởỡ]/u", "o", $str);
+    $str = preg_replace("/[ùúụủũưừứựửữ]/u", "u", $str);
+    $str = preg_replace("/[ỳýỵỷỹ]/u", "y", $str);
+    $str = preg_replace("/[đ]/u", "d", $str);
+    return $str;
+}
+public function index(Request $request)
+{
+    $posts = $this->filterPosts($request)->latest()->paginate(10);
+    return view('home.render', compact('posts'));
+}
+
+    /**
+     * Xử lý tìm kiếm
+     */
+public function search(Request $request)
+{
+    // Lấy keyword và chuẩn hóa (giữ nguyên từ code cũ)
+    $keyword = trim(preg_replace('/\s+/', ' ', $request->input('keyword', '')));
+
+    // Tách keyword theo dấu phẩy
+    $parts = array_map('trim', explode(',', $keyword));
+
+    // Bắt đầu query
+    $query = StaffPost::query();
+
+    // --- Xử lý keyword ---
+    if ($request->filled('keyword')) {
+        \Log::info('KEYWORD PROCESSING:', [
+            'original' => $request->keyword,
+            'cleaned' => $keyword,
+            'parts' => $parts,
+            'parts_count' => count($parts)
+        ]);
+
+        $query->where(function ($q) use ($parts) {
+            foreach ($parts as $part) {
+                $partLower = strtolower($part);
+                $q->orWhereRaw('LOWER(title) LIKE ?', ["%{$partLower}%"])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ["%{$partLower}%"])
+                  ->orWhereRaw('LOWER(city) LIKE ?', ["%{$partLower}%"])
+                  ->orWhereRaw('LOWER(district) LIKE ?', ["%{$partLower}%"])
+                  ->orWhereRaw('LOWER(ward) LIKE ?', ["%{$partLower}%"]);
+            }
+        });
+    }
+
+    // --- Lọc theo giá (bỏ nhân *1000000 vì value đã là đồng) ---
+    if ($request->filled('price')) {
+        $raw = preg_replace('/[^0-9\-]/', '', $request->price);
+        if (!preg_match('/^\d+-\d+$/', $raw)) {
+            \Log::warning('INVALID PRICE FORMAT:', ['input' => $request->price]);
+        } else {
+            $parts = explode('-', $raw);
+            $numbers = array_map('intval', array_filter($parts, function($value) {
+                return trim($value) !== '';
+            }));
+
+            if (count($numbers) >= 2) {
+                $min = $numbers[0]; // Không nhân nữa
+                $max = $numbers[1]; // Không nhân nữa
+
+                if ($min > $max) {
+                    [$min, $max] = [$max, $min];
+                }
+
+                if ($min < 0 || $max < 0) {
+                    \Log::warning('NEGATIVE PRICE DETECTED:', ['min' => $min, 'max' => $max]);
+                } else {
+                    \Log::info('PRICE FILTER APPLIED:', [
+                        'min' => $min,
+                        'max' => $max,
+                        'min_formatted' => number_format($min) . ' VND',
+                        'max_formatted' => number_format($max) . ' VND'
+                    ]);
+
+                    $query->whereBetween('price', [$min, $max]);
+                }
+            } else {
+                \Log::warning('PRICE FILTER SKIPPED - Not enough numbers:', [
+                    'numbers' => $numbers,
+                    'count' => count($numbers)
+                ]);
+            }
+        }
+    }
+
+    // --- Lọc theo diện tích ---
+    if ($request->filled('area')) {
+        [$min, $max] = explode('-', $request->area);
+        $min = (int) $min;
+        $max = (int) $max;
+        \Log::info('AREA FILTER APPLIED:', ['min' => $min, 'max' => $max]);
+        $query->whereBetween('area', [$min, $max]);
+    }
+
+    // --- Lọc theo danh mục ---
+    if ($request->filled('category_id')) {
+        \Log::info('CATEGORY FILTER APPLIED:', ['category_id' => $request->category_id]);
+        $query->where('category_id', $request->category_id);
+    }
+
+    // --- Lọc theo đặc điểm (amenities) ---
+   if ($request->filled('amenities')) {
+    $amenities = array_filter($request->input('amenities', []));
+
+    if (!empty($amenities)) {
+        $query->whereHas('features', function ($q) use ($amenities) {
+            $q->whereIn('name', $amenities);
+        });
+    }
+    }
+    // Debug SQL query (không dùng echo, dùng Log để tránh hỏng output)
+    \Log::info('FINAL SQL QUERY:', [
+        'sql' => $query->toSql(),
+        'bindings' => $query->getBindings()
+    ]);
+
+    // Lấy kết quả với paginate và sắp xếp latest
+    $posts = $query->latest()->paginate(10);
+
+    return view('home.search', [
+        'posts' => $posts,
+        'keyword' => $keyword,
+    ]);
+}
+
+    /** =========================
+     *        RENTER
+     *  ========================= */
+    public function renter(Request $request)
     {
         $rooms = Room::latest()->paginate(6);
 
@@ -52,13 +192,15 @@ class HomeController extends Controller
             $currentPage,
             ['path' => request()->url(), 'query' => request()->query()]
         );
-
         return view('home.render', [
             'posts' => $pagedPosts,
             'rooms' => $rooms,
         ]);
     }
 
+    /** =========================
+     *        FAVORITES
+     *  ========================= */
     public function favorites()
     {
         $favorites = Auth::user()->favorites()->get();
@@ -83,6 +225,9 @@ class HomeController extends Controller
         }
     }
 
+    /** =========================
+     *        AGREEMENT
+     *  ========================= */
     public function StausAgreement()
     {
         $user = Auth::user();
@@ -114,7 +259,6 @@ class HomeController extends Controller
             ]);
         }
 
-        // Đọc file Word
         $text = '';
         try {
             $phpWord = IOFactory::load($fullPath);
@@ -129,7 +273,6 @@ class HomeController extends Controller
             $text = 'Không thể đọc file Word: ' . $e->getMessage();
         }
 
-        // Trích thông tin
         preg_match('/Họ tên:\s*(.*)/i', $text, $nameMatch);
         preg_match('/Email:\s*([^\s]+)/i', $text, $emailMatch);
 
@@ -143,6 +286,9 @@ class HomeController extends Controller
         ]);
     }
 
+    /** =========================
+     *        CREATE USER
+     *  ========================= */
     public function create(Request $request)
     {
         $roomId = $request->input('room_id');
@@ -162,18 +308,14 @@ class HomeController extends Controller
             'rental_id' => 'required|exists:rental_agreements,rental_id',
         ]);
 
-        RoomUser::create([
-            'room_id' => $validated['room_id'],
-            'name' => $validated['name'],
-            'phone' => $validated['phone'],
-            'cccd' => $validated['cccd'],
-            'email' => $validated['email'],
-            'rental_id' => $validated['rental_id'],
-        ]);
+        RoomUser::create($validated);
 
         return redirect()->back()->with('success', 'Đăng ký thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất có thể.');
     }
 
+    /** =========================
+     *        MY ROOM
+     *  ========================= */
     public function myRoom()
     {
         $user = Auth::user();
@@ -181,6 +323,9 @@ class HomeController extends Controller
         return view('home.my-room', compact('rooms'));
     }
 
+    /** =========================
+     *        STOP RENT
+     *  ========================= */
     public function stopRentForm()
     {
         $user = auth()->user();
@@ -191,7 +336,7 @@ class HomeController extends Controller
             ->first();
 
         if (!$rentalAgreement || !$rentalAgreement->room) {
-            return view('home.stopRentForm', ['roomUsers' => collect()]);
+            return view('home.roomleave.stopRentForm', ['roomUsers' => collect()]);
         }
 
         $roomUsers = RentalAgreement::with('renter')
@@ -199,7 +344,7 @@ class HomeController extends Controller
             ->where('is_active', true)
             ->get();
 
-        return view('home.stopRentForm', compact('roomUsers'));
+        return view('home.roomleave.stopRentForm', compact('roomUsers'));
     }
 
     public function stopUserRental(Request $request, $id)

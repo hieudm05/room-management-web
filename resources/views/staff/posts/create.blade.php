@@ -261,12 +261,14 @@
                 });
         </script>
 
-        {{-- Leaflet.js for Map --}}
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        {{-- VietMap GL JS --}}
+        <script src="https://unpkg.com/@vietmap/vietmap-gl-js@6.0.0/dist/vietmap-gl.js"></script>
+        <link href="https://unpkg.com/@vietmap/vietmap-gl-js@6.0.0/dist/vietmap-gl.css" rel="stylesheet" />
 
         {{-- JavaScript for Address Handling and Map Integration --}}
         <script>
+            const LOCATIONIQ_API_KEY = 'pk.b295bf761714d3877d8357f90389f9d8';
+            const VIET_MAP_API_KEY = '7430bfb21940bf6132cee938f854579ba86abc2ca55c3748';
             const provinceSelect = document.getElementById('province');
             const districtSelect = document.getElementById('district');
             const wardSelect = document.getElementById('ward');
@@ -276,11 +278,14 @@
             const latitudeInput = document.getElementById('latitude');
             const longitudeInput = document.getElementById('longitude');
 
-            // Initialize map
-            const map = L.map('map').setView([10.7769, 106.7009], 13); // Default: Ho Chi Minh City
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+            // Initialize VietMap GL JS
+            vietmapgl.accessToken = VIET_MAP_API_KEY;
+            const map = new vietmapgl.Map({
+                container: 'map',
+                style: `https://maps.vietmap.vn/maps/styles/tm/style.json?apikey=${VIET_MAP_API_KEY}`,
+                center: [106.7009, 10.7769], // Default: Ho Chi Minh City [lng, lat]
+                zoom: 13
+            });
 
             let marker = null;
 
@@ -310,11 +315,11 @@
                     .trim();
             }
 
-            // Fetch address from Nominatim
+            // Fetch address from LocationIQ (VietMap geocoding API not provided)
             async function fetchAddress(query) {
                 try {
                     const response = await fetch(
-                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=vn&addressdetails=1`
+                        `https://us1.locationiq.com/v1/search.php?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(query)}&format=json&countrycodes=vn&addressdetails=1`
                     );
                     return await response.json();
                 } catch (error) {
@@ -426,12 +431,13 @@
                 if (data.length > 0) {
                     const lat = parseFloat(data[0].lat);
                     const lon = parseFloat(data[0].lon);
-                    map.setView([lat, lon], data[0].importance < 0.3 ? 13 : 17);
+                    map.setCenter([lon, lat]);
+                    map.setZoom(data[0].importance < 0.3 ? 13 : 17);
 
                     if (marker) {
-                        marker.setLatLng([lat, lon]);
+                        marker.setLngLat([lon, lat]);
                     } else {
-                        marker = L.marker([lat, lon]).addTo(map);
+                        marker = new vietmapgl.Marker().setLngLat([lon, lat]).addTo(map);
                     }
 
                     // Update hidden inputs with latitude and longitude
@@ -446,13 +452,13 @@
 
             // Map click event for reverse geocoding
             map.on('click', async function(e) {
-                const lat = e.latlng.lat;
-                const lng = e.latlng.lng;
+                const lng = e.lngLat.lng;
+                const lat = e.lngLat.lat;
 
                 if (marker) {
-                    marker.setLatLng([lat, lng]);
+                    marker.setLngLat([lng, lat]);
                 } else {
-                    marker = L.marker([lat, lng]).addTo(map);
+                    marker = new vietmapgl.Marker().setLngLat([lng, lat]).addTo(map);
                 }
 
                 // Update hidden inputs with latitude and longitude
@@ -461,7 +467,7 @@
 
                 try {
                     const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&countrycodes=vn`
+                        `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${lat}&lon=${lng}&format=json&addressdetails=1&countrycodes=vn`
                     );
                     const data = await response.json();
                     if (data.address) {
@@ -475,9 +481,8 @@
                         } = data.address;
 
                         const provinceName = state || city || '';
-                        const province = provincesData.find(p =>
-                            normalizeName(p.name).includes(normalizeName(provinceName))
-                        );
+                        const province = provincesData.find(p => normalizeName(p.name).includes(normalizeName(
+                            provinceName)));
 
                         if (province) {
                             provinceSelect.value = province.name;
@@ -497,9 +502,8 @@
                                 districtSelect.appendChild(option);
                             });
 
-                            const district = districtData.districts.find(d =>
-                                normalizeName(d.name).includes(normalizeName(county))
-                            );
+                            const district = districtData.districts.find(d => normalizeName(d.name).includes(
+                                normalizeName(county)));
                             if (district) {
                                 districtSelect.value = district.name;
                                 wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
@@ -517,9 +521,8 @@
                                     wardSelect.appendChild(option);
                                 });
 
-                                const ward = wardData.wards.find(w =>
-                                    normalizeName(w.name).includes(normalizeName(suburb))
-                                );
+                                const ward = wardData.wards.find(w => normalizeName(w.name).includes(normalizeName(
+                                    suburb)));
                                 if (ward) {
                                     wardSelect.value = ward.name;
                                 }
@@ -573,12 +576,13 @@
                 if (data.length > 0) {
                     const lat = parseFloat(data[0].lat);
                     const lon = parseFloat(data[0].lon);
-                    map.setView([lat, lon], data[0].importance < 0.3 ? 13 : 17);
+                    map.setCenter([lon, lat]);
+                    map.setZoom(data[0].importance < 0.3 ? 13 : 17);
 
                     if (marker) {
-                        marker.setLatLng([lat, lon]);
+                        marker.setLngLat([lon, lat]);
                     } else {
-                        marker = L.marker([lat, lon]).addTo(map);
+                        marker = new vietmapgl.Marker().setLngLat([lon, lat]).addTo(map);
                     }
 
                     // Update hidden inputs with latitude and longitude
@@ -588,7 +592,7 @@
                     // Update form fields
                     try {
                         const addressResponse = await fetch(
-                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&countrycodes=vn`
+                            `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${lat}&lon=${lon}&format=json&addressdetails=1&countrycodes=vn`
                         );
                         const addressData = await addressResponse.json();
                         if (addressData.address) {
@@ -602,9 +606,8 @@
                             } = addressData.address;
 
                             const provinceName = state || city || '';
-                            const province = provincesData.find(p =>
-                                normalizeName(p.name).includes(normalizeName(provinceName))
-                            );
+                            const province = provincesData.find(p => normalizeName(p.name).includes(normalizeName(
+                                provinceName)));
 
                             if (province) {
                                 provinceSelect.value = province.name;
@@ -612,8 +615,7 @@
                                 wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
 
                                 const districtResponse = await fetch(
-                                    `https://provinces.open-api.vn/api/p/${province.code}?depth=2`
-                                );
+                                    `https://provinces.open-api.vn/api/p/${province.code}?depth=2`);
                                 const districtData = await districtResponse.json();
                                 districtsData[province.code] = districtData.districts;
                                 districtData.districts.forEach(district => {
@@ -624,16 +626,14 @@
                                     districtSelect.appendChild(option);
                                 });
 
-                                const district = districtData.districts.find(d =>
-                                    normalizeName(d.name).includes(normalizeName(county))
-                                );
+                                const district = districtData.districts.find(d => normalizeName(d.name).includes(
+                                    normalizeName(county)));
                                 if (district) {
                                     districtSelect.value = district.name;
                                     wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
 
                                     const wardResponse = await fetch(
-                                        `https://provinces.open-api.vn/api/d/${district.code}?depth=2`
-                                    );
+                                        `https://provinces.open-api.vn/api/d/${district.code}?depth=2`);
                                     const wardData = await wardResponse.json();
                                     wardsData[district.code] = wardData.wards;
                                     wardData.wards.forEach(ward => {
@@ -644,9 +644,8 @@
                                         wardSelect.appendChild(option);
                                     });
 
-                                    const ward = wardData.wards.find(w =>
-                                        normalizeName(w.name).includes(normalizeName(suburb))
-                                    );
+                                    const ward = wardData.wards.find(w => normalizeName(w.name).includes(normalizeName(
+                                        suburb)));
                                     if (ward) {
                                         wardSelect.value = ward.name;
                                     }
@@ -752,15 +751,14 @@
                             type: 'GET',
                             success: function(data) {
                                 console.log(data);
-                                
+
                                 // Kích hoạt dropdown phòng
                                 roomSelect.prop('disabled', false);
 
                                 // Thêm các phòng vào dropdown
                                 $.each(data.rooms, function(index, room) {
-                                    
                                     roomSelect.append('<option value="' + room.room_id +
-                                        '">' + room.room_id + '</option>');
+                                        '">' + room.room_number + '</option>');
                                 });
                             },
                             error: function() {
@@ -799,9 +797,19 @@
                 box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
             }
 
+            /* Green glow for filled inputs */
+            .form-control:not(:placeholder-shown):not([type="file"]),
+            .form-control[type="file"]:valid,
+            .form-select option[value]:not([value=""]):checked,
+            textarea.form-control:not(:empty) {
+                box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+                border-color: #00cc00;
+            }
+
             .form-check-input:checked {
-                background-color: #4facfe;
-                border-color: #4facfe;
+                background-color: #00cc00;
+                border-color: #00cc00;
+                box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
             }
 
             .card {
@@ -816,10 +824,6 @@
             #map {
                 border: 1px solid #e0e0e0;
                 border-radius: 0.5rem;
-            }
-
-            .leaflet-container {
-                background: #f8f9fa;
             }
         </style>
     @endsection

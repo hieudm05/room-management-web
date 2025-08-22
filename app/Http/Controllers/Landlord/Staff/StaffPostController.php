@@ -18,9 +18,17 @@ class StaffPostController extends Controller
     // Danh sách bài viết
     public function index()
     {
-        $posts = StaffPost::with(['category', 'features'])->orderBy('created_at', 'desc')->paginate(10);
+        $staffId = auth()->id(); // hoặc auth()->user()->id nếu dùng guard mặc định
+        // Nếu dùng guard riêng cho staff thì: auth('staff')->id()
+
+        $posts = StaffPost::with(['category', 'features'])
+            ->where('staff_id', $staffId)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
         return view('staff.posts.index', compact('posts'));
     }
+
 
     // Form tạo bài viết
     public function create()
@@ -56,6 +64,7 @@ class StaffPostController extends Controller
 
         $post = new StaffPost();
         $post->category_id = $request->category_id;
+        $post->post_by = auth()->id();
         $post->staff_id = auth()->id();
         $post->landlord_id = $request->landlord_id;
         $post->property_id = $request->property_id;
@@ -71,6 +80,7 @@ class StaffPostController extends Controller
         $post->latitude = $request->latitude;
         $post->longitude = $request->longitude;
         $post->description = $request->description;
+
 
         // Upload thumbnail
         if ($request->hasFile('thumbnail')) {

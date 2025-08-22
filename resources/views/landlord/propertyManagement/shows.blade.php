@@ -8,10 +8,6 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bage-primary text-white d-flex align-items-center justify-content-between">
                 <h3 class="card-title mb-0">{{ $property->name }}</h3>
-                <span
-                    class="badge fs-6 bg-{{ $property->status === 'Approved' ? 'success' : ($property->status === 'Pending' ? 'warning' : 'secondary') }}">
-                    {{ $property->status === 'Approved' ? 'Đã duyệt' : ($property->status === 'Pending' ? 'Chờ duyệt' : 'Tạm dừng') }}
-                </span>
             </div>
             <div class="card-body">
                 <div class="row align-items-center">

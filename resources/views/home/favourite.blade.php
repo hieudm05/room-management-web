@@ -44,14 +44,15 @@
                             {{-- Giá + Nút bỏ yêu thích --}}
                             <div class="d-flex justify-content-between align-items-center mt-2">
                                 <span class="text-success fw-bold">{{ number_format($price) }} VND / tháng</span>
-                                  <div class="d-flex gap-2">
-                                <form action="{{ route('home.favorites.toggle', $property->property_id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                                        ❤️ Bỏ yêu thích
-                                    </button>
-                                </form>
-                            </div>
+                                <div class="d-flex gap-2">
+                                    <form action="{{ route('home.favorites.toggle', $property->property_id) }}"
+                                        method="POST">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            ❤️ Bỏ yêu thích
+                                        </button>
+                                    </form>
+                                </div>
                                 <div class="d-flex gap-2">
                                     {{-- Nút xem chi tiết --}}
                                     @if ($firstRoom)

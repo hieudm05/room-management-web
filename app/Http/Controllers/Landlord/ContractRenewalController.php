@@ -10,13 +10,20 @@ class ContractRenewalController extends Controller
 {
 public function index()
 {
-   $renewals = ContractRenewal::with([
-        'room.currentAgreement', // lấy hợp đồng hiện tại của phòng
+    $renewals = ContractRenewal::with([
+        'room.currentAgreement',
         'room.staffs',
         'user'
     ])
-    ->whereHas('room.staffs', function ($query) {
-        $query->where('users.id', auth()->id());
+    ->where(function ($query) {
+        $query->whereHas('room.staffs', function ($q) {
+            // Trường hợp là nhân viên phụ trách
+            $q->where('users.id', auth()->id());
+        })
+        ->orWhereHas('room.currentAgreement', function ($q) {
+            // Trường hợp là chủ trọ của hợp đồng hiện tại
+            $q->where('landlord_id', auth()->id());
+        });
     })
     ->where('status', 'pending')
     ->latest()

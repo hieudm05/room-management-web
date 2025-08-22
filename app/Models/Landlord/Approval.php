@@ -37,11 +37,6 @@ class Approval extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-
-
-    /**
-     * Phòng trọ liên quan đến yêu cầu.
-     */
     public function room()
     {
         return $this->belongsTo(Room::class, 'room_id', 'room_id');

@@ -47,6 +47,8 @@ class StaffPost extends Model
         'approved_by',
         'approved_at',
         'rejected_reason',
+        'latitude',
+        'longitude',
         'is_public', // New field added
     ];
 

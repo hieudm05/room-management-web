@@ -10,17 +10,17 @@ use Illuminate\Support\Facades\DB;
 class PostController extends Controller
 {
 
-
    public function show(StaffPost $post)
 {
     if ($post->status != 1 || !$post->is_public || ($post->room && $post->room->is_contract_locked)) {
-        abort(404);
+        $post->load(['category', 'features', 'property']);
+        // dd($post);
+        return view('home.detailPost', compact('post'));
     }
 
     $post->load(['category', 'features', 'property', 'room']);
     return view('home.detailPost', compact('post'));
 }
-
 
     public function suggestNearby(Request $request)
     {
