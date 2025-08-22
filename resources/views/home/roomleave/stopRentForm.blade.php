@@ -302,7 +302,6 @@
                                     @endforeach
                                 </select>
                             </div>
-                 
                             <label for="leave_date" class="form-label mt-3">📅 Ngày áp dụng</label>
                             <input type="date" name="leave_date" id="leave_date" class="form-control" required
                                 min="{{ now()->toDateString() }}" value="{{ old('leave_date') }}">
@@ -440,7 +439,7 @@ transferTarget.style.display = transferOption.checked ? 'block' : 'none';
 
     toggleFields();
 });
-    
+
         </script>
     @endif
 

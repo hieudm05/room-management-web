@@ -19,6 +19,9 @@
                 <a href="{{ route('landlords.staff.deposit.form', $room) }}" class="btn btn-outline-success">
                     💰 Đặt cọc
                 </a>
+                <a href="{{ route('landlords.staff.contract.form', $room) }}" class="btn btn-outline-warning">
+                    📝 Điền form thông tin
+                </a>
             </div>
             <div>
                 {{-- Nội dung chi tiết từng phần sẽ render ở đây --}}
