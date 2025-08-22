@@ -4,24 +4,6 @@
 
 @section('content')
 
-    {{-- ✅ Thông báo lỗi khi xóa phòng có hợp đồng với khách thuê --}}
-    @if ($errors->has('delete'))
-        <script>
-            window.onload = function() {
-                alert("{{ $errors->first('delete') }}");
-            };
-        </script>
-    @endif
-
-    {{-- ✅ Thông báo khi thao tác thành công --}}
-    {{-- @if (session('success'))
-        <script>
-            window.onload = function() {
-                alert("{{ session('success') }}");
-            };
-        </script>
-    @endif --}}
-
     <div class="col-xl-12">
         <div class="card mb-3">
             <div class="card-body">
@@ -35,6 +17,7 @@
                                 placeholder="Tên phòng, khu trọ, tiện nghi..." value="{{ request('search') }}">
                         </div>
                     </div>
+
                     {{-- Lọc theo khu trọ --}}
                     <div class="col-md-3">
                         <label class="form-label fw-bold">Khu trọ</label>
@@ -47,27 +30,20 @@
                                 </option>
                             @endforeach
                         </select>
-
                     </div>
 
-                    {{-- Lọc theo giá cố định --}}
+                    {{-- Lọc giá cố định --}}
                     <div class="col-md-3">
                         <label class="form-label fw-bold">Mức giá</label>
                         <select name="price_range" class="form-select">
                             <option value="">-- Chọn mức giá --</option>
-                            <option value="0-1000000" {{ request('price_range') == '0-1000000' ? 'selected' : '' }}>
-                                Dưới 1 triệu
-                            </option>
+                            <option value="0-1000000" {{ request('price_range') == '0-1000000' ? 'selected' : '' }}>Dưới 1
+                                triệu</option>
                             <option value="1000000-3000000"
-                                {{ request('price_range') == '1000000-3000000' ? 'selected' : '' }}>
-                                1 - 3 triệu
-                            </option>
+                                {{ request('price_range') == '1000000-3000000' ? 'selected' : '' }}>1 - 3 triệu</option>
                             <option value="3000000-5000000"
-                                {{ request('price_range') == '3000000-5000000' ? 'selected' : '' }}>
-                                3 - 5 triệu
-                            </option>
-                            <option value="5000000" {{ request('price_range') == '5000000' ? 'selected' : '' }}>
-                                Trên 5 triệu
+                                {{ request('price_range') == '3000000-5000000' ? 'selected' : '' }}>3 - 5 triệu</option>
+                            <option value="5000000" {{ request('price_range') == '5000000' ? 'selected' : '' }}>Trên 5 triệu
                             </option>
                         </select>
                     </div>
@@ -78,7 +54,6 @@
                         <input type="number" name="price_min" class="form-control" value="{{ request('price_min') }}"
                             placeholder="Tối thiểu">
                     </div>
-
                     <div class="col-md-2">
                         <label class="form-label fw-bold">Đến giá (VNĐ)</label>
                         <input type="number" name="price_max" class="form-control" value="{{ request('price_max') }}"
@@ -96,10 +71,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between">
                 <h4 class="card-title mb-0">📋Danh sách phòng</h4>
-                <a href="{{ route('landlords.rooms.create') }}" class="btn btn-success">
-                    ➕ Thêm phòng mới
-                </a>
-
+                <a href="{{ route('landlords.rooms.create') }}" class="btn btn-success">➕ Thêm phòng mới</a>
             </div>
 
             <div class="card-body">
@@ -147,7 +119,6 @@
                                             @foreach ($room->services->take(2) as $service)
                                                 <span class="badge bg-secondary">{{ $service->name }}</span>
                                             @endforeach
-
                                             @if ($room->services->count() > 2)
                                                 <span
                                                     class="badge bg-light text-dark">+{{ $room->services->count() - 2 }}</span>
@@ -164,7 +135,6 @@
                                             <span class="text-muted">Chưa có ảnh</span>
                                         @endif
                                     </td>
-
                                     <td>
                                         @forelse ($room->staffs as $staff)
                                             <span class="badge bg-info">{{ $staff->name }}</span>
@@ -174,6 +144,7 @@
                                     </td>
 
                                     <td>
+                                        {{-- Các nút thao tác --}}
                                         <a href="{{ route('landlords.rooms.edit', $room) }}"
                                             class="btn btn-sm btn-outline-primary">✏️</a>
                                         <a href="{{ route('landlords.rooms.show', $room) }}"
@@ -190,23 +161,115 @@
                                             class="btn btn-sm btn-outline-info">👤</a>
 
                                         <div class="d-flex gap-1 mt-1">
-                                            @if ($room->currentAgreementValid && !$room->is_contract_locked)
-                                                <form action="{{ route('landlords.rooms.lockContract', $room) }}"
-                                                    method="POST"
-                                                    onsubmit="return confirm('Bạn có chắc chắn muốn khóa hợp đồng phòng này không?');">
+                                            @if (!$room->is_contract_locked)
+                                                {{-- Khóa phòng --}}
+                                                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#lockRoomModal{{ $room->room_id }}">🔒</button>
+                                            @else
+                                                {{-- Mở khóa phòng --}}
+                                                <form action="{{ route('landlords.rooms.unlock', $room) }}" method="POST"
+                                                    onsubmit="return confirm('Bạn có chắc chắn muốn mở khóa phòng này không?');">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-danger btn-sm">🔒</button>
+                                                    <button type="submit" class="btn btn-success btn-sm">🔓</button>
                                                 </form>
                                             @endif
+
+                                            {{-- Chuyển phòng --}}
+                                            @if ($room->currentAgreementValid)
+                                                <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#moveRoomModal{{ $room->room_id }}">🔄</button>
+                                            @endif
+
+
+                                            {{-- Thống kê --}}
                                             <a href="{{ route('landlords.rooms.statistics', $room) }}"
                                                 class="btn btn-sm btn-outline-secondary">📊</a>
                                         </div>
 
-                                    </td>
+                                        {{-- Modal Khóa phòng --}}
+                                        <div class="modal fade" id="lockRoomModal{{ $room->room_id }}" tabindex="-1"
+                                            aria-labelledby="lockRoomLabel{{ $room->room_id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form action="{{ route('landlords.rooms.lock', $room) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title"
+                                                                id="lockRoomLabel{{ $room->room_id }}">Khóa phòng
+                                                                {{ $room->room_number }}</h5>
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <label for="lock_reason_{{ $room->room_id }}"
+                                                                class="form-label">Nhập lý do khóa:</label>
+                                                            <textarea id="lock_reason_{{ $room->room_id }}" class="form-control" name="lock_reason" required rows="3"
+                                                                placeholder="Ví dụ: Phòng cần sửa chữa, bảo trì..."></textarea>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">Hủy</button>
+                                                            <button type="submit" class="btn btn-danger">Xác nhận
+                                                                khóa</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Modal Chuyển Phòng -->
+                                        @if ($room->currentAgreementValid)
+                                            <div class="modal fade" id="moveRoomModal{{ $room->room_id }}"
+                                                tabindex="-1" aria-labelledby="moveRoomLabel{{ $room->room_id }}"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <form action="{{ route('landlords.rooms.move', $room) }}"
+                                                            method="POST">
+                                                            @csrf
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title"
+                                                                    id="moveRoomLabel{{ $room->room_id }}">
+                                                                    Chuyển phòng {{ $room->room_number }}
+                                                                </h5>
+                                                                <button type="button" class="btn-close"
+                                                                    data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <label for="new_room_{{ $room->room_id }}"
+                                                                    class="form-label">Chọn phòng mới:</label>
+                                                                <select name="new_room_id"
+                                                                    id="new_room_{{ $room->room_id }}"
+                                                                    class="form-select" required>
+                                                                    <option value="">-- Chọn phòng mới --</option>
+                                                                    @foreach ($availableRooms as $availableRoom)
+                                                                        @if ($availableRoom->room_id != $room->room_id && !$availableRoom->currentAgreementValid)
+                                                                            <option value="{{ $availableRoom->room_id }}">
+                                                                                {{ $availableRoom->property->name ?? '' }}
+                                                                                -
+                                                                                {{ $availableRoom->room_number }}
+                                                                                ({{ number_format($availableRoom->rental_price) }}
+                                                                                VND)
+                                                                            </option>
+                                                                        @endif
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-bs-dismiss="modal">Hủy</button>
+                                                                <button type="submit" class="btn btn-warning">Xác nhận
+                                                                    chuyển</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="10" class="text-center text-muted">Không có phòng nào.</td>
+                                    <td colspan="11" class="text-center text-muted">Không có phòng nào.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -236,21 +299,20 @@
             });
         </script>
     @endsection
+
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+        @if (session('success'))
+            <script>
+                Swal.fire({
+                    title: "Thành công!",
+                    text: "{{ session('success') }}",
+                    icon: "success",
+                    confirmButtonText: "OK"
+                });
+            </script>
+        @endif
+    @endpush
+
 @endsection
-
-@push('scripts')
-    {{-- SweetAlert2 CDN (chỉ cần nếu layout chưa có) --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    {{-- Hiển thị thông báo SweetAlert2 nếu có --}}
-    @if(session('success'))
-        <script>
-            Swal.fire({
-                title: "Thành công!",
-                text: "{{ session('success') }}",
-                icon: "success",
-                confirmButtonText: "OK"
-            });
-        </script>
-    @endif
-@endpush

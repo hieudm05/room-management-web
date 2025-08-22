@@ -160,7 +160,10 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/', [RoomController::class, 'index'])->name('index');
         Route::get('/create', [RoomController::class, 'create'])->name('create');
         Route::post('/store', [RoomController::class, 'store'])->name('store');
-        Route::post('/{room}/lock', [RoomController::class, 'lockContract'])->name('lockContract');
+        // Khóa phòng
+        Route::post('/{room}/lock', [RoomController::class, 'lockRoom'])->name('lock');
+        // Mở khóa phòng
+        Route::post('/{room}/unlock', [RoomController::class, 'unlockRoom'])->name('unlock');
         // thống kê biểu đồ phòng
         Route::get('/{room}/statistics', [RoomBillController::class, 'showRoomStatistics'])->name('statistics');
         Route::get('/{room}/compare-months', [RoomBillController::class, 'compareMonths'])->name('compareMonths');
@@ -181,6 +184,8 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::post('/room-users/{id}/suscess', [RoomController::class, 'ConfirmAllUser'])->name('room_users.suscess');
         Route::get('/{room}/staffs', [RoomStaffController::class, 'edit'])->name('staffs.edit');
         Route::post('/{room}/staffs', [RoomStaffController::class, 'update'])->name('staffs.update');
+        // chuyển phòng
+        Route::post('/{room}/move', [RoomController::class, 'move'])->name('move');
     });
 
     // Staff quản lý phòng
@@ -302,7 +307,10 @@ Route::prefix('room-users')->name('room-users.')->group(function () {
     Route::post('/{id}/stop', [HomeController::class, 'stopUserRental'])->name('stop');
 });
 
-
+Route::prefix('client')->name('client.')->middleware(['auth'])->group(function () {
+    Route::get('/rooms/{room}/join/{agreement?}', [\App\Http\Controllers\Client\RoomJoinController::class, 'join'])
+        ->name('rooms.join');
+});
 
 // Profile
 Route::middleware(['auth'])->group(function () {

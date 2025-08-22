@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Landlord;
 
 use App\Http\Controllers\Controller;
+use App\Mail\RoomJoinSuccessNotification;
+use App\Mail\RoomUpdatedNotification;
+use App\Mail\TenantMovedNotification;
 use App\Models\Landlord\Facility;
 use App\Models\Landlord\Property;
 use App\Models\Landlord\Room;
@@ -12,6 +15,7 @@ use App\Models\Landlord\Service;
 use App\Models\RentalAgreement;
 use App\Models\RoomUser;
 use App\Models\User;
+use App\Models\UserInfo;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +29,6 @@ use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\TemplateProcessor;
 use PhpOffice\PhpWord\Writer\HTML;
 use Smalot\PdfParser\Parser;
-use App\Mail\RoomUpdatedNotification;
 
 
 
@@ -33,76 +36,77 @@ class RoomController extends Controller
 {
     public function index(Request $request)
     {
+        // 1️⃣ Truy vấn cơ bản với eager load
         $query = Room::with([
             'facilities',
             'property',
             'photos',
             'services',
             'staffs',
-            'currentAgreement.renter.info', // cần eager load luôn để show thông tin người thuê nếu có
-        ])
-            ->withCount('facilities')
-            ->orderBy('created_at', 'desc');
+            'rentalAgreements',
+        ])->orderBy('created_at', 'desc');
 
-        // 🔍 Tìm kiếm
+        // 2️⃣ Tìm kiếm
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('room_number', 'LIKE', "%{$search}%")
-                    ->orWhereHas('property', function ($q2) use ($search) {
-                        $q2->where('name', 'LIKE', "%{$search}%");
-                    })
-                    ->orWhereHas('facilities', function ($q3) use ($search) {
-                        $q3->where('name', 'LIKE', "%{$search}%");
-                    })
+                    ->orWhereHas('property', fn($q2) => $q2->where('name', 'LIKE', "%{$search}%"))
+                    ->orWhereHas('facilities', fn($q3) => $q3->where('name', 'LIKE', "%{$search}%"))
                     ->orWhere('rental_price', 'LIKE', "%{$search}%")
                     ->orWhere('area', 'LIKE', "%{$search}%");
             });
         }
 
-        // 🔍 Lọc theo khu trọ
+        // 3️⃣ Lọc theo khu trọ
         if ($propertyId = $request->input('property_id')) {
             $query->where('property_id', $propertyId);
         }
 
-        // 🔍 Lọc theo giá cố định từ dropdown
+        // 4️⃣ Lọc theo giá cố định từ dropdown
         if ($range = $request->input('price_range')) {
             if (str_contains($range, '-')) {
                 [$min, $max] = explode('-', $range);
-                $query->whereBetween('rental_price', [(int) $min, (int) $max]);
+                $query->whereBetween('rental_price', [(int)$min, (int)$max]);
             } elseif (is_numeric($range)) {
-                $query->where('rental_price', '>', (int) $range);
+                $query->where('rental_price', '>', (int)$range);
             }
         }
 
-        // 🔍 Lọc theo giá nhập tay
+        // 5️⃣ Lọc theo giá nhập tay
         if ($request->filled('price_min')) {
             $query->where('rental_price', '>=', $request->input('price_min'));
         }
-
         if ($request->filled('price_max')) {
             $query->where('rental_price', '<=', $request->input('price_max'));
         }
 
-        // Lấy danh sách phòng
+        // 6️⃣ Lấy danh sách phòng phân trang
         $rooms = $query->paginate(8);
 
-        // ✅ Đánh dấu phòng có hợp đồng hợp lệ để hiển thị nút khóa hợp đồng
-        foreach ($rooms as $room) {
-            $status = $room->currentAgreement->status ?? null;
-            $room->currentAgreementValid = in_array($status, ['Active', 'Signed']);
-        }
+        // 7️⃣ Gán flag kiểm tra hợp đồng Active/Signed
+        $rooms->load('rentalAgreements'); // tránh n+1 query
+        $rooms->each(fn($room) => $room->currentAgreementValidFlag = $room->currentAgreementValid ? true : false);
 
-        // Tất cả khu trọ để filter
-        $allProperties = \App\Models\Landlord\Property::all();
+        // 8️⃣ Lấy tất cả khu trọ để filter
+        $allProperties = Property::all();
 
-        return view('landlord.rooms.index', compact('rooms', 'allProperties'));
+        // 9️⃣ Lấy danh sách phòng trống để chuyển phòng
+        $availableRooms = Room::where('is_contract_locked', false)
+            ->whereDoesntHave('rentalAgreements', function ($q) {
+                $q->whereIn('status', [RentalAgreement::STATUS_ACTIVE, RentalAgreement::STATUS_SIGNED]);
+            })
+            ->get();
+
+        // 10️⃣ Trả về view
+        return view('landlord.rooms.index', compact('rooms', 'allProperties', 'availableRooms'));
     }
+
 
     public function create()
     {
         $properties = Property::all();
         $facilities = Facility::where('name', '!=', 'Thang máy')->get();
-         $services = Service::where('is_hidden', false)->get();
+        $services = Service::where('is_hidden', false)->get();
 
         return view('landlord.rooms.create', compact('facilities', 'properties', 'services'));
     }
@@ -619,6 +623,58 @@ class RoomController extends Controller
     }
 
 
+    // public function confirmContract(Request $request, Room $room)
+    // {
+    //     if ($room->is_contract_locked) {
+    //         return back()->withErrors(['contract_locked' => 'Phòng này đã bị khóa hợp đồng. Không thể xác nhận hợp đồng.']);
+    //     }
+
+    //     $user = Auth::user();
+    //     $tenantName  = $request->input('tenant_name');
+    //     $tenantEmail = $request->input('tenant_email');
+    //     $tenantPhone = $request->input('tenant_phone');   // ✅ huy thêm
+    //     $tenantCccd  = $request->input('tenant_cccd');    // ✅ huy thêm
+    //     $tempPath = $request->input('temp_path');
+
+    //     // 1. Di chuyển file
+    //     $newPath = 'contracts/word/' . basename($tempPath);
+    //     Storage::disk('public')->move($tempPath, $newPath);
+
+    //     // 2. Tạo mới hợp đồng
+    //     $agreement = new RentalAgreement();
+    //     $agreement->room_id = $room->room_id;
+    //     $agreement->renter_id = $user->id;
+    //     $agreement->status = 'Pending';
+    //     $agreement->start_date = now();
+    //     $agreement->end_date = now()->addMonths(12);
+    //     $agreement->contract_file = $newPath;
+
+    //     // ✅ thêm: lưu thông tin bên B vào hợp đồng
+    //     $agreement->full_name = $tenantName;
+    //     $agreement->email     = $tenantEmail;
+    //     $agreement->phone     = $tenantPhone;
+    //     $agreement->cccd      = $tenantCccd;
+
+    //     $agreement->save();
+
+    //     // ✅ Sau khi tạo hợp đồng, lưu thông tin vào user_infos
+    //     $userInfo = \App\Models\UserInfo::firstOrNew(['user_id' => $user->id]);
+    //     $userInfo->full_name = $tenantName;
+    //     $userInfo->email     = $tenantEmail;
+    //     $userInfo->phone     = $tenantPhone;   // ✅ huy thêm
+    //     $userInfo->cccd      = $tenantCccd;    // ✅ huy thêm
+    //     $userInfo->room_id   = $room->room_id;
+    //     $userInfo->save();
+
+    //     // 3. Cập nhật lại thông tin phòng
+    //     $room->id_rental_agreements = $agreement->rental_id;
+    //     $room->people_renter = $request->input('number_of_people', 0);
+    //     $room->occupants = $request->input('max_number_of_people', 0);
+    //     $room->save();
+
+    //     return redirect()->route('show2', $room)->with('success', 'Hợp đồng mới đã được tạo và phòng đã được cập nhật!');
+    // }
+
     public function confirmContract(Request $request, Room $room)
     {
         if ($room->is_contract_locked) {
@@ -626,38 +682,71 @@ class RoomController extends Controller
         }
 
         $user = Auth::user();
-        $tenantName = $request->input('tenant_name');
-        $tenantEmail = $request->input('tenant_email');
         $tempPath = $request->input('temp_path');
 
-        // 1. Di chuyển file
+        // 1. Di chuyển file sang thư mục lưu trữ chính thức
         $newPath = 'contracts/word/' . basename($tempPath);
         Storage::disk('public')->move($tempPath, $newPath);
 
-        // 2. Tạo mới hợp đồng
+        // 2. Parse PDF để lấy thông tin Bên B (người thuê)
+        $tenantName = $tenantEmail = $tenantPhone = $tenantCccd = '';
+        try {
+            $parser = new \Smalot\PdfParser\Parser();
+            $pdf = $parser->parseFile(storage_path('app/public/' . $newPath));
+            $text = mb_convert_encoding($pdf->getText(), 'UTF-8', 'auto');
+
+            if (preg_match('/BÊN THUÊ PHÒNG TRỌ.*?:\s*(.*?)(?:Căn cứ pháp lý|BÊN CHO THUÊ)/siu', $text, $match)) {
+                $infoBlock = $match[1];
+
+                preg_match('/- Ông\/Bà:\s*(.+)/u', $infoBlock, $nameMatch);
+                preg_match('/- CMND\/CCCD số:\s*([0-9]+)/u', $infoBlock, $cccdMatch);
+                preg_match('/- SĐT:\s*([0-9]+)/u', $infoBlock, $phoneMatch);
+                preg_match('/- Email:\s*([^\s]+)/iu', $infoBlock, $emailMatch);
+
+                $tenantName  = $nameMatch[1] ?? '';
+                $tenantCccd  = $cccdMatch[1] ?? '';
+                $tenantPhone = $phoneMatch[1] ?? '';
+                $tenantEmail = $emailMatch[1] ?? '';
+            }
+        } catch (\Exception $e) {
+            // Nếu parse lỗi thì để trống, tránh crash
+        }
+
+        // 3. Tạo mới hợp đồng
         $agreement = new RentalAgreement();
         $agreement->room_id = $room->room_id;
-        $agreement->renter_id = $user->id;
+        $agreement->renter_id = $user->id; // ai tạo thì gắn tạm, sau khi parse xong có thể cập nhật lại
         $agreement->status = 'Pending';
         $agreement->start_date = now();
         $agreement->end_date = now()->addMonths(12);
         $agreement->contract_file = $newPath;
-        $agreement->save(); // Lúc này $agreement->id đã có
-        // ✅ Sau khi tạo hợp đồng, lưu thông tin vào user_infos
+
+        // ✅ lưu thông tin người thuê lấy từ PDF
+        $agreement->full_name = $tenantName;
+        $agreement->email     = $tenantEmail;
+        $agreement->phone     = $tenantPhone;
+        $agreement->cccd      = $tenantCccd;
+
+        $agreement->save();
+
+        // 4. Lưu thêm vào user_infos
         $userInfo = \App\Models\UserInfo::firstOrNew(['user_id' => $user->id]);
         $userInfo->full_name = $tenantName;
-        $userInfo->email = $tenantEmail;
-        $userInfo->room_id = $room->room_id;
+        $userInfo->email     = $tenantEmail;
+        $userInfo->phone     = $tenantPhone;
+        $userInfo->cccd      = $tenantCccd;
+        $userInfo->room_id   = $room->room_id;
         $userInfo->save();
 
-        // 3. Cập nhật lại thông tin phòng
+        // 5. Cập nhật lại thông tin phòng
         $room->id_rental_agreements = $agreement->rental_id;
         $room->people_renter = $request->input('number_of_people', 0);
         $room->occupants = $request->input('max_number_of_people', 0);
         $room->save();
 
-        return redirect()->route('show2', $room)->with('success', 'Hợp đồng mới đã được tạo và phòng đã được cập nhật!');
+        return redirect()->route('show2', $room)->with('success', '✅ Hợp đồng mới đã được tạo từ file và phòng đã được cập nhật!');
     }
+
 
     public function formShowContract(Request $request)
     {
@@ -728,66 +817,91 @@ class RoomController extends Controller
 
     public function confirmStatusRentalAgreement(Request $request)
     {
+        // ✅ Validate input
+        $request->validate([
+            'rental_id'   => 'required|exists:rental_agreements,rental_id',
+            'tenant_name' => 'required|string|max:255',
+            'tenant_email' => 'required|email',
+            'tenant_phone' => 'required|string|max:20',
+            'tenant_cccd' => 'required|string|max:20',
+            'occupants'   => 'nullable|integer|min:0',
+            'people_renter' => 'nullable|integer|min:0',
+        ]);
 
         // 1. Lấy thông tin từ request
-        $rentalId = $request->input('rental_id');
-        $tenantName = $request->input('tenant_name');
-        $tenantEmail = $request->input('tenant_email');
-        $occupants = $request->input('occupants', 0);
+        $rentalId     = $request->input('rental_id');
+        $tenantName   = $request->input('tenant_name');
+        $tenantEmail  = $request->input('tenant_email');
+        $tenantPhone  = $request->input('tenant_phone');
+        $tenantCccd   = $request->input('tenant_cccd');
+        $occupants    = $request->input('occupants', 0);
         $people_renter = $request->input('people_renter', 0);
 
         // 2. Tìm hợp đồng và cập nhật trạng thái
         $rental = RentalAgreement::findOrFail($rentalId);
-        $rental->status = 'Active'; // hoặc 'Active' tùy theo bạn định nghĩa
+        $rental->status    = 'Active';
+        $rental->is_active = 1;
         $rental->save();
 
-        // 3. Cập nhật phòng tương ứng thành 'Rented'
+        // 3. Cập nhật phòng thành 'Rented'
         $room = Room::findOrFail($rental->room_id);
         $room->status = 'Rented';
         $room->save();
+
         if ($people_renter > $occupants) {
-            return back()->withErrors(['people_renter' => 'Số lượng người ở không được lớn hơn số lượng người tối đa của phòng.']);
+            return back()->withErrors([
+                'people_renter' => 'Số lượng người ở không được lớn hơn số lượng người tối đa của phòng.'
+            ]);
         }
+
         // 4. Kiểm tra email đã tồn tại chưa
         $existingUser = User::where('email', $tenantEmail)->first();
         if (!$existingUser) {
             // Tạo mật khẩu ngẫu nhiên
-            $password = Str::random(8);
+            $password       = Str::random(8);
             $hashedPassword = Hash::make($password);
-
 
             // Tạo user
             $user = new User();
-            $user->name = $tenantName;
-            $user->email = $tenantEmail;
+            $user->name     = $tenantName;
+            $user->email    = $tenantEmail;
             $user->password = $hashedPassword;
-            $user->role = 'renter'; // nếu bạn có cột role
+            $user->role     = 'renter';
             $user->save();
-            // Cập nhật thông tin người thuê trong hợp đồng
-            $user_id = $user->id;
-            $rental->renter_id = $user_id;
-            $rental->save();
 
-            // Gửi email thông báo
+            $rental->renter_id = $user->id;
+
+            // Gửi email thông báo tài khoản
             Mail::raw("
-            Chào $tenantName,
+                Chào $tenantName,
 
-            Tài khoản của bạn đã được tạo:
-            Email: $tenantEmail
-            Mật khẩu: $password
+                Tài khoản của bạn đã được tạo:
+                Email: $tenantEmail
+                Mật khẩu: $password
 
-            Vui lòng đăng nhập và thay đổi mật khẩu sau lần đăng nhập đầu tiên.
+                Vui lòng đăng nhập và thay đổi mật khẩu sau lần đăng nhập đầu tiên.
 
-            Trân trọng,
-            Hệ thống quản lý phòng trọ
-        ", function ($message) use ($tenantEmail) {
+                Trân trọng,
+                Hệ thống quản lý phòng trọ
+            ", function ($message) use ($tenantEmail) {
                 $message->to($tenantEmail)
                     ->subject('Tài khoản thuê phòng đã được tạo');
             });
+        } else {
+            $rental->renter_id = $existingUser->id;
         }
+
+        // ✅ Luôn luôn lưu thông tin Bên B vào hợp đồng
+        $rental->full_name = $tenantName;
+        $rental->email     = $tenantEmail;
+        $rental->phone     = $tenantPhone;
+        $rental->cccd      = $tenantCccd;
+        $rental->save();
 
         return back()->with('success', 'Hợp đồng đã xác nhận và tài khoản người thuê đã được xử lý.');
     }
+
+
     public function ConfirmAllUser(Request $request)
     {
         $userId = $request->input('user_id');
@@ -836,35 +950,230 @@ class RoomController extends Controller
         return back()->with('success', 'Hợp đồng đã xác nhận và tài khoản người thuê đã được xử lý.');
     }
 
-    public function lockContract(Room $room)
+    public function lockRoom(Request $request, Room $room)
     {
-        // Vô hiệu hóa tất cả hợp đồng đang hoạt động của phòng
-        $room->rentalAgreements()
+        $request->validate([
+            'lock_reason' => 'required|string|max:500',
+        ]);
+
+        // Tìm hợp đồng đang hoạt động
+        $activeAgreement = $room->rentalAgreements()
             ->whereIn('status', ['Active', 'Signed'])
-            ->update(['status' => 'Terminated']);
+            ->where('is_active', 1)
+            ->latest('start_date')
+            ->first();
 
-        // Khóa phòng
-        $room->update(['is_contract_locked' => true]);
+        $tenant = null;
 
-        return back()->with('success', 'Phòng đã được khóa hợp đồng. Hợp đồng hiện tại bị vô hiệu hóa, cần tạo hợp đồng mới để tiếp tục thuê.');
+        if ($activeAgreement) {
+            // Nếu có hợp đồng thì kết thúc hợp đồng
+            $activeAgreement->update([
+                'is_active' => 0,
+                'status'    => RentalAgreement::STATUS_TERMINATED,
+            ]);
+
+            $tenant = $activeAgreement->renter;
+        }
+
+        // 1. Khóa phòng (kể cả không có hợp đồng vẫn khóa được)
+        $room->update([
+            'is_contract_locked' => true,
+            'lock_reason'        => $request->lock_reason,
+        ]);
+
+        // 2. Nếu có tenant thì gửi mail
+        if ($tenant) {
+            // Gợi ý phòng mới trong cùng property
+            $samePropertyRooms = Room::with(['property', 'facilities', 'services', 'photos'])
+                ->where('property_id', $room->property_id)
+                ->where('room_id', '!=', $room->room_id)
+                ->where('is_contract_locked', false)
+                ->whereDoesntHave('rentalAgreements', function ($q) {
+                    $q->whereIn('status', ['Active', 'Signed']);
+                })
+                ->inRandomOrder()
+                ->take(3)
+                ->get();
+
+            // Nếu chưa đủ thì lấy thêm phòng khác property
+            if ($samePropertyRooms->count() < 3) {
+                $moreRooms = Room::with(['property', 'facilities', 'services', 'photos'])
+                    ->where('property_id', '!=', $room->property_id)
+                    ->where('is_contract_locked', false)
+                    ->whereDoesntHave('rentalAgreements', function ($q) {
+                        $q->whereIn('status', ['Active', 'Signed']);
+                    })
+                    ->inRandomOrder()
+                    ->take(3 - $samePropertyRooms->count())
+                    ->get();
+
+                $suggestedRooms = $samePropertyRooms->merge($moreRooms);
+            } else {
+                $suggestedRooms = $samePropertyRooms;
+            }
+
+            // Gửi mail tenant
+            Mail::to($tenant->email)->send(
+                new \App\Mail\RoomLockedNotification(
+                    $room,
+                    $request->lock_reason,
+                    $suggestedRooms,
+                    $activeAgreement->rental_id ?? null
+                )
+            );
+
+            // Gửi mail landlord
+            Mail::to($room->property->landlord->email)->send(
+                new \App\Mail\TenantMovedNotification([
+                    'full_name' => $tenant->name,
+                    'email'     => $tenant->email,
+                    'phone'     => $activeAgreement->phone,
+                    'cccd'      => $activeAgreement->cccd,
+                ], $room)
+            );
+        }
+
+        return back()->with('success', 'Phòng đã được khóa thành công.');
     }
-    // Hiển thị thống kê hợp đồng của phòng
-    // public function showStats(Room $room)
-    // {
-    //     $room->load('rentalAgreements');
 
-    //     $contracts = $room->rentalAgreements()
-    //         ->selectRaw('status, COUNT(*) as total')
-    //         ->groupBy('status')
-    //         ->pluck('total', 'status');
 
-    //     // Nếu không có dữ liệu, gán giá trị mặc định để Chart.js không bị trắng
-    //     if ($contracts->isEmpty()) {
-    //         $contracts = collect(['Không có hợp đồng' => 0]);
-    //     }
 
-    //     return view('landlord.rooms.statistics', compact('room', 'contracts'));
-    // }
+    public function unlockRoom(Room $room)
+    {
+        // Cập nhật trạng thái mở khóa
+        $room->update([
+            'is_contract_locked' => false,
+            'lock_reason' => null, // clear lý do cũ
+        ]);
+
+        return back()->with('success', 'Phòng đã được mở khóa, có thể cho thuê lại.');
+    }
+
+    public function joinRoom(Room $newRoom, $tenantId)
+    {
+        // 1. Lấy hợp đồng vừa bị khóa của tenant
+        $oldAgreement = RentalAgreement::where('renter_id', $tenantId)
+            ->where('status', RentalAgreement::STATUS_TERMINATED)
+            ->latest('updated_at')
+            ->first();
+
+        if (!$oldAgreement) {
+            return back()->withErrors('Không tìm thấy hợp đồng cũ đã bị khóa để tham gia phòng mới.');
+        }
+
+        // 2. Tạo hợp đồng mới ở phòng mới
+        $newAgreement = $newRoom->rentalAgreements()->create([
+            'renter_id'    => $oldAgreement->renter_id,
+            'landlord_id'  => $newRoom->property->landlord_id,
+            'start_date'   => now(),
+            'end_date'     => now()->addMonths(12),
+            'status'       => RentalAgreement::STATUS_ACTIVE,
+            'rental_price' => $newRoom->rental_price,
+            'deposit'      => $newRoom->deposit_price,
+            'is_active'    => 1,
+            'created_by'   => auth()->id() ?? $oldAgreement->renter_id,
+            'full_name'    => $oldAgreement->full_name,
+            'email'        => $oldAgreement->email,
+            'phone'        => $oldAgreement->phone,
+            'cccd'         => $oldAgreement->cccd,
+        ]);
+
+        // 3. Cập nhật phòng mới
+        $newRoom->update([
+            'id_rental_agreements' => $newAgreement->rental_id,
+            'people_renter'        => 1,
+            'is_contract_locked'   => false,
+        ]);
+
+        // 4. Gửi mail tenant
+        if ($oldAgreement->email) {
+            Mail::to($oldAgreement->email)
+                ->send(new \App\Mail\RoomJoinSuccessNotification($newRoom, $oldAgreement->full_name, $oldAgreement->phone, $oldAgreement->cccd));
+        }
+
+        // 5. Gửi mail landlord
+        Mail::to($newRoom->property->landlord->email)
+            ->send(new \App\Mail\TenantMovedNotification([
+                'full_name' => $oldAgreement->full_name,
+                'email'     => $oldAgreement->email,
+                'phone'     => $oldAgreement->phone,
+                'cccd'      => $oldAgreement->cccd,
+            ], $newRoom));
+
+        return back()->with('success', 'Tenant đã tham gia phòng mới thành công, thông tin cá nhân giữ nguyên, giá phòng cập nhật theo phòng mới!');
+    }
+
+    public function move(Request $request, Room $room)
+    {
+        // dd($room->room_id, $room->toArray());
+
+        $request->validate([
+            'new_room_id' => 'required|exists:rooms,room_id',
+        ]);
+
+        // Lấy phòng mới
+        $newRoom = Room::with('property')->findOrFail($request->new_room_id);
+        // Kiểm tra phòng mới có tenant hay không
+        if ($newRoom->currentAgreementValid) {
+            return back()->with('error', 'Phòng mới đang có tenant, không thể chuyển.');
+        }
+
+        // Lấy hợp đồng gần nhất của phòng cũ => chuyển sang phòng mới(chỉ chuyển hợp đồng đang hoạt động)
+        $oldAgreement = $room->rentalAgreements()
+            ->whereIn('status', [RentalAgreement::STATUS_ACTIVE, RentalAgreement::STATUS_SIGNED])
+            ->where('is_active', 1)
+            ->latest('start_date')
+            ->first();
+
+        if (!$oldAgreement) {
+            return back()->with('error', 'Phòng này hiện không có hợp đồng đang hoạt động, không thể chuyển.');
+        }
+
+
+        if (!$oldAgreement) {
+            return back()->with('error', 'Phòng cũ không có hợp đồng nào.');
+        }
+
+        // Tạo hợp đồng mới cho phòng mới
+        $newAgreement = $newRoom->rentalAgreements()->create([
+            'renter_id'    => $oldAgreement->renter_id,
+            'landlord_id'  => $newRoom->property->landlord_id,
+            'start_date'   => now(),
+            'end_date'     => now()->addMonths(12),
+            'status'       => RentalAgreement::STATUS_ACTIVE,
+            'rental_price' => $newRoom->rental_price,
+            'deposit'      => $newRoom->deposit_price,
+            'is_active'    => 1,
+            'created_by'   => auth()->id() ?? $oldAgreement->renter_id,
+
+            // Copy thông tin Bên B từ hợp đồng cũ
+            'full_name'    => $oldAgreement->full_name,
+            'email'        => $oldAgreement->email,
+            'phone'        => $oldAgreement->phone,
+            'cccd'         => $oldAgreement->cccd,
+        ]);
+
+        // dd($newAgreement->toArray());
+        // Cập nhật phòng mới
+        $newRoom->update([
+            'id_rental_agreements' => $newAgreement->rental_id,
+            'people_renter'        => 1,
+            'is_contract_locked'   => false,
+        ]);
+
+        // Cập nhật hợp đồng cũ thành đã kết thúc
+        $oldAgreement->update([
+            'status'    => RentalAgreement::STATUS_TERMINATED,
+            'is_active' => 0,
+        ]);
+
+        // 🚀 Gửi mail cho tenant (người thuê)
+        Mail::to($oldAgreement->email)->send(
+            new RoomJoinSuccessNotification($newRoom, $newAgreement) // bạn có thể custom mail này
+        );
+
+        return back()->with('success', 'Tenant đã chuyển sang phòng mới thành công!');
+    }
 
     public function getRoomsByProperty($property_id)
     {
