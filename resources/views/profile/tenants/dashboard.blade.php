@@ -58,6 +58,7 @@
     </div>
 
     {{-- Biểu đồ chi tiết --}}
+    {{-- Biểu đồ chi tiết dịch vụ --}}
     <div class="card mb-5 shadow">
         <div class="card-body">
             <h5 class="card-title">📊 Biểu đồ chi tiết dịch vụ</h5>
@@ -71,6 +72,42 @@
         <div class="card-body">
             <h5 class="card-title">📊 So sánh giữa 2 mốc thời gian</h5>
             <div class="row">
+            <h5 class="card-title">📈 Biểu đồ chi phí</h5>
+            <div>
+                <canvas id="costChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {{-- Biểu đồ so sánh nếu có --}}
+<div class="card shadow">
+    <div class="card-body">
+        <h5 class="card-title">📊 So sánh giữa 2 mốc thời gian</h5>
+
+        <form method="GET" action="{{ route('home.profile.tenants.dashboard') }}" class="row g-3 mb-5">
+
+            <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="compare" id="compareCheckbox" value="1" {{ request('compare') ? 'checked' : '' }}>
+                    <label class="form-check-label" for="compareCheckbox">So sánh 2 mốc thời gian</label>
+                </div>
+            </div>
+            <div class="col-md-3" id="comparePeriods" style="{{ request('compare') ? '' : 'display:none;' }}">
+                <input type="month" name="period1" value="{{ request('period1') }}" class="form-control mb-2" placeholder="Chọn mốc 1">
+                <input type="month" name="period2" value="{{ request('period2') }}" class="form-control" placeholder="Chọn mốc 2">
+            </div>
+            <div class="col-md-12 d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">Xem thống kê</button>
+            </div>
+        </form>
+
+        @isset($bills1, $bills2)
+            <div class="mt-4">
+                <canvas id="compareChart" height="100"></canvas>
+            </div>
+
+            <div class="row mt-5">
+                {{-- Bảng chi tiết mốc thời gian 1 --}}
                 <div class="col-md-6">
                     <h6 class="text-center mb-3">{{ $label1 }}</h6>
                     <table class="table table-bordered table-striped">

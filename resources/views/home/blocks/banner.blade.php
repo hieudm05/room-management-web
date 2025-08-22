@@ -1,306 +1,328 @@
-<div class="container-fluid" style="padding: 0; margin: 0;">
-    <!-- ============================================================== -->
-    <!-- Top header  -->
-    <!-- ============================================================== -->
+<style>
+    /* Z-index chuẩn Bootstrap để modal nằm trên backdrop */
+    .modal {
+        z-index: 1050 !important;
+    }
 
-    <!-- ============================ Hero Banner Start ================================== -->
+    .modal-backdrop {
+        z-index: 4 !important;
+    }
+
+    /* Gợi ý tìm kiếm: đủ cao hơn video nhưng thấp hơn modal */
+    .suggestions-box {
+        border: 1px solid #ccc;
+        background: #fff;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        z-index: 1030;
+        /* < 1040 để không đè modal */
+        max-height: 250px;
+        overflow-y: auto;
+        display: none;
+    }
+
+    .suggestion-item {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+
+    .suggestion-item:hover {
+        background: #f0f0f0;
+    }
+
+    /* Khóa cuộn nền khi mở modal (Bootstrap sẽ gắn class .modal-open vào body) */
+    body.modal-open {
+        overflow: hidden !important;
+        padding-right: 0 !important;
+        /* tránh lệch layout khi ẩn scrollbar */
+    }
+
+    /* Modal căn giữa, rộng và chỉ cuộn bên trong */
+    .modal-dialog {
+        margin: auto;
+    }
+
+    .modal-content {
+        max-height: 90vh;
+        /* modal không vượt quá chiều cao màn hình */
+        overflow-y: auto;
+        /* chỉ cuộn bên trong modal */
+        border-radius: 12px;
+    }
+</style>
+
+<div class="container-fluid" style="padding: 0; margin: 0;">
     <div class="hero-banner vedio-banner">
         <div class="overlay"></div>
-
-        <video playsinline="playsinline" autoplay="autoplay" muted="muted" loop="loop">
+        <video playsinline autoplay muted loop>
             <source src="{{ asset('assets/client/img/banners.mp4') }}" type="video/mp4">
         </video>
 
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-xl-12 col-lg-12 col-md-12">
+                <div class="col-xl-12">
                     <h1 class="big-header-capt mb-0 text-light">Tìm ngôi nhà tiếp theo của bạn</h1>
                     <p class="text-center mb-4 text-light">Khám phá bất động sản mới & nổi bật tại khu vực của bạn.</p>
                 </div>
             </div>
 
             <div class="row">
-                <div class="col-xl-12 col-lg-12 col-md-12">
-                    <div class="search-container">
-                        <!-- Bọc thêm div để căn giữa -->
+                <div class="col-xl-12">
+                    <div class="search-container my-4">
                         <div class="d-flex justify-content-center">
-                            <form method="GET" action="{{ route('search.results') }}"
-                                class="d-flex align-items-center flex-wrap bg-light p-3 rounded shadow"
-                                style="max-width: 900px; width: 100%;">
 
-                                <div class="me-2">
-                                    <label class="text-dark mb-0">Tỉnh/Thành phố</label>
-                                    <select id="city" name="city" class="form-select">
-                                        <option value="">-- Chọn Tỉnh/Thành phố --</option>
-                                        @foreach ($cities ?? [] as $city)
-                                            <option value="{{ $city }}"
-                                                {{ request('city') == $city ? 'selected' : '' }}>
-                                                {{ $city }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                            {{-- ✅ Form CHÍNH duy nhất --}}
+                            <form id="searchForm" action="{{ route('search.results') }}" method="GET"
+                                class="d-flex w-75 position-relative">
 
-                                <span class="text-light mx-2 align-self-end">|</span>
+                                {{-- Ô nhập tìm kiếm --}}
+                                <input type="text" name="keyword" id="search-input"
+                                    class="form-control form-control-lg me-2"
+                                    placeholder="Nhập từ khóa (VD: quận, phường, thành phố...)"
+                                    value="{{ request('keyword') }}" autocapitalize="off" autocomplete="off">
 
-                                <div class="me-2">
-                                    <label class="text-dark mb-0">Quận/Huyện</label>
-                                    <select id="district" name="district" class="form-select" disabled>
-                                        <option value="">-- Chọn Quận/Huyện --</option>
-                                        @if (request('district'))
-                                            <option value="{{ request('district') }}" selected>{{ request('district') }}
-                                            </option>
-                                        @endif
-                                    </select>
-                                </div>
+                                <div id="suggestions-box" class="suggestions-box"></div>
 
-                                <span class="text-light mx-2 align-self-end">|</span>
+                                {{-- Nút mở bộ lọc (chỉ mở modal) --}}
+                                <button type="button" class="btn btn-secondary btn-lg ms-2" data-bs-toggle="modal"
+                                    data-bs-target="#filterModal">
+                                    <i class="bi bi-funnel"></i> Bộ lọc
+                                </button>
 
-                                <div class="me-2">
-                                    <label class="text-dark mb-0">Phường/Xã</label>
-                                    <select id="ward" name="ward" class="form-select" disabled>
-                                        <option value="">-- Chọn Phường/Xã --</option>
-                                        @if (request('ward'))
-                                            <option value="{{ request('ward') }}" selected>{{ request('ward') }}
-                                            </option>
-                                        @endif
-                                    </select>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary ms-0 align-self-end">Tìm kiếm</button>
+                                {{-- Nút submit CHÍNH --}}
+                                <button type="submit" class="btn btn-lg btn-danger ms-2">Tìm kiếm</button>
                             </form>
+
                         </div>
                     </div>
+
+                    {{-- ✅ Modal Bộ lọc (KHÔNG có <form>) --}}
+                    <div class="modal fade" id="filterModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-xl">
+                            <div class="modal-content">
+
+                                {{-- Header --}}
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold">Bộ lọc</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+
+                                {{-- Body --}}
+                                <div class="modal-body">
+                                    {{-- Danh mục cho thuê - SỬA: thành category_id --}}
+                                    <div class="mb-4">
+                                        <label class="fw-bold d-block mb-2">Danh mục cho thuê</label>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <input type="radio" class="btn-check" name="category_id" id="phongtro"
+                                                value="1" form="searchForm"
+                                                {{ request('category_id') == '1' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger" for="phongtro">Phòng trọ</label>
+
+                                            <input type="radio" class="btn-check" name="category_id" id="oghep"
+                                                value="2" form="searchForm"
+                                                {{ request('category_id') == '2' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger" for="oghep">Ở ghép</label>
+
+                                            <input type="radio" class="btn-check" name="category_id" id="canhomini"
+                                                value="3" form="searchForm"
+                                                {{ request('category_id') == '3' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger" for="canhomini">Căn hộ mini</label>
+                                        </div>
+                                    </div>
+
+                                    {{-- Khoảng diện tích --}}
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Khoảng diện tích</label>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <input type="radio" class="btn-check" name="area" id="area_all"
+                                                value="" form="searchForm"
+                                                {{ !request('area') == '' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded px-2" for="area_all">Tất
+                                                cả</label>
+
+                                            <input type="radio" class="btn-check" name="area" id="area1"
+                                                value="0-20" form="searchForm"
+                                                {{ request('area') == '0-20' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded px-2" for="area1">Dưới
+                                                20m²</label>
+
+                                            <input type="radio" class="btn-check" name="area" id="area2"
+                                                value="20-30" form="searchForm"
+                                                {{ request('area') == '20-30' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded px-2"
+                                                for="area2">20–30m²</label>
+
+                                            <input type="radio" class="btn-check" name="area" id="area3"
+                                                value="30-50" form="searchForm"
+                                                {{ request('area') == '30-50' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded px-2"
+                                                for="area3">30–50m²</label>
+
+                                            <input type="radio" class="btn-check" name="area" id="area4"
+                                                value="50-70" form="searchForm"
+                                                {{ request('area') == '50-70' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded px-2"
+                                                for="area4">50–70m²</label>
+
+                                            <input type="radio" class="btn-check" name="area" id="area5"
+                                                value="70-90" form="searchForm"
+                                                {{ request('area') == '70-90' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded px-2"
+                                                for="area5">70–90m²</label>
+
+                                            <input type="radio" class="btn-check" name="area" id="area6"
+                                                value="90-9999" form="searchForm"
+                                                {{ request('area') == '90-9999' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded px-2" for="area6">Trên
+                                                90m²</label>
+                                        </div>
+                                    </div>
+
+                                    {{-- Khoảng giá - SỬA: giá trị từ triệu thành VND --}}
+                                    <div class="mb-4">
+                                        <label class="fw-bold d-block mb-2">Khoảng giá</label>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <input type="radio" class="btn-check" name="price" id="price_all"
+                                                value="" form="searchForm"
+                                                {{ !request('price') == '' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger" for="price_all">Tất cả</label>
+
+                                            <input type="radio" class="btn-check" name="price" id="price1"
+                                                value="0-1000000" form="searchForm"
+                                                {{ request('price') == '0-1000000' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger" for="price1">Dưới 1 triệu</label>
+
+                                            <input type="radio" class="btn-check" name="price" id="price2"
+                                                value="1000000-2000000" form="searchForm"
+                                                {{ request('price') == '1000000-2000000' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger" for="price2">1–2 triệu</label>
+
+                                            <input type="radio" class="btn-check" name="price" id="price3"
+                                                value="2000000-3000000" form="searchForm"
+                                                {{ request('price') == '2000000-3000000' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger" for="price3">2–3 triệu</label>
+
+                                            <input type="radio" class="btn-check" name="price" id="price4"
+                                                value="3000000-5000000" form="searchForm"
+                                                {{ request('price') == '3000000-5000000' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger" for="price4">3–5 triệu</label>
+
+                                            <input type="radio" class="btn-check" name="price" id="price5"
+                                                value="5000000-7000000" form="searchForm"
+                                                {{ request('price') == '5000000-7000000' ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger" for="price5">5–7 triệu</label>
+                                        </div>
+                                    </div>
+
+                                    {{-- Đặc điểm nổi bật - SỬA: value phù hợp với backend --}}
+                                    <div class="mb-4">
+                                        <label class="fw-bold d-block mb-2">Đặc điểm nổi bật</label>
+                                        <div class="d-flex flex-wrap gap-2">
+
+                                            {{-- Tất cả (reset filter) --}}
+                                            <input type="checkbox" class="btn-check" name="amenities[]"
+                                                id="amenities_all" value="" form="searchForm">
+                                            <label class="btn btn-outline-danger rounded-pill px-3"
+                                                for="amenities_all">Tất cả</label>
+
+
+                                            {{-- Đầy đủ nội thất --}}
+                                            <input type="checkbox" class="btn-check" name="amenities[]"
+                                                id="amenities1" value="Đầy đủ nội thất" form="searchForm"
+                                                {{ in_array('Đầy đủ nội thất', (array) request('amenities', [])) ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded-pill px-3"
+                                                for="amenities1">Đầy đủ nội thất</label>
+
+                                            {{-- Có máy giặt --}}
+                                            <input type="checkbox" class="btn-check" name="amenities[]"
+                                                id="amenities2" value="Có máy giặt" form="searchForm"
+                                                {{ in_array('Có máy giặt', (array) request('amenities', [])) ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded-pill px-3"
+                                                for="amenities2">Có máy giặt</label>
+
+                                            {{-- Có máy lạnh --}}
+                                            <input type="checkbox" class="btn-check" name="amenities[]"
+                                                id="amenities3" value="Có máy lạnh" form="searchForm"
+                                                {{ in_array('Có máy lạnh', (array) request('amenities', [])) ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded-pill px-3"
+                                                for="amenities3">Có máy lạnh</label>
+
+                                            {{-- Không chung chủ --}}
+                                            <input type="checkbox" class="btn-check" name="amenities[]"
+                                                id="amenities4" value="Không chung chủ" form="searchForm"
+                                                {{ in_array('Không chung chủ', (array) request('amenities', [])) ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded-pill px-3"
+                                                for="amenities4">Không chung chủ</label>
+
+                                            {{-- Có thang máy --}}
+                                            <input type="checkbox" class="btn-check" name="amenities[]"
+                                                id="amenities5" value="Có thang máy" form="searchForm"
+                                                {{ in_array('Có thang máy', (array) request('amenities', [])) ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded-pill px-3"
+                                                for="amenities5">Có thang máy</label>
+
+                                            {{-- Bảo vệ 24/24 --}}
+                                            <input type="checkbox" class="btn-check" name="amenities[]"
+                                                id="amenities6" value="Bảo vệ 24/24" form="searchForm"
+                                                {{ in_array('Bảo vệ 24/24', (array) request('amenities', [])) ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded-pill px-3"
+                                                for="amenities6">Bảo vệ 24/24</label>
+
+                                            {{-- Hầm để xe --}}
+                                            <input type="checkbox" class="btn-check" name="amenities[]"
+                                                id="amenities7" value="Hầm để xe" form="searchForm"
+                                                {{ in_array('Hầm để xe', (array) request('amenities', [])) ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-danger rounded-pill px-3"
+                                                for="amenities7">Hầm để xe</label>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                {{-- Footer: Áp dụng chỉ đóng modal, KHÔNG submit --}}
+                                <div class="modal-footer justify-content-between">
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                                        Áp dụng
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    {{-- End Modal --}}
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 
-@push('scripts')
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const citySelect = document.getElementById("city");
-            const districtSelect = document.getElementById("district");
-            const wardSelect = document.getElementById("ward");
+<script>
+    // Hàm xóa tất cả bộ lọc
+    function clearFilters() {
+        // Reset tất cả radio buttons về trạng thái mặc định
+        document.querySelectorAll('input[name="category_id"]').forEach(input => input.checked = false);
+        document.getElementById('area_all').checked = true;
+        document.getElementById('price_all').checked = true;
+        document.getElementById('amenities_all').checked = true;
+    }
 
-            // Vô hiệu hóa quận/huyện và phường/xã ban đầu
-            districtSelect.disabled = true;
-            wardSelect.disabled = true;
 
             // Log danh sách tỉnh/thành trong dropdown
           
+    document.getElementById('searchForm').addEventListener('submit', function(e) {
+        const keyword = document.getElementById('search-input').value.trim();
+        const amenitiesChecked = document.querySelectorAll('input[name="amenities[]"]:checked').length;
+        const categoryChecked = document.querySelector('input[name="category_id"]:checked');
+        const areaChecked = document.querySelector('input[name="area"]:checked');
+        const priceChecked = document.querySelector('input[name="price"]:checked');
 
-            // Hàm load quận/huyện
-            function loadDistricts(city) {
-                districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
-                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-                districtSelect.disabled = !city;
-                wardSelect.disabled = true;
-
-                if (city) {
-                    fetch(`/search/districts/${encodeURIComponent(city)}`, {
-                            method: 'GET',
-                            headers: {
-                                'Accept': 'application/json'
-                            }
-                        })
-                        .then(res => {
-                            console.log("Mã trạng thái phản hồi (quận/huyện):", res.status);
-                            if (!res.ok) {
-                                throw new Error(`Lỗi khi tải quận/huyện: ${res.status}`);
-                            }
-                            return res.json();
-                        })
-                        .then(data => {
-                            console.log("Dữ liệu quận/huyện:", data);
-                            districtSelect.innerHTML =
-                                '<option value="">-- Chọn Quận/Huyện --</option>';
-                            if (!data || data.length === 0) {
-                                districtSelect.innerHTML =
-                                    '<option value="">Không có quận/huyện</option>';
-                                console.warn(`Không tìm thấy quận/huyện cho thành phố: ${city}`);
-                                alert(
-                                    `Không tìm thấy quận/huyện cho ${city}. Vui lòng thử tỉnh/thành khác.`
-                                );
-                                return;
-                            }
-                            data.forEach(d => {
-                                const opt = document.createElement("option");
-                                opt.value = d;
-                                opt.textContent = d;
-                                if (d === @json(request('district'))) {
-                                    opt.selected = true;
-                                }
-                                districtSelect.appendChild(opt);
-                            });
-                            districtSelect.disabled = false;
-
-                            // Nếu đã chọn quận/huyện, load danh sách phường/xã
-                            if (@json(request('district'))) {
-                                loadWards(@json(request('district')));
-                            }
-                        })
-                        .catch(err => {
-                            console.error("Lỗi load quận/huyện:", err.message);
-                            districtSelect.innerHTML =
-                                '<option value="">Lỗi tải quận/huyện, vui lòng thử lại</option>';
-                            districtSelect.disabled = true;
-                            alert(`Lỗi tải danh sách quận/huyện cho ${city}: ${err.message}`);
-                        });
-                }
-            }
-
-            // Hàm load phường/xã
-            function loadWards(district) {
-                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-                wardSelect.disabled = !district;
-
-                if (district) {
-                    fetch(`/search/wards/${encodeURIComponent(district)}`, {
-                            method: 'GET',
-                            headers: {
-                                'Accept': 'application/json'
-                            }
-                        })
-                        .then(res => {
-                            console.log("Mã trạng thái phản hồi (phường/xã):", res.status);
-                            if (!res.ok) {
-                                throw new Error(`Lỗi khi tải phường/xã: ${res.status}`);
-                            }
-                            return res.json();
-                        })
-                        .then(data => {
-                            console.log("Dữ liệu phường/xã:", data);
-                            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-                            if (!data || data.length === 0) {
-                                wardSelect.innerHTML =
-                                    '<option value="">Không có phường/xã</option>';
-                                console.warn(`Không tìm thấy phường/xã cho quận/huyện: ${district}`);
-                                wardSelect.disabled = true;
-                                return;
-                            }
-                            data.forEach(w => {
-                                const opt = document.createElement("option");
-                                opt.value = w;
-                                opt.textContent = w;
-                                if (w === @json(request('ward'))) {
-                                    opt.selected = true;
-                                }
-                                wardSelect.appendChild(opt);
-                            });
-                            wardSelect.disabled = false;
-                        })
-                        .catch(err => {
-                            console.error("Lỗi load phường/xã:", err.message);
-                            wardSelect.innerHTML =
-                                '<option value="">Lỗi tải phường/xã, vui lòng thử lại</option>';
-                            wardSelect.disabled = true;
-                            alert(`Lỗi tải danh sách phường/xã cho ${district}: ${err.message}`);
-                        });
-                }
-            }
-
-            // Khi chọn thành phố -> load quận/huyện
-            citySelect.addEventListener("change", function() {
-                loadDistricts(this.value);
-            });
-
-            // Khi chọn quận/huyện -> load phường/xã
-            districtSelect.addEventListener("change", function() {
-                loadWards(this.value);
-            });
-
-            // Load quận/huyện và phường/xã nếu đã có giá trị từ request
-            if (@json(request('city'))) {
-                loadDistricts(@json(request('city')));
-            }
-
-            // Gợi ý bài viết gần bạn
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        const container = document.getElementById("suggested-posts");
-                        container.innerHTML = `
-                            <div class="d-flex justify-content-center">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Đang tải...</span>
-                                </div>
-                            </div>
-                        `;
-
-                        fetch("{{ route('posts.suggestNearby') }}", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                                    "Accept": "application/json"
-                                },
-                                body: JSON.stringify({
-                                    lat,
-                                    lng
-                                })
-                            })
-                            .then(res => {
-                                if (!res.ok) throw new Error(`Lỗi HTTP! Trạng thái: ${res.status}`);
-                                return res.json();
-                            })
-                            .then(data => {
-                                container.innerHTML = '';
-                                if (!data || data.length === 0) {
-                                    container.innerHTML =
-                                        `<div class="col-12 text-center"><p class="text-muted">Không có bài viết nào gần bạn.</p></div>`;
-                                    return;
-                                }
-                                data.forEach(post => {
-                                    const html = `
-                                    <div class="col-lg-4 col-md-6 col-sm-12">
-                                        <div class="card h-100 shadow-sm rounded-3 border-0">
-                                            ${post.thumbnail
-                                                ? `<img src="/storage/${post.thumbnail}" class="card-img-top rounded-top-3" style="height:200px;object-fit:cover;">`
-                                                : `<div class="d-flex justify-content-center align-items-center bg-light" style="height:200px;"><span class="text-muted">Chưa có ảnh</span></div>`}
-                                            <div class="card-body d-flex flex-column">
-                                                <h5 class="fw-bold text-truncate mb-2" title="${post.title}">${post.title}</h5>
-                                                <p class="text-danger fw-semibold mb-2">${Number(post.price).toLocaleString('vi-VN')} đ/tháng</p>
-                                                <ul class="list-unstyled small mb-3">
-                                                    <li><i class="fa fa-expand me-1 text-secondary"></i> ${post.area} m²</li>
-                                                    <li><i class="fa fa-map-marker-alt me-1 text-secondary"></i> ${post.district}, ${post.city}</li>
-                                                    <li><i class="fa fa-home me-1 text-secondary"></i> ${post.address}</li>
-                                                    <li><i class="fa fa-road me-1 text-secondary"></i> Cách bạn ~ ${Math.round(post.distance * 100) / 100} km</li>
-                                                </ul>
-                                                <div class="d-flex justify-content-between align-items-center mt-auto">
-                                                    <small class="text-muted">Mã tin: ${post.post_code}</small>
-                                                    <a href="/posts/${post.slug}" class="btn btn-sm btn-outline-primary">Xem chi tiết</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>`;
-                                    container.insertAdjacentHTML("beforeend", html);
-                                });
-                            })
-                            .catch(err => {
-                                console.error("Lỗi fetch:", err.message);
-                                container.innerHTML =
-                                    `<div class="col-12 text-center"><p class="text-muted">Không thể tải bài viết gần bạn: ${err.message}</p></div>`;
-                            });
-                    },
-                    (error) => {
-                        console.error("Lỗi định vị:", error.message);
-                        document.getElementById("suggested-posts").innerHTML =
-                            `<div class="col-12 text-center"><p class="text-muted">Không thể lấy vị trí của bạn: ${error.message}</p></div>`;
-                    }, {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    }
-                );
-            } else {
-                document.getElementById("suggested-posts").innerHTML =
-                    `<div class="col-12 text-center"><p class="text-muted">Trình duyệt không hỗ trợ định vị.</p></div>`;
-            }
-        });
-    </script>
-@endpush
+        if (!keyword && !amenitiesChecked && !categoryChecked && !areaChecked && !priceChecked) {
+            e.preventDefault(); // Ngăn form submit
+            // Không cần alert
+        }
+    });
+</script>

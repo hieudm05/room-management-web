@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Landlord;
 
 use App\Http\Controllers\Controller;
-use App\Models\DepositRefund;
-use App\Models\Notification;
-use Carbon\Carbon;
 use App\Models\Landlord\RoomLeaveRequest;
 use App\Models\RoomLeaveLog;
 use App\Models\Landlord\RentalAgreement;
+use App\Models\RoomLeaveLog as ModelsRoomLeaveLog;
+
+use App\Models\Notification;
+use Carbon\Carbon;
 use App\Models\Landlord\Room;
 use App\Models\UserInfo;
 use Illuminate\Http\Request;
@@ -280,6 +281,9 @@ if ($roomLeaveRequest->action_type === 'leave') {
     }
 
 
+    // Hiện form từ chối
+
+
 
     public function acceptTransfer($id)
     {
@@ -322,6 +326,7 @@ if ($roomLeaveRequest->action_type === 'leave') {
 
         return redirect()->route('my-room')->with('success', '✅ Bạn đã xác nhận nhận quyền thuê phòng.');
     }
+
 
     public function rejectForm($id)
     {

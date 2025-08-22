@@ -76,7 +76,7 @@
                     confirmButtonText: 'OK'
                 });
             </script>
-        @endif
+@endif
 
         @if (session('error'))
             <script>
@@ -146,7 +146,7 @@
                                         action="{{ route('home.roomleave.cancelRequest', $leaveRequest->id) }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-secondary btn-sm" type="submit">❌ Huỷ yêu cầu</button>
+<button class="btn btn-secondary btn-sm" type="submit">❌ Huỷ yêu cầu</button>
                                     </form>
                                 </div>
                             @else
@@ -162,7 +162,7 @@
 
             {{-- Modal dừng thuê (cho thành viên) --}}
             @if ($user->id == $userId && !$isContractOwner)
-                <div class="modal fade" id="leaveModal-{{ $user->id }}" tabindex="-1">
+<div class="modal fade" id="leaveModal-{{ $user->id }}" tabindex="-1">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <form method="POST" action="{{ route('home.roomleave.send') }}">
@@ -199,7 +199,7 @@
 
         {{-- Các yêu cầu đã gửi --}}
         @if ($leaveRequests->count())
-            <h4 class="mt-5">📤 Yêu cầu rời phòng đã gửi</h4>
+<h4 class="mt-5">📤 Yêu cầu rời phòng đã gửi</h4>
 
             @foreach ($leaveRequests as $req)
                 @php $user = $req->user ?? null; @endphp
@@ -211,8 +211,8 @@
                                 📅 <strong>Ngày rời:</strong>
                                 {{ \Carbon\Carbon::parse($req->leave_date)->format('d/m/Y') }}<br>
                                 📝 <strong>Lý do:</strong> {{ $req->note ?? 'Không có' }}<br>
-                                {{-- ⏳ <strong>Trạng thái:</strong>
-                                Trạng thái gốc: <code>{{ $req->status }}</code><br> --}}
+                                ⏳ <strong>Trạng thái:</strong>
+                                Trạng thái gốc: <code>{{ $req->status }}</code><br>
                                 ⏳ <strong>Trạng thái:</strong>
                                 @switch(strtolower($req->status))
                                     @case('pending')
@@ -249,7 +249,7 @@
                                 <form method="POST" action="{{ route('home.roomleave.finalize', $req->id) }}"
                                     onsubmit="return confirm('Bạn chắc chắn đã rời phòng?')" class="mt-3">
                                     @csrf
-                                    <button class="btn btn-outline-danger btn-sm">✅ Tôi đã rời phòng</button>
+<button class="btn btn-outline-danger btn-sm">✅ Tôi đã rời phòng</button>
                                 </form>
                             @endif
                         </div>
@@ -320,14 +320,14 @@
                                 <select name="new_renter_id" id="new_renter_id" class="form-select">
                                     @foreach ($room->userInfos as $info)
                                         @if ($info->user->id !== $userId)
-                                            <option value="{{ $info->user->id }}">
+<option value="{{ $info->user->id }}">
                                                 {{ $info->user->name }} ({{ $info->user->email }})
                                             </option>
                                         @endif
                                     @endforeach
                                 </select>
                             </div>
-
+                 
                             <label for="leave_date" class="form-label mt-3">📅 Ngày áp dụng</label>
                             <input type="date" name="leave_date" id="leave_date" class="form-control" required
                                 min="{{ now()->toDateString() }}" value="{{ old('leave_date') }}">
@@ -376,7 +376,7 @@
                 }
 
                 const finalizeForms = document.querySelectorAll('form[action*="roomleave/finalize"]');
-                finalizeForms.forEach(form => {
+finalizeForms.forEach(form => {
                     form.addEventListener('submit', function(e) {
                         e.preventDefault();
                         Swal.fire({
@@ -433,9 +433,19 @@
                     });
                 }
 
-                // --- Bổ sung phần QR + ngày kết thúc hợp đồng ---
-                const modal = document.getElementById('terminateContractModal');
-                if (!modal) return;
+                const transferOption = document.getElementById('transferOption');
+                const transferTarget = document.getElementById('transferTarget');
+
+                function toggleTransfer() {
+                    transferTarget.style.display = transferOption.checked ? 'block' : 'none';
+                }
+
+                transferOption.addEventListener('change', toggleTransfer);
+                toggleTransfer();
+            });
+             document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById('terminateContractModal');
+    if (!modal) return;
 
                 const transferOption = modal.querySelector('#transferOption');
                 const terminateOption = modal.querySelector('#terminateOption');
@@ -465,78 +475,14 @@
                     }
                 }
 
-                transferOption?.addEventListener('change', toggleFields);
-                terminateOption?.addEventListener('change', toggleFields);
-                leaveDateInput?.addEventListener('change', toggleFields);
-                modal.addEventListener('shown.bs.modal', toggleFields);
-                toggleFields();
+    transferOption?.addEventListener('change', toggleFields);
+    terminateOption?.addEventListener('change', toggleFields);
 
-                // Kiểm tra khi submit (bắt buộc upload QR nếu leave_date >= end_date)
-                mainForm?.addEventListener('submit', function(e) {
-                    const actionType = mainForm.querySelector('input[name="action_type"]:checked');
-                    const leaveDate = parseDate(leaveDateInput.value);
+    modal.addEventListener('shown.bs.modal', toggleFields);
 
-                    if (actionType?.value === 'leave' && leaveDate && leaveDate >= rentalEndDate) {
-                        if (!depositFile.value) {
-                            e.preventDefault();
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Thiếu QR!',
-                                text: 'Vui lòng tải lên QR để nhận lại tiền cọc.'
-                            });
-                        }
-                    }
-                });
-
-            });
-            document.addEventListener("DOMContentLoaded", function() {
-                const modal = document.getElementById('terminateContractModal');
-                if (!modal) return;
-
-                const qrUpload = modal.querySelector('#qrUpload');
-                const depositFile = modal.querySelector('#deposit_file');
-                const leaveDateInput = modal.querySelector('#leave_date');
-                const mainForm = modal.querySelector('form');
-                const leaveAllRadio = modal.querySelector('input[name="action_type"][value="leave_all"]');
-
-                function parseDate(str) {
-                    if (!str) return null;
-                    const [y, m, d] = str.split('-').map(Number);
-                    return new Date(y, m - 1, d);
-                }
-
-                const rentalEndDate = parseDate("{{ optional($room->rentalAgreement)->end_date }}");
-
-                function toggleLeaveAllFields() {
-                    const leaveDate = parseDate(leaveDateInput.value);
-                    if (leaveAllRadio?.checked && leaveDate && leaveDate >= rentalEndDate) {
-                        qrUpload.style.display = 'block';
-                    } else if (leaveAllRadio?.checked) {
-                        qrUpload.style.display = 'none';
-                    }
-                }
-
-                leaveDateInput?.addEventListener('change', toggleLeaveAllFields);
-                leaveAllRadio?.addEventListener('change', toggleLeaveAllFields);
-                modal.addEventListener('shown.bs.modal', toggleLeaveAllFields);
-
-                // --- Kiểm tra khi submit ---
-                mainForm?.addEventListener('submit', function(e) {
-                    const actionType = mainForm.querySelector('input[name="action_type"]:checked');
-                    const leaveDate = parseDate(leaveDateInput.value);
-
-                    if (actionType?.value === 'leave_all' && leaveDate && leaveDate >= rentalEndDate) {
-                        if (!depositFile.value) {
-                            e.preventDefault();
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Thiếu QR!',
-                                text: 'Khi rời phòng toàn bộ sau ngày kết thúc hợp đồng, bạn phải tải lên QR để nhận lại tiền cọc.'
-                            });
-                        }
-                    }
-                });
-            });
+    toggleFields();
+});
+    
         </script>
 
 

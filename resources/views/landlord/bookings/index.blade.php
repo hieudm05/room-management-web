@@ -218,7 +218,7 @@
                         },
                         body: JSON.stringify({})
                     })
-                    .then(res => res.json())
+                    .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             setTimeout(() => location.reload(), 500);

@@ -31,7 +31,6 @@
         <thead class="thead-light">
             <tr>
                 <th>Loại giấy tờ</th>
-                <th>Trạng thái</th>
                 <th>File</th>
                 <th>Cập nhật</th>
             </tr>
@@ -40,15 +39,6 @@
             @foreach ($legalDocuments as $doc)
             <tr>
                 <td>{{ $doc->document_type }}</td>
-                <td>
-                    @if ($doc->status == 'approved')
-                        <span class="badge bg-success">Đã duyệt</span>
-                    @elseif ($doc->status == 'Pending')
-                        <span class="badge bg-warning">Chờ duyệt</span>
-                    @else
-                        <span class="badge bg-danger">Từ chối</span>
-                    @endif
-                </td>
                 <td>
                     <a href="{{ Storage::url($doc->file_path) }}"
                        class="btn btn-sm btn-outline-primary"

@@ -253,7 +253,7 @@ class LandLordComplaintController extends Controller
 
     public function resolveAsLandlord(Request $request, $id)
     {
-   
+
         $request->validate([
             'user_cost' => 'nullable|numeric|min:0',
             'landlord_cost' => 'nullable|numeric|min:0',
