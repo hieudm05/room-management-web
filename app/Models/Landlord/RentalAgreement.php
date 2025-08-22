@@ -5,6 +5,7 @@ namespace App\Models\Landlord;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Landlord\Room;
+use App\Models\UserInfo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class RentalAgreement extends Model
@@ -30,4 +31,11 @@ class RentalAgreement extends Model
     {
         return $this->hasMany(RoomLeaveRequest::class, 'rental_agreement_id');
     }
+
+
+    public function userInfos()
+    {
+        return $this->hasMany(\App\Models\UserInfo::class, 'rental_id', 'rental_id');
+    }
+
 }

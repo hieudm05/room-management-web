@@ -1,8 +1,23 @@
+
+@extends('profile.tenants.layouts.app')
+
+{{-- Fake dữ liệu demo nếu chưa có --}}
+
 @extends('home.layouts.app')
+
 
 @section('content')
 <div class="container-fluid px-4 py-6">
     <h2 class="text-3xl font-bold mb-6">📊 Dashboard người thuê phòng</h2>
+
+
+    {{-- Bộ lọc theo thời gian --}}
+    <form method="GET" action="{{ route('home.profile.tenants.dashboard') }}" class="row g-3 mb-5">
+        <div class="col-md-3">
+            <label class="form-label">Kiểu thời gian</label>
+            <select name="type" class="form-select">
+                <option value="month" {{ request('type') === 'month' ? 'selected' : '' }}>Tháng</option>
+                <option value="quarter" {{ request('type') === 'quarter' ? 'selected' : '' }}>Quý</option>
 
     {{-- Bộ lọc thời gian --}}
     <form method="GET" action="{{ route('home.profile.tenants.dashboard') }}" class="row g-3 mb-5">
@@ -10,13 +25,18 @@
             <label class="form-label">Kiểu thời gian</label>
             <select name="type" id="typeSelect" class="form-select" onchange="changePeriodInput()">
                 <option value="month" {{ request('type') === 'month' ? 'selected' : '' }}>Tháng</option>
+
                 <option value="year" {{ request('type') === 'year' ? 'selected' : '' }}>Năm</option>
             </select>
         </div>
         <div class="col-md-3">
             <label class="form-label">Mốc thời gian</label>
+
+            <input type="text" name="period" value="{{ request('period') }}" required class="form-control" placeholder="VD: 2025 hoặc 2025-03 hoặc 2025-Q2">
+
             <input type="month" id="periodInput" name="period" value="{{ request('type') === 'month' ? request('period') : '' }}" class="form-control" autocomplete="off">
             <input type="number" id="yearInput" name="period" value="{{ request('type') === 'year' ? request('period') : '' }}" min="2000" max="{{ date('Y')+10 }}" class="form-control" style="display:none;">
+
         </div>
         <div class="col-md-2 d-flex align-items-end">
             <button type="submit" class="btn btn-primary w-100">Xem thống kê</button>
@@ -66,8 +86,52 @@
         </div>
     </div>
 
+
+    {{-- So sánh chi tiết --}}
+    <div class="card shadow">
+        <div class="card-body">
+            <h5 class="card-title">📈 So sánh giữa 2 mốc thời gian</h5>
+            <form method="GET" action="{{ route('home.profile.tenants.dashboard') }}" class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label">Kiểu so sánh</label>
+                    <select name="compare_type" class="form-select">
+                        <option value="month" {{ request('compare_type') === 'month' ? 'selected' : '' }}>Tháng</option>
+                        <option value="quarter" {{ request('compare_type') === 'quarter' ? 'selected' : '' }}>Quý</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Mốc 1</label>
+                    <input type="text" name="period1" value="{{ request('period1') }}" class="form-control" placeholder="2025-05 hoặc 2025-Q2">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Mốc 2</label>
+                    <input type="text" name="period2" value="{{ request('period2') }}" class="form-control" placeholder="2025-06 hoặc 2025-Q3">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-secondary w-100" type="submit">So sánh</button>
+                </div>
+            </form>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-primary">📅 {{ $label1 }}</h6>
+                    <table class="table table-bordered table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Dịch vụ</th>
+                                <th class="text-end">Chi phí (đ)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($bills1 as $service => $amount)
+
+
+    {{-- Biểu đồ chi phí chính --}}
+    {{-- <pre>{{ dd($serviceTotals) }}</pre> --}}
+
     {{-- So sánh mốc thời gian --}}
     @isset($bills1, $bills2)
+
     <div class="card shadow mb-5">
         <div class="card-body">
             <h5 class="card-title">📊 So sánh giữa 2 mốc thời gian</h5>
@@ -119,14 +183,40 @@
                         </thead>
                         <tbody>
                             @forelse($bills1 as $service => $amount)
+
+
+                                <tr>
+                                    <td>{{ ucfirst($service) }}</td>
+                                    <td class="text-end">{{ number_format($amount) }}</td>
+                                </tr>
+                            @endforeach
+
                                 <tr><td>{{ ucfirst($service) }}</td><td class="text-end">{{ number_format($amount) }}</td></tr>
                             @empty
                                 <tr><td colspan="2" class="text-center">Không có dữ liệu</td></tr>
                             @endforelse
+
                         </tbody>
                     </table>
                 </div>
                 <div class="col-md-6">
+
+                    <h6 class="fw-bold text-danger">📅 {{ $label2 }}</h6>
+                    <table class="table table-bordered table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Dịch vụ</th>
+                                <th class="text-end">Chi phí (đ)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($bills2 as $service => $amount)
+                                <tr>
+                                    <td>{{ ucfirst($service) }}</td>
+                                    <td class="text-end">{{ number_format($amount) }}</td>
+                                </tr>
+                            @endforeach
+
                     <h6 class="text-center mb-3">{{ $label2 }}</h6>
                     <table class="table table-bordered table-striped">
                         <thead>
@@ -141,6 +231,7 @@
                             @empty
                                 <tr><td colspan="2" class="text-center">Không có dữ liệu</td></tr>
                             @endforelse
+
                         </tbody>
                     </table>
                 </div>
@@ -151,12 +242,46 @@
             </div>
         </div>
     </div>
+
     @endisset
+
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+
+    const ctxDetail = document.getElementById('detailChart').getContext('2d');
+    const chartDetail = new Chart(ctxDetail, {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode(array_keys($serviceTotals->toArray())) !!},
+            datasets: [{
+                label: 'Chi phí theo dịch vụ',
+                data: {!! json_encode(array_values($serviceTotals->toArray())) !!},
+                backgroundColor: 'rgba(54, 162, 235, 0.7)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Chi phí dịch vụ theo mốc thời gian chọn'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'VNĐ'
+                    }
+                }
+            }
+        }
+    });
+
     function changePeriodInput() {
         const type = document.getElementById('typeSelect').value;
         const periodInput = document.getElementById('periodInput');

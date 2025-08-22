@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Landlord\ContractRenewal;
 use App\Models\Landlord\Staff\Rooms\RoomBill;
 use App\Models\Landlord\Staff\Rooms\RoomUtility;
+use App\Models\StaffPost;
+use Illuminate\Support\Facades\Log; // Thêm dòng này ở đầu file Room.php
 
 class Room extends Model
 {
@@ -26,6 +28,7 @@ class Room extends Model
         'status',
         'occupants',
         'deposit_price',
+        'people_renter',
         'contract_file',
         'contract_pdf_file',
         'contract_word_file',
@@ -126,7 +129,6 @@ class Room extends Model
     }
 
     public function staffs()
-
     {
         return $this->belongsToMany(User::class, 'room_staff', 'room_id', 'staff_id')
             ->where('role', 'Staff')
@@ -172,6 +174,47 @@ class Room extends Model
         return $this->hasMany(Booking::class, 'room_id');
     }
 
+
+    public static function hidePostsIfFull($roomId)
+    {
+        $room = self::find($roomId);
+
+
+
+        if (!$room) {
+            Log::warning("Room $roomId not found!");
+            return;
+        }
+
+        Log::info("Running hidePostsIfFull: Room {$room->room_id} | occupants={$room->occupants} | max={$room->people_renter}");
+
+        if ($room->people_renter !== null && $room->occupants >= $room->people_renter) {
+            $count = StaffPost::where('room_id', $room->room_id)
+                ->update([
+                    'is_public' => 0,
+                    'auto_hidden_reason' => 'Phòng đã đủ người'
+                ]);
+            Log::info("Room {$room->room_id} FULL → Hidden {$count} StaffPost(s)");
+        } else {
+            $count = StaffPost::where('room_id', $room->room_id)
+                ->where('status', 1)
+                ->update([
+                    'is_public' => 1,
+                    'auto_hidden_reason' => null
+                ]);
+            Log::info("Room {$room->room_id} NOT FULL → Unhidden {$count} StaffPost(s)");
+        }
+    }
+    public function allUserInfos()
+    {
+        return $this->hasMany(UserInfo::class, 'room_id', 'room_id');
+    }
+    public function getCanKickAttribute()
+    {
+        // return true nếu phòng có tenant và hóa đơn quá hạn 5 ngày
+        return $this->tenants()->count() > 0 && $this->latestInvoice?->isOverdue();
+
+
     // public function getCurrentAgreementValidAttribute()
     // {
     //     // Lấy hợp đồng đang hoạt động gần nhất của phòng
@@ -202,5 +245,6 @@ class Room extends Model
     public function getRouteKeyName()
     {
         return 'room_id';
+
     }
 }

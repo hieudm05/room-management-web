@@ -28,7 +28,9 @@ use Illuminate\Support\Str;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\TemplateProcessor;
 use PhpOffice\PhpWord\Writer\HTML;
+
 use Smalot\PdfParser\Parser;
+
 
 
 

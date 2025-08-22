@@ -65,15 +65,20 @@
                             class="btn btn-outline-secondary px-5 py-3 rounded-pill hover-btn fs-6">
                             <i class="bi bi-arrow-left-circle me-2"></i> Quay lại
                         </a>
-                        <form action="{{ route('landlord.posts.destroy', $post->post_id) }}" method="POST"
-                            onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài đăng này?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-outline-danger px-5 py-3 rounded-pill hover-btn fs-6">
-                                <i class="bi bi-trash3-fill me-2"></i> Xóa bài
-                            </button>
-                        </form>
+
+                        @if ($post->status !== 1)
+                            {{-- Chỉ hiện nút xóa nếu bài chưa được duyệt --}}
+                            <form action="{{ route('landlord.posts.destroy', $post->post_id) }}" method="POST"
+                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài đăng này?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-outline-danger px-5 py-3 rounded-pill hover-btn fs-6">
+                                    <i class="bi bi-trash3-fill me-2"></i> Xóa bài
+                                </button>
+                            </form>
+                        @endif
                     </div>
+                    
                 </div>
 
                 {{-- Right: Images --}}

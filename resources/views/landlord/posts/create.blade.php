@@ -135,6 +135,18 @@
                                     @enderror
                                 </div>
 
+                                <div class="col-md-6">
+                                    <label for="move_in_date" class="form-label fw-semibold text-dark">Ngày Nhập
+                                        Phòng</label>
+                                    <input type="date" name="move_in_date" id="move_in_date"
+                                        class="form-control shadow-sm rounded-3" placeholder="Chọn ngày nhập phòng"
+                                        value="{{ old('move_in_date') }}" required>
+                                    @error('move_in_date')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+
+
                                 {{-- Hidden fields for latitude and longitude --}}
                                 <div class="col-md-6">
                                     <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">

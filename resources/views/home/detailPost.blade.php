@@ -220,12 +220,15 @@
                                 <li><strong>Tiền Phòng/tháng:</strong> {{ number_format($post->price, 2) }} VND</li>
                                 <li><strong>Diện Tích:</strong> {{ $post->area }} m²</li>
                                 <li><strong>Địa Chỉ:</strong> {{ $post->address }}, {{ $post->ward }},
-                                    {{ $post->district }}, {{ $post->city }}</li>
+                                <li>
+                                    <strong>Ngày chuyển vào dự kiến:</strong>
+                                    {{ \Carbon\Carbon::parse($post->move_in_date)->format('d/m/Y') }}
+                                </li>
                                 <li><strong>Ngày đăng:</strong>
-                                    {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Chưa xác định' }}
+                                    {{ $post->published_at ? $post->published_at->format('d/m/Y') : 'Chưa xác định' }}
                                 </li>
                                 <li><strong>Hết hạn:</strong>
-                                    {{ $post->expired_at ? $post->expired_at->format('M d, Y') : 'Không giới hạn' }}</li>
+                                    {{ $post->expired_at ? $post->expired_at->format('d/m/Y') : 'Không giới hạn' }}
                             </ul>
                         </div>
                     </div>
@@ -262,6 +265,8 @@
                         </div>
                     </div>
 
+<<<<<<< HEAD
+=======
                     <!-- Location Map -->
                     <div class="card mb-4 shadow-sm border-0 rounded-3 map-card">
                         <div class="card-header bg-light border-0 rounded-top-3">
@@ -313,6 +318,7 @@
                             </form>
                         </div>
                     </div>
+>>>>>>> 845f07bc13036d8cf41990f00f274e2e93d0d596
                 </div>
 
                 <!-- Sidebar -->
@@ -388,6 +394,36 @@
                         </div>
                     </div>
 
+<<<<<<< HEAD
+                </div>
+
+                <!-- Similar Properties -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h4 class="mb-0">Bài Viết Liên Quan</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="property-list">
+                            @foreach ($post->category->posts()->where('post_id', '!=', $post->post_id)->where('status', 1)->where('is_public', 1)->take(4)->get() as $similar)
+                                <div class="property-item d-flex mb-3">
+                                    <a href="{{ route('posts.show', $similar->slug) }}">
+                                        <img src="{{ asset('storage/' . $similar->thumbnail) }}"
+                                            class="img-fluid rounded me-3"
+                                            style="width: 100px; max-height: 100px; object-fit: cover;"
+                                            alt="{{ $similar->title }}" loading="lazy">
+                                    </a>
+                                    <div>
+                                        <h5>
+                                            <a href="{{ route('posts.show', $similar->slug) }}"
+                                                class="text-decoration-none">
+                                                {{ $similar->title }}
+                                            </a>
+                                        </h5>
+                                        <p class="mb-1"><i class="fas fa-map-marker-alt me-1"></i>
+                                            {{ $similar->city }}</p>
+                                        <span class="badge bg-primary">For Rent</span>
+                                        <h6 class="mt-1">${{ number_format($similar->price, 2) }}</h6>
+=======
                     <!-- Agent Contact -->
                     <div class="card mb-4 shadow-sm">
                         <div class="card-body text-center">
@@ -425,6 +461,7 @@
                                             <span class="badge bg-primary">For Rent</span>
                                             <h6 class="mt-1">${{ number_format($similar->price, 2) }}</h6>
                                         </div>
+>>>>>>> 845f07bc13036d8cf41990f00f274e2e93d0d596
                                     </div>
                                 @endforeach
                             </div>
@@ -508,6 +545,8 @@ form.addEventListener('submit', function(e) {
         }
     });
 </script>
+<<<<<<< HEAD
+=======
 
 <!-- VietMap Script -->
 <script src="https://cdn.jsdelivr.net/npm/@mapbox/polyline@1.2.0/src/polyline.min.js"></script>
@@ -897,3 +936,4 @@ getDirectionsBtn.addEventListener('click', getUserLocationAndDrawRoute);
 </script>
 
 {{-- <script src="https://unpkg.com/@turf/polyline@6.x.x/dist/polyline.min.js"></script> --}}
+>>>>>>> 845f07bc13036d8cf41990f00f274e2e93d0d596

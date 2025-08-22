@@ -1,4 +1,9 @@
 <?php
+
+
+use App\Http\Controllers\FeatureController;
+
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Renter\DashboardRenterController;
 use App\Http\Controllers\Landlord\Staff\StaffRoomLeaveController;
@@ -195,8 +200,19 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::post('/room-users/{id}/suscess', [RoomController::class, 'ConfirmAllUser'])->name('room_users.suscess');
         Route::get('/{room}/staffs', [RoomStaffController::class, 'edit'])->name('staffs.edit');
         Route::post('/{room}/staffs', [RoomStaffController::class, 'update'])->name('staffs.update');
+
+        Route::post('{room}/kick', [RoomController::class, 'kickTenants'])
+            ->name('rooms.kick');
+        // Deposit (minh chứng đặt cọc)
+        Route::get('/{room}/deposit', [RoomController::class, 'showDepositForm'])
+            ->name('deposit.form');
+
+        Route::post('/{room}/deposit', [RoomController::class, 'uploadDeposit'])
+            ->name('deposit.upload');
+
         // chuyển phòng
         Route::post('/{room}/move', [RoomController::class, 'move'])->name('move');
+
     });
 
     // Staff quản lý phòng
@@ -467,9 +483,14 @@ Route::post('/complaints/{id}/reject', [LandLordComplaintController::class, 'rej
         Route::post('/home/roomleave/{id}/finalize', [RoomLeaveController::class, 'finalize'])->name('home.roomleave.finalize');
         Route::post('/transfer/accept', [RoomLeaveController::class, 'acceptTransfer'])->name('renter.transfer.accept');
         Route::get('/transfer/confirm', [RoomLeaveController::class, 'confirmTransfer'])->name('roomleave.confirmTransfer');
+
         Route::get('/transfer/deposits', [RoomLeaveController::class, 'depositHistory'])->name('home.roomleave.deposits');
+
+
+
         Route::post('/transfer/reject/{id}', [RoomLeaveController::class, 'rejectTransfer'])
             ->name('renter.transfer.reject');
+
     });
 Route::prefix('room-leave')->middleware(['auth'])->group(function () {
     Route::get('/list', [RoomLeaveController::class, 'index'])->name('home.roomleave.stopRentForm');
@@ -517,17 +538,17 @@ Route::prefix('room-leave')->middleware(['auth'])->group(function () {
 
 
 Route::post('/bookings', [BookingController::class, 'store'])->name('bookings');
+
 Route::middleware(['auth'])->prefix('staff/posts')->name('staff.posts.')->group(function () {
     Route::get('/', [StaffPostController::class, 'index'])->name('index');
     Route::get('/create', [StaffPostController::class, 'create'])->name('create');
     Route::post('/', [StaffPostController::class, 'store'])->name('store');
-
-
-    // 🔧 Sửa lại ở đây
-    Route::get('/{post}', [StaffPostController::class, 'show'])->name('show');
     Route::get('/{post}/edit', [StaffPostController::class, 'edit'])->name('edit');
+
+    Route::get('/{post}', [StaffPostController::class, 'show'])->name('show');
     Route::put('/{post}', [StaffPostController::class, 'update'])->name('update');
     Route::delete('/{post}', [StaffPostController::class, 'destroy'])->name('destroy');
+    Route::post('{post}/resubmit', [StaffPostController::class, 'resubmit'])->name('staff.posts.resubmit');
 });
 
 Route::prefix('landlords')->middleware(['auth'])->group(function () {
@@ -570,3 +591,30 @@ Route::prefix('staff/bookings')->group(function () {
     Route::post('{id}/no-cancel', [StaffBookingController::class, 'noShow']);
     Route::post('{id}/done-with-image', [StaffBookingController::class, 'doneWithImage']);
 });
+
+
+Route::middleware(['auth', 'role:Landlord'])->prefix('landlord')->group(function () {
+    Route::get('/posts', [App\Http\Controllers\Landlord\PostController::class, 'index'])->name('landlord.posts.index');
+    Route::get('/posts/create', [App\Http\Controllers\Landlord\PostController::class, 'create'])->name('landlord.posts.create');
+    Route::post('/posts', [App\Http\Controllers\Landlord\PostController::class, 'store'])->name('landlord.posts.store');
+    Route::get('/posts/{id}', [App\Http\Controllers\Landlord\PostController::class, 'show'])->name('landlord.posts.show');
+    Route::get('/posts/{id}/edit', [App\Http\Controllers\Landlord\PostController::class, 'edit'])->name('landlord.posts.edit'); // Thêm edit
+    Route::put('/posts/{id}', [App\Http\Controllers\Landlord\PostController::class, 'update'])->name('landlord.posts.update'); // Thêm update
+    Route::delete('/posts/{id}', [App\Http\Controllers\Landlord\PostController::class, 'destroy'])->name('landlord.posts.destroy');
+});
+Route::get('/password/change', [ResetPasswordController::class, 'showChangeForm'])
+    ->name('password.change');
+Route::resource('features', FeatureController::class);
+
+Route::post('staff/posts/{post}/resubmit', [StaffPostController::class, 'resubmit'])->name('staff.posts.resubmit');
+
+
+
+Route::prefix('search')->group(function () {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/search', [HomeController::class, 'search'])->name('search.results');
+    Route::get('/search/api-suggestions', [HomeController::class, 'apiSuggestions'])->name('search.api-suggestions');
+});
+// Trong routes/web.php hoặc routes/api.php
+Route::get('/debug-api-structure', [HomeController::class, 'debugApiStructure']);
+

@@ -50,6 +50,7 @@ class StaffPost extends Model
         'latitude',
         'longitude',
         'is_public', // New field added
+        'move_in_date'
     ];
 
     protected $casts = [
@@ -57,6 +58,7 @@ class StaffPost extends Model
         'furnitures' => 'array',
         'gallery' => 'array',
         'published_at' => 'datetime',
+        'move_in_date' => 'date',
     ];
 
     /*
