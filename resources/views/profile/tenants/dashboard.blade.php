@@ -1,35 +1,6 @@
 @extends('profile.tenants.layouts.app')
 
 {{-- Fake dữ liệu demo nếu chưa có --}}
-@php
-    // Dữ liệu từng tháng cho mỗi dịch vụ
-    $monthsQ1 = [
-        ['electric' => 300000, 'water' => 150000, 'wifi' => 100000, 'parking' => 40000],
-        ['electric' => 320000, 'water' => 160000, 'wifi' => 100000, 'parking' => 40000],
-        ['electric' => 310000, 'water' => 155000, 'wifi' => 100000, 'parking' => 40000],
-    ];
-    $monthsQ2 = [
-        ['electric' => 350000, 'water' => 170000, 'wifi' => 100000, 'parking' => 50000],
-        ['electric' => 360000, 'water' => 180000, 'wifi' => 100000, 'parking' => 50000],
-        ['electric' => 340000, 'water' => 175000, 'wifi' => 100000, 'parking' => 50000],
-    ];
-
-    // Tổng từng dịch vụ của mỗi quý
-    $billsQ1 = collect(['electric' => 0, 'water' => 0, 'wifi' => 0, 'parking' => 0]);
-    foreach ($monthsQ1 as $m) {
-        foreach ($billsQ1 as $k => $v) $billsQ1[$k] += $m[$k];
-    }
-    $billsQ2 = collect(['electric' => 0, 'water' => 0, 'wifi' => 0, 'parking' => 0]);
-    foreach ($monthsQ2 as $m) {
-        foreach ($billsQ2 as $k => $v) $billsQ2[$k] += $m[$k];
-    }
-
-    // Gán vào biến dùng cho view
-    $bills1 = $billsQ1;
-    $bills2 = $billsQ2;
-    $label1 = 'Quý 1/2025';
-    $label2 = 'Quý 2/2025';
-@endphp
 
 @section('content')
 <div class="container-fluid px-4 py-6">
@@ -136,6 +107,60 @@
                         </thead>
                         <tbody>
                             @foreach($bills1 as $service => $amount)
+
+
+    {{-- Biểu đồ chi phí chính --}}
+    {{-- <pre>{{ dd($serviceTotals) }}</pre> --}}
+    <div class="card shadow mb-5">
+        <div class="card-body">
+            <h5 class="card-title">📈 Biểu đồ chi phí</h5>
+            <div>
+                <canvas id="costChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {{-- Biểu đồ so sánh nếu có --}}
+<div class="card shadow">
+    <div class="card-body">
+        <h5 class="card-title">📊 So sánh giữa 2 mốc thời gian</h5>
+
+        <form method="GET" action="{{ route('home.profile.tenants.dashboard') }}" class="row g-3 mb-5">
+
+            <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="compare" id="compareCheckbox" value="1" {{ request('compare') ? 'checked' : '' }}>
+                    <label class="form-check-label" for="compareCheckbox">So sánh 2 mốc thời gian</label>
+                </div>
+            </div>
+            <div class="col-md-3" id="comparePeriods" style="{{ request('compare') ? '' : 'display:none;' }}">
+                <input type="month" name="period1" value="{{ request('period1') }}" class="form-control mb-2" placeholder="Chọn mốc 1">
+                <input type="month" name="period2" value="{{ request('period2') }}" class="form-control" placeholder="Chọn mốc 2">
+            </div>
+            <div class="col-md-12 d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">Xem thống kê</button>
+            </div>
+        </form>
+
+        @isset($bills1, $bills2)
+            <div class="mt-4">
+                <canvas id="compareChart" height="100"></canvas>
+            </div>
+
+            <div class="row mt-5">
+                {{-- Bảng chi tiết mốc thời gian 1 --}}
+                <div class="col-md-6">
+                    <h6 class="text-center mb-3">Chi tiết {{ $label1 ?? 'Mốc thời gian 1' }}</h6>
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th>Dịch vụ</th>
+                                <th class="text-end">Số tiền (đ)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($bills1 as $service => $amount)
+
                                 <tr>
                                     <td>{{ ucfirst($service) }}</td>
                                     <td class="text-end">{{ number_format($amount) }}</td>

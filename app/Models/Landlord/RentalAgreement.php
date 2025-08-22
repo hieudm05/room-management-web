@@ -32,8 +32,10 @@ class RentalAgreement extends Model
         return $this->hasMany(RoomLeaveRequest::class, 'rental_agreement_id');
     }
 
+
     public function userInfos()
     {
         return $this->hasMany(\App\Models\UserInfo::class, 'rental_id', 'rental_id');
     }
+
 }

@@ -160,8 +160,10 @@
                                 </div>
                             @endforeach
                         </div>
-                    </div>
-                @endif
+                    @else
+                        <p class="text-muted">Không có ảnh phòng.</p>
+                    @endif
+                </div>
 
                 {{-- Hợp đồng mẫu --}}
                 @if ($room->contract_pdf_file || $room->contract_word_file)
@@ -169,19 +171,32 @@
                         <label class="section-title">Hợp đồng mẫu</label><br>
                         @if ($room->contract_pdf_file)
                             <a href="{{ route('landlords.rooms.contract.pdf', $room) }}"
-                                class="btn btn-outline-success btn-sm me-2" target="_blank">
+                                class="btn btn-outline-success  me-2" target="_blank">
                                 👁️ Xem PDF
                             </a>
                             <a href="{{ route('landlords.rooms.contract.download', $room) }}"
-                                class="btn btn-outline-primary btn-sm me-2">
+                                class="btn btn-outline-primary  me-2">
                                 📄 Tải PDF
                             </a>
+                            <a href="{{ route('landlords.rooms.contract.contractIndex', $room) }}"
+                                class="btn btn-outline-primary ">
+                                📄 Hợp đồng
+                            </a>
+                            <a href="{{ route('landlords.rooms.contracts.create', $room) }}"
+                                class="btn btn-outline-primary ">
+                                📄 Điền form thông tin
+                            </a>
                         @endif
-
                         @if ($room->contract_word_file)
                             <a href="{{ route('landlords.rooms.contract.word', $room) }}"
-                                class="btn btn-outline-warning btn-sm">
+                                class="btn btn-outline-warning ">
                                 📝 Tải Word (.docx)
+                            </a>
+                        @endif
+                        @if ($room->status === 'Available')
+                            <a href="{{ route('landlords.rooms.deposit.form', $room) }}"
+                                class="btn btn-outline-info ">
+                                💰 Đặt cọc
                             </a>
                         @endif
                     </div>

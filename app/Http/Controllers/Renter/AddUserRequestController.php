@@ -8,6 +8,7 @@ use App\Models\Landlord\Approval;
 use App\Models\Landlord\RentalAgreement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class AddUserRequestController extends Controller
 {
@@ -15,9 +16,8 @@ class AddUserRequestController extends Controller
     {
         $renter = Auth::user();
 
-        // Lấy thông tin phòng người thuê đang ở
         $renterInfo = UserInfo::where('user_id', $renter->id)
-            ->with('room.property') // nếu muốn lấy thông tin property luôn
+            ->with('room.property')
             ->first();
 
         if (!$renterInfo || !$renterInfo->room) {
@@ -27,14 +27,13 @@ class AddUserRequestController extends Controller
         $room = $renterInfo->room;
         $roomId = $room->room_id ?? $room->id;
 
-        // Lấy hợp đồng gần nhất của người thuê với phòng đó
         $rental = RentalAgreement::where('room_id', $roomId)
             ->where('renter_id', $renter->id)
             ->latest()
             ->first();
 
         $rentalId = $rental?->rental_id ?? null;
-        // dd($rentalId);
+
         return view('renter.storeuser', [
             'roomId'   => $roomId,
             'rooms'    => $room,
@@ -42,8 +41,6 @@ class AddUserRequestController extends Controller
             'rentalId' => $rentalId,
         ]);
     }
-
-
 
     public function store(Request $request)
     {

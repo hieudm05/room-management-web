@@ -177,6 +177,8 @@ class Room extends Model
     {
         $room = self::find($roomId);
 
+
+
         if (!$room) {
             Log::warning("Room $roomId not found!");
             return;
@@ -200,5 +202,14 @@ class Room extends Model
                 ]);
             Log::info("Room {$room->room_id} NOT FULL → Unhidden {$count} StaffPost(s)");
         }
+    }
+    public function allUserInfos()
+    {
+        return $this->hasMany(UserInfo::class, 'room_id', 'room_id');
+    }
+    public function getCanKickAttribute()
+    {
+        // return true nếu phòng có tenant và hóa đơn quá hạn 5 ngày
+        return $this->tenants()->count() > 0 && $this->latestInvoice?->isOverdue();
     }
 }

@@ -174,22 +174,56 @@
                                     </td>
 
                                     <td>
-                                        <a href="{{ route('landlords.rooms.edit', $room) }}"
-                                            class="btn btn-sm btn-outline-primary">✏️</a>
-                                        <a href="{{ route('landlords.rooms.show', $room) }}"
-                                            class="btn btn-sm btn-outline-warning">👁️</a>
+                                        <div class="d-flex flex-wrap gap-1 align-items-center">
+                                            {{-- Chỉnh sửa --}}
+                                            <a href="{{ route('landlords.rooms.edit', $room) }}"
+                                                class="btn btn-sm btn-outline-primary">✏️</a>
 
-                                        <form action="{{ route('landlords.rooms.destroy', $room) }}" method="POST"
-                                            class="d-inline"
-                                            onsubmit="return confirm('Bạn có chắc chắn muốn xoá phòng này?');">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger">🗑️</button>
-                                        </form>
+                                            {{-- Xem chi tiết --}}
+                                            <a href="{{ route('landlords.rooms.show', $room) }}"
+                                                class="btn btn-sm btn-outline-warning">👁️</a>
 
-                                        <a href="{{ route('landlords.rooms.staffs.edit', $room->room_id) }}"
-                                            class="btn btn-sm btn-outline-info">👤</a>
+                                            {{-- Xóa phòng --}}
+                                            <form action="{{ route('landlords.rooms.destroy', $room) }}" method="POST"
+                                                onsubmit="return confirm('Bạn có chắc chắn muốn xoá phòng này?');">
+                                                @csrf @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger">🗑️</button>
+                                            </form>
 
-                                        <div class="d-flex gap-1 mt-1">
+                                            {{-- Kick tenant --}}
+                                            @php
+                                                $latestBill = \App\Models\Landlord\Staff\Rooms\RoomBill::where(
+                                                    'room_id',
+                                                    $room->room_id,
+                                                )
+                                                    ->where('status', 'unpaid')
+                                                    ->orderByDesc('month')
+                                                    ->first();
+
+                                                $canKick = false;
+                                                if ($latestBill) {
+                                                    $dueDatePlus5 = \Carbon\Carbon::parse($latestBill->month)->addDays(
+                                                        5,
+                                                    );
+                                                    if (\Carbon\Carbon::now()->gte($dueDatePlus5)) {
+                                                        $canKick = true;
+                                                    }
+                                                }
+                                            @endphp
+                                            <form action="{{ route('landlords.rooms.rooms.kick', $room) }}" method="POST"
+                                                onsubmit="return confirm('Bạn có chắc chắn muốn kick tất cả tenant trong phòng này?');">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    @if (!$canKick) disabled title="Phòng chưa có hóa đơn quá hạn 5 ngày hoặc đã thanh toán" @endif>
+                                                    Kick
+                                                </button>
+                                            </form>
+
+                                            {{-- Nhân viên quản lý --}}
+                                            <a href="{{ route('landlords.rooms.staffs.edit', $room->room_id) }}"
+                                                class="btn btn-sm btn-outline-info">👤</a>
+
+                                            {{-- Khóa hợp đồng & thống kê --}}
                                             @if ($room->currentAgreementValid && !$room->is_contract_locked)
                                                 <form action="{{ route('landlords.rooms.lockContract', $room) }}"
                                                     method="POST"
@@ -201,8 +235,8 @@
                                             <a href="{{ route('landlords.rooms.statistics', $room) }}"
                                                 class="btn btn-sm btn-outline-secondary">📊</a>
                                         </div>
-
                                     </td>
+
                                 </tr>
                             @empty
                                 <tr>
@@ -243,7 +277,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     {{-- Hiển thị thông báo SweetAlert2 nếu có --}}
-    @if(session('success'))
+    @if (session('success'))
         <script>
             Swal.fire({
                 title: "Thành công!",
