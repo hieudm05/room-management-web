@@ -52,7 +52,7 @@
             <div class="mb-3">
                 <label for="user_cost" class="form-label">💰 Chi phí người thuê chịu (VNĐ):</label>
                 <input type="number" name="user_cost" id="user_cost"
-                  class="form-control" min="0" step="1000"
+                  class="form-control" min="0" 
                  value="{{ old('user_cost') }}"
                    placeholder="Không nhập nếu không tính phí">
             </div>
@@ -60,7 +60,7 @@
             <div class="mb-3">
                 <label for="landlord_cost" class="form-label">💼 Chi phí chủ trọ chịu (VNĐ):</label>
                <input type="number" name="landlord_cost" id="landlord_cost"
-                 class="form-control" min="0" step="1000"
+                 class="form-control" min="0" 
                  value="{{ old('landlord_cost') }}"
                  placeholder="Không nhập nếu không tính phí">
             </div>
