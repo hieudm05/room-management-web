@@ -383,7 +383,7 @@ class PropertyController extends Controller
             'format' => 'json',
             'q' => $fullAddress
         ])->json();
-         $lat = $request->input('latitude');
+        $lat = $request->input('latitude');
         $lon = $request->input('longitude');
 
         // Xử lý ảnh chính

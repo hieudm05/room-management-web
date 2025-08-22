@@ -25,7 +25,7 @@ class PostController extends Controller
     {
         $lat = $request->input('lat');
         $lng = $request->input('lng');
-        $radius = 50; // km
+        $radius = 10; // km
 
         if (!is_numeric($lat) || !is_numeric($lng)) {
             return response()->json(['message' => 'Toạ độ không hợp lệ.'], 422);

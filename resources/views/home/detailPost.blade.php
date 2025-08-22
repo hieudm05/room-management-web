@@ -161,12 +161,15 @@
                                 <li><strong>Tiền Phòng/tháng:</strong> {{ number_format($post->price, 2) }} VND</li>
                                 <li><strong>Diện Tích:</strong> {{ $post->area }} m²</li>
                                 <li><strong>Địa Chỉ:</strong> {{ $post->address }}, {{ $post->ward }},
-                                    {{ $post->district }}, {{ $post->city }}</li>
+                                <li>
+                                    <strong>Ngày chuyển vào dự kiến:</strong>
+                                    {{ \Carbon\Carbon::parse($post->move_in_date)->format('d/m/Y') }}
+                                </li>
                                 <li><strong>Ngày đăng:</strong>
-                                    {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Chưa xác định' }}
+                                    {{ $post->published_at ? $post->published_at->format('d/m/Y') : 'Chưa xác định' }}
                                 </li>
                                 <li><strong>Hết hạn:</strong>
-                                    {{ $post->expired_at ? $post->expired_at->format('M d, Y') : 'Không giới hạn' }}</li>
+                                    {{ $post->expired_at ? $post->expired_at->format('d/m/Y') : 'Không giới hạn' }}
                             </ul>
                         </div>
                     </div>
@@ -204,32 +207,6 @@
                         </div>
                     </div>
 
-                    <!-- Reviews -->
-                    <div class="card mb-4 shadow-sm border-0 rounded-3">
-                        <div class="card-header bg-light border-0 rounded-top-3">
-                            <h4 class="mb-0 fw-semibold text-primary">Đánh Giá</h4>
-                        </div>
-                        <div class="card-body">
-                            <p>Chưa có đánh giá. Hãy chia sẻ trải nghiệm của bạn!</p>
-                        </div>
-                    </div>
-
-                    <!-- Write a Review -->
-                    <div class="card shadow-sm border-0 rounded-3">
-                        <div class="card-header bg-light border-0 rounded-top-3">
-                            <h4 class="mb-0 fw-semibold text-primary">Viết Đánh Giá</h4>
-                        </div>
-                        <div class="card-body">
-                            <form action="#" method="POST">
-                                @csrf
-                                <div class="mb-3">
-                                    <label for="reviewMessage" class="form-label">Đánh giá của bạn</label>
-                                    <textarea id="reviewMessage" name="review" class="form-control" rows="5" placeholder="Viết đánh giá..." required></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary rounded-pill w-100">Gửi Đánh Giá</button>
-                            </form>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Sidebar -->
@@ -301,20 +278,10 @@
 
                 </div>
 
-                <!-- Agent Contact -->
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-body text-center">
-                        <a href="#" class="btn btn-outline-primary rounded-pill" data-bs-toggle="modal"
-                            data-bs-target="#agentMessage">
-                            <i class="fas fa-comment-alt me-2"></i> Contact Agent
-                        </a>
-                    </div>
-                </div>
-
                 <!-- Similar Properties -->
                 <div class="card shadow-sm">
                     <div class="card-header bg-light">
-                        <h4 class="mb-0">Similar Properties</h4>
+                        <h4 class="mb-0">Bài Viết Liên Quan</h4>
                     </div>
                     <div class="card-body">
                         <div class="property-list">
@@ -367,4 +334,3 @@
         });
     });
 </script>
-

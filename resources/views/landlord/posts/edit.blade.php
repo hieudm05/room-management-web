@@ -7,13 +7,13 @@
                 <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
                     <div class="card-body p-5 bg-white">
                         <h2 class="mb-5 text-center text-primary fw-bold display-5">
-                            <i class="bi bi-house-door-fill me-2"></i> Sửa bài cho thuê nhà trọ
+                            <i class="bi bi-house-door-fill me-2"></i> Chỉnh sửa bài cho thuê nhà trọ
                         </h2>
 
-                        <form action="{{ route('staff.posts.update', $post) }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('landlord.posts.update', ['id' => $post->post_id]) }}" method="POST"
+                            enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
-
 
                             <div class="row g-4">
                                 {{-- Loại chuyên mục --}}
@@ -25,30 +25,11 @@
                                         <option value="">-- Chọn loại chuyên mục --</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->category_id }}"
-                                                {{ $post->category_id == $category->category_id ? 'selected' : '' }}>
-                                                {{ $category->name }}
-                                            </option>
+                                                {{ old('category_id', $post->category_id) == $category->category_id ? 'selected' : '' }}>
+                                                {{ $category->name }}</option>
                                         @endforeach
                                     </select>
                                     @error('category_id')
-                                        <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
-
-                                {{-- Chủ trọ --}}
-                                <div class="col-md-6">
-                                    <label for="landlord_id" class="form-label fw-semibold text-dark">Chủ trọ</label>
-                                    <select name="landlord_id" id="landlord_id" class="form-select shadow-sm rounded-3"
-                                        required>
-                                        <option value="">-- Chọn chủ trọ --</option>
-                                        @foreach ($landlords as $landlord)
-                                            <option value="{{ $landlord->id }}"
-                                                {{ $post->landlord_id == $landlord->id ? 'selected' : '' }}>
-                                                {{ $landlord->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('landlord_id')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
@@ -61,9 +42,8 @@
                                         <option value="">-- Chọn bất động sản --</option>
                                         @foreach ($properties as $property)
                                             <option value="{{ $property->property_id }}"
-                                                {{ $post->property_id == $property->property_id ? 'selected' : '' }}>
-                                                {{ $property->name }}
-                                            </option>
+                                                {{ old('property_id', $post->property_id) == $property->property_id ? 'selected' : '' }}>
+                                                {{ $property->name }}</option>
                                         @endforeach
                                     </select>
                                     @error('property_id')
@@ -71,15 +51,15 @@
                                     @enderror
                                 </div>
 
+                                {{-- Phòng (Optional) --}}
                                 <div class="col-md-6">
-                                    <label for="room_id" class="form-label fw-semibold text-dark">Phòng</label>
-                                    <select name="room_id" id="room_id" class="form-select shadow-sm rounded-3" required>
+                                    <label for="room_id" class="form-label fw-semibold text-dark">Phòng (Tùy chọn)</label>
+                                    <select name="room_id" id="room_id" class="form-select shadow-sm rounded-3">
                                         <option value="">-- Chọn Phòng --</option>
                                         @foreach ($rooms as $room)
                                             <option value="{{ $room->room_id }}"
-                                                {{ $post->room_id == $room->room_id ? 'selected' : '' }}>
-                                                {{ $room->room_number }}
-                                            </option>
+                                                {{ old('room_id', $post->room_id) == $room->room_id ? 'selected' : '' }}>
+                                                {{ $room->room_number }}</option>
                                         @endforeach
                                     </select>
                                     @error('room_id')
@@ -153,8 +133,7 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label for="address" class="form-label fw-semibold text-dark">Địa chỉ chi
-                                        tiết</label>
+                                    <label for="address" class="form-label fw-semibold text-dark">Địa chỉ chi tiết</label>
                                     <input type="text" name="address" id="address"
                                         class="form-control shadow-sm rounded-3" placeholder="VD: Số 123, Ngõ 45"
                                         value="{{ old('address', $post->address) }}" required>
@@ -163,15 +142,12 @@
                                     @enderror
                                 </div>
 
-                                {{-- Tiêu đề --}}
                                 <div class="col-md-6">
-                                    <label for="move_in_date" class="form-label fw-semibold text-dark">Ngày Nhập
-                                        Phòng</label>
-                                    <input type="datetime-local" name="move_in_date" id="move_in_date"
-                                        class="form-control shadow-sm rounded-3"
-                                        value="{{ old('move_in_date', optional($post->move_in_date)->format('Y-m-d\TH:i')) }}"
-                                        required>
-                                    @error('move_in_date')
+                                    <label for="title" class="form-label fw-semibold text-dark">Ngày Nhập Phòng</label>
+                                    <input type="text" name="title" id="title"
+                                        class="form-control shadow-sm rounded-3" placeholder="Nhập tiêu đề bài viết"
+                                        value="{{ old('title', $post->move_in_date) }}" required>
+                                    @error('title')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
@@ -197,12 +173,13 @@
                                         <input type="text" id="search-map"
                                             class="form-control shadow-sm rounded-start-3"
                                             placeholder="VD: Số 123, Ngõ 45, Phường Cống Vị, Quận Ba Đình, Hà Nội"
-                                            value="{{ old('address', $post->address) }}">
+                                            value="{{ old('search-map', $post->address . ', ' . $post->ward . ', ' . $post->district . ', ' . $post->city) }}">
                                         <button class="btn btn-outline-primary" type="button" id="search-button">
                                             <i class="bi bi-search"></i> Tìm
                                         </button>
                                     </div>
-                                    <div id="map" class="rounded-3 shadow-sm" style="height: 400px;"></div>
+                                    <div id="map" class="rounded-3 shadow-sm" style="height: 400px; width: 100%;">
+                                    </div>
                                     <small class="text-muted">Nhấn vào bản đồ để chọn vị trí hoặc sử dụng ô tìm kiếm. Nếu
                                         địa chỉ chi tiết không tìm thấy, hãy thử chọn trên bản đồ hoặc nhập địa chỉ tổng
                                         quát hơn.</small>
@@ -246,7 +223,7 @@
                                 <div class="col-md-6">
                                     <label for="thumbnail" class="form-label fw-semibold text-dark">Ảnh thumbnail</label>
                                     <input type="file" name="thumbnail" id="thumbnail"
-                                        class="form-control shadow-sm rounded-3" accept="image/*">
+                                        class="form-control shadow-sm rounded-3" accept="image/jpeg,image/png,image/jpg">
                                     @error('thumbnail')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -266,16 +243,16 @@
                                 <div class="col-md-6">
                                     <label for="gallery" class="form-label fw-semibold text-dark">Album ảnh</label>
                                     <input type="file" name="gallery[]" id="gallery"
-                                        class="form-control shadow-sm rounded-3" accept="image/*" multiple>
-                                    @error('gallery')
+                                        class="form-control shadow-sm rounded-3" accept="image/jpeg,image/png,image/jpg"
+                                        multiple>
+                                    @error('gallery.*')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                     <div id="gallery-preview" class="mt-3 d-flex flex-wrap gap-2">
                                         @if ($post->gallery)
-                                            @foreach (json_decode($post->gallery, true) as $image)
+                                            @foreach (json_decode($post->gallery) as $image)
                                                 <img src="{{ asset('storage/' . $image) }}"
-                                                    class="img-fluid rounded-3 shadow-sm" style="max-height: 100px;"
-                                                    alt="Gallery Image">
+                                                    class="img-fluid rounded-3 shadow-sm" style="max-height: 100px;">
                                             @endforeach
                                         @endif
                                     </div>
@@ -284,7 +261,7 @@
 
                             <div class="mt-5 text-center">
                                 <button type="submit" class="btn btn-gradient-primary px-5 py-3 rounded-pill fw-bold">
-                                    <i class="bi bi-save me-2"></i> Cập nhật bài đăng
+                                    <i class="bi bi-save me-2"></i> Cập nhật bài
                                 </button>
                             </div>
                         </form>
@@ -803,7 +780,7 @@
                     var roomSelect = $('#room_id');
 
                     roomSelect.empty().append('<option value="">-- Chọn Phòng --</option>');
-                    roomSelect.prop('disabled', true);
+                    roomSelect.prop('disabled', !propertyId);
 
                     if (propertyId) {
                         $.ajax({
@@ -813,13 +790,14 @@
                                 console.log(data);
                                 roomSelect.prop('disabled', false);
                                 $.each(data.rooms, function(index, room) {
-                                    const option = $('<option></option>').val(room.room_id)
+                                    const option = $('<option></option>')
+                                        .val(room.room_id)
                                         .text(room.room_number);
-                                    if (room.room_id == '{{ $post->room_id }}') {
+                                    if (room.room_id ==
+                                        '{{ old('room_id', $post->room_id) }}') {
                                         option.prop('selected', true);
                                     }
-                                    roomSelect.append(
-                                        option); // Sửa từ appendChild sang append
+                                    roomSelect.append(option);
                                 });
                             },
                             error: function() {
@@ -829,7 +807,7 @@
                     }
                 });
 
-                // Trigger change để load danh sách phòng
+                // Trigger property_id change to load rooms for the current property
                 $('#property_id').trigger('change');
             });
         </script>
@@ -887,6 +865,8 @@
             #map {
                 border: 1px solid #e0e0e0;
                 border-radius: 0.5rem;
+                width: 100%;
+                height: 400px;
             }
         </style>
     @endsection
