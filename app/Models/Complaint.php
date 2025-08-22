@@ -28,6 +28,7 @@ class Complaint extends Model
         'photo_album',
         'handled_by',
         'status',
+         'rejected_staff_ids' => 'array',
         'room_bill_id', // Added field for room_bill_id
     ];
 

@@ -135,32 +135,45 @@ class LandLordComplaintController extends Controller
             ->with('success', 'Đã ủy quyền nhân viên xử lý khiếu nại thành công.');
     }
 
-    public function acceptReject($id)
-    {
-        $complaint = Complaint::with('property')->findOrFail($id);
+    public function acceptReject(Request $request, $id)
+{
+    $complaint = Complaint::findOrFail($id);
 
-        if (!$complaint->property || $complaint->property->landlord_id !== Auth::id()) {
-            abort(403, 'Bạn không có quyền xử lý khiếu nại này.');
-        }
+    // Xác định action từ form
+    $action = $request->input('action');
 
-        if ($complaint->status !== 'rejected') {
-            return back()->with('error', 'Khiếu nại này chưa bị từ chối.');
-        }
-
+    if ($action === 'cancel') {
+        // Chủ trọ đồng ý từ chối -> đóng khiếu nại
         $complaint->status = 'cancelled';
+        $complaint->handled_by = null; // không ai xử lý nữa
         $complaint->save();
 
-        if ($complaint->user_id) {
-            $this->sendNotificationToUser(
-                $complaint->user_id,
-                'Khiếu nại đã bị huỷ xử lý',
-                'Chủ trọ đã đánh dấu khiếu nại của bạn là huỷ bỏ.',
-                route('home.complaints.show', $complaint->id)
-            );
-        }
+        // Thông báo cho người thuê
+        Notification::create([
+            'title' => 'Khiếu nại đã đóng',
+            'message' => "Khiếu nại #{$complaint->id} đã được chủ trọ xác nhận từ chối và đóng lại.",
+        ]);
 
-        return redirect()->route('landlord.complaints.index')->with('success', 'Đã chấp nhận từ chối xử lý khiếu nại.');
+        return back()->with('success', 'Bạn đã đồng ý với lý do từ chối và đóng khiếu nại.');
+    } 
+    elseif ($action === 'takeover') {
+        // Chủ trọ không đồng ý từ chối -> tự xử lý
+        $complaint->status = 'in_progress';
+        $complaint->handled_by = auth()->id(); // id chủ trọ đang login
+        $complaint->save();
+
+        // Thông báo cho người thuê
+        Notification::create([
+            'title' => 'Chủ trọ tiếp nhận khiếu nại',
+            'message' => "Khiếu nại #{$complaint->id} đã được chủ trọ trực tiếp tiếp nhận xử lý.",
+        ]);
+
+          return redirect()->route('landlord.complaints.resolve.form', $complaint->id);
     }
+
+    return back()->with('error', 'Hành động không hợp lệ.');
+}
+
 
     public function showRejection($id)
     {

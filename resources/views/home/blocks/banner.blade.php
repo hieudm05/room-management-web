@@ -90,7 +90,7 @@
             wardSelect.disabled = true;
 
             // Log danh sách tỉnh/thành trong dropdown
-            console.log("Danh sách tỉnh/thành trong dropdown:", @json($cities));
+          
 
             // Hàm load quận/huyện
             function loadDistricts(city) {

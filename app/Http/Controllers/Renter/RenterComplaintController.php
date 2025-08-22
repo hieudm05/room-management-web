@@ -12,6 +12,7 @@ use App\Models\Complaint;
 use App\Models\CommonIssue;
 use App\Models\Landlord\Property;
 use App\Models\Landlord\Room;
+use App\Models\UserInfo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
@@ -20,25 +21,28 @@ class RenterComplaintController extends Controller
 {
     // Hiển thị form gửi khiếu nại
     public function create()
-    {
-        $user = auth()->user();
+{
+    $user = auth()->user();
 
-        $rental = RentalAgreement::with(['room.property'])
-            ->where('renter_id', $user->id)
-            ->whereIn('status', ['Signed', 'Active'])
-            ->latest()
-            ->first();
+    // Lấy thông tin phòng mà user đang active
+    $userInfo = UserInfo::with(['room.property'])
+        ->where('user_id', $user->id)
+        ->where('active', 1)
+        ->latest()
+        ->first();
 
-        if (!$rental) {
-            return back()->with('error', 'Bạn chưa có hợp đồng thuê đang hoạt động.');
-        }
-
-        $room = $rental->room;
-        $property = $room->property;
-        $commonIssues = CommonIssue::all();
-
-        return view('home.complaints.form', compact('room', 'property', 'commonIssues'));
+    if (!$userInfo) {
+        return back()->with('error', 'Bạn chưa có hợp đồng thuê đang hoạt động.');
     }
+
+    $room = $userInfo->room;
+    $property = $room->property;
+
+    // Lấy danh sách vấn đề phổ biến
+    $commonIssues = CommonIssue::all();
+
+    return view('home.complaints.form', compact('room', 'property', 'commonIssues'));
+}
 
     // Lưu khiếu nại
     public function store(Request $request)

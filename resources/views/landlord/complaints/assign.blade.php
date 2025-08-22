@@ -9,12 +9,16 @@
 
         <div class="mb-3">
             <label for="staff_id" class="form-label">Chọn nhân viên:</label>
-            <select class="form-select" name="staff_id" id="staff_id" required>
-                <option value="">-- Chọn nhân viên --</option>
-                @foreach ($staffList as $staff)
-                    <option value="{{ $staff->id }}">{{ $staff->name }} ({{ $staff->email }})</option>
-                @endforeach
-            </select>
+           <select class="form-select" name="staff_id" id="staff_id" required>
+    @if($staffList->isEmpty())
+        <option value="">Không còn nhân viên khả dụng</option>
+    @else
+        <option value="">-- Chọn nhân viên --</option>
+        @foreach ($staffList as $staff)
+            <option value="{{ $staff->id }}">{{ $staff->name }} ({{ $staff->email }})</option>
+        @endforeach
+    @endif
+</select>
         </div>
 
         <div class="d-flex gap-2">
