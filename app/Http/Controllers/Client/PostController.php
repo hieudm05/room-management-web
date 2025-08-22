@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class PostController extends Controller
 {
-   
+
 
     public function show(StaffPost $post)
     {
@@ -18,6 +18,7 @@ class PostController extends Controller
         }
 
         $post->load(['category', 'features', 'property']);
+        // dd($post);
         return view('home.detailPost', compact('post'));
     }
 

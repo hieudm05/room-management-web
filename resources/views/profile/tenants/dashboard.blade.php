@@ -2,35 +2,6 @@
 @extends('profile.tenants.layouts.app')
 
 {{-- Fake dữ liệu demo nếu chưa có --}}
-@php
-    // Dữ liệu từng tháng cho mỗi dịch vụ
-    $monthsQ1 = [
-        ['electric' => 300000, 'water' => 150000, 'wifi' => 100000, 'parking' => 40000],
-        ['electric' => 320000, 'water' => 160000, 'wifi' => 100000, 'parking' => 40000],
-        ['electric' => 310000, 'water' => 155000, 'wifi' => 100000, 'parking' => 40000],
-    ];
-    $monthsQ2 = [
-        ['electric' => 350000, 'water' => 170000, 'wifi' => 100000, 'parking' => 50000],
-        ['electric' => 360000, 'water' => 180000, 'wifi' => 100000, 'parking' => 50000],
-        ['electric' => 340000, 'water' => 175000, 'wifi' => 100000, 'parking' => 50000],
-    ];
-
-    // Tổng từng dịch vụ của mỗi quý
-    $billsQ1 = collect(['electric' => 0, 'water' => 0, 'wifi' => 0, 'parking' => 0]);
-    foreach ($monthsQ1 as $m) {
-        foreach ($billsQ1 as $k => $v) $billsQ1[$k] += $m[$k];
-    }
-    $billsQ2 = collect(['electric' => 0, 'water' => 0, 'wifi' => 0, 'parking' => 0]);
-    foreach ($monthsQ2 as $m) {
-        foreach ($billsQ2 as $k => $v) $billsQ2[$k] += $m[$k];
-    }
-
-    // Gán vào biến dùng cho view
-    $bills1 = $billsQ1;
-    $bills2 = $billsQ2;
-    $label1 = 'Quý 1/2025';
-    $label2 = 'Quý 2/2025';
-@endphp
 
 @extends('home.layouts.app')
 
@@ -127,7 +98,6 @@
         </div>
     </div>
 
-
     {{-- Biểu đồ chi tiết dịch vụ --}}
     <div class="card mb-5 shadow">
         <div class="card-body">
@@ -191,7 +161,7 @@
         <h5 class="card-title">📊 So sánh giữa 2 mốc thời gian</h5>
 
         <form method="GET" action="{{ route('home.profile.tenants.dashboard') }}" class="row g-3 mb-5">
-           
+
             <div class="col-md-3 d-flex align-items-end">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="compare" id="compareCheckbox" value="1" {{ request('compare') ? 'checked' : '' }}>

@@ -8,6 +8,8 @@ use App\Models\Landlord\Property;
 use App\Models\Landlord\Staff\Rooms\RoomBill;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Exports\AllBillsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class LandlordBillController extends Controller
 {
@@ -60,7 +62,9 @@ class LandlordBillController extends Controller
 
         // Phí phát sinh
         $additionalFees = $bill->additionalFees ?? [];
-        $additionalFeesTotal = collect($additionalFees)->sum('total');
+        $additionalFeesTotal = collect($additionalFees)->sum(function ($fee) {
+            return ($fee['price'] ?? 0) * ($fee['qty'] ?? 1);
+        });
 
         // Kiểm tra và log nếu additionalFeesTotal không khớp
         $calculatedTotal = 0;
@@ -81,6 +85,7 @@ class LandlordBillController extends Controller
 
         // Dịch vụ phụ (ngoại trừ điện và nước)
         $services = $bill->services ?? [];
+        // dd($services);
         $serviceTotal = collect($services)->sum('total');
 
         // Tổng hóa đơn
@@ -93,4 +98,31 @@ class LandlordBillController extends Controller
             'additionalFeesTotal', 'total', 'waterUnit', 'waterPrice', 'electricPrice'
         ));
     }
+    public function exportAllBills(Request $request)
+    {
+        // Lấy tháng/năm từ request, mặc định là hiện tại
+        $monthInput = $request->input('month', now()->format('Y-m'));
+        $status = $request->input('status');
+
+        // Tách thành năm và tháng để query
+        [$year, $month] = explode('-', $monthInput);
+
+        // Lấy dữ liệu hóa đơn
+        $bills = RoomBill::query()
+            ->when($status, function ($query) use ($status) {
+                $query->where('status', $status);
+            })
+            ->whereYear('month', $year)
+            ->whereMonth('month', $month)
+            ->orderBy('room_id')
+            ->get();
+
+        // Xuất Excel
+        return Excel::download(
+            new AllBillsExport($bills),
+            'hoa_don_tong_hop_' . $monthInput . '.xlsx'
+        );
+    }
+
+
 }

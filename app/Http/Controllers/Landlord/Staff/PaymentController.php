@@ -9,8 +9,10 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
 use App\Models\Landlord\BankAccount;
+use App\Models\Landlord\BillService;
 use App\Models\Landlord\Property;
 use App\Models\Landlord\Room;
+use App\Models\Landlord\Service;
 use App\Models\Landlord\Staff\Rooms\RoomBill;
 use App\Models\Landlord\Staff\Rooms\RoomBillService;
 use App\Models\Landlord\Staff\Rooms\RoomBillAdditionalFee;
@@ -22,6 +24,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+
 
 class PaymentController extends Controller
 {
@@ -74,8 +78,7 @@ class PaymentController extends Controller
             $rentalAgreement = $room->rentalAgreement;
             $tenant = $rentalAgreement ? User::find($rentalAgreement->renter_id) : null;
             $bill = $room->bills->first();
-            $utility = $room->utilities->first();
-
+            $billService = BillService::where('bill_id', $bill ? $bill->id : null)->get();
             // Lấy chỉ số đầu từ tháng trước
             $previousMonth = date('Y-m', strtotime($month . '-01 -1 month'));
             $previousBill = RoomBill::where('room_id', $room->room_id)
@@ -85,7 +88,7 @@ class PaymentController extends Controller
             $electricService = $room->services->firstWhere('service_id', 1);
             $electricPrice = $electricService ? $electricService->pivot->price : 3000;
             $waterService = $room->services->firstWhere('service_id', 2);
-            $waterPrice = $waterService ? $waterService->pivot->price : 20000;
+            $waterPrice = $bill ? $bill->water_price : ($waterService ? $waterService->pivot->price : 20000);
             $waterUnit = $waterService ? $waterService->pivot->unit : 'per_m3';
 
             $services = [];
@@ -105,7 +108,7 @@ class PaymentController extends Controller
                 $total = $isFree ? 0 : $price * $qty;
 
                 $services[] = [
-                    'service_id' => $service->id,
+                    'service_id' => $service->service_id,
                     'name' => $service->name,
                     'price' => $price,
                     'qty' => $qty,
@@ -166,8 +169,8 @@ class PaymentController extends Controller
 
 
             $rentPrice = $bill ? $bill->rent_price : ($room->rental_price ?? 0);
-            $electricTotal = $utility ? $utility->electricity : ($bill ? $bill->electric_total : 0);
-            $waterTotal = $utility ? $utility->water : ($bill ? $bill->water_total : 0);
+            $electricTotal = $bill ? $bill->electric_total : 0;
+            $waterTotal = $bill ? $bill->water_total : 0;
             $total = $rentPrice + $electricTotal + $waterTotal + $additionalFeesTotal + $serviceTotal + $totalAfterComplaint;
 
             // Kiểm tra hóa đơn đã đầy đủ thông tin chưa
@@ -187,22 +190,33 @@ class PaymentController extends Controller
                 'rent_price' => $rentPrice,
                 'month' => $month,
                 'electric_start' => $previousBill ? $previousBill->electric_end : ($bill ? $bill->electric_start : 0),
-                'electric_end' => $utility ? $utility->electric_end : 0,
-                'electric_kwh' => $utility ? $utility->electric_kwh : 0,
+                'electric_end' => $bill ? $bill->electric_end : 0,
+                'electric_kwh' => $bill ? $bill->electric_kwh : 0,
                 'electric_price' => $electricPrice,
                 'electric_total' => $electricTotal,
                 'electric_photos' => $electricPhotos,
                 'water_price' => $waterPrice,
-                'water_unit' => $waterUnit ?? 'per_m3',
-                'water_occupants' => $room ? $room->people_renter : ($bill ? $bill->water_occupants : 1),
+                'water_unit' =>   $bill ? $bill->water_unit :  $waterUnit ?? 'per_m3',
+                'water_occupants' => $bill ? $bill->water_occupants : ( $room ? $room->people_renter : 1 ) ,
                 'water_start' => $waterUnit == 'per_m3'
                     ? ($previousBill ? $previousBill->water_end : 0)
                     : ($bill ? $bill->water_start : 0),
-
-                'water_m3' => $utility ? $utility->water_m3 : 0,
+                'water_end' => $bill ? $bill->water_end : 0,
+                'water_m3' => $bill ? $bill->water_m3 : 0,
                 'water_total' => $waterTotal,
                 'water_photos' => $waterPhotos,
-                'services' => $services,
+                'services' => $billService->isNotEmpty()
+                    ? $billService->map(function ($sv) {
+                        return [
+                            'service_id' => $sv->service_id,
+                            'name' => $sv->name,
+                            'price' => $sv->price,
+                            'qty' => $sv->qty,
+                            'total' => $sv->total,
+                            'type_display' => $sv->type_display ?? 'Tùy chỉnh',
+                        ];
+                    })->toArray()
+                    : $services,
                 'service_total' => $serviceTotal,
                 'complaints' => $complaints,
                 'complaint_user_cost' => $complaintUserCost,
@@ -222,6 +236,7 @@ class PaymentController extends Controller
     public function store(Request $request, Room $room)
     {
         $staffId = Auth::id();
+        // dd($request->all());
         $validated = $request->validate([
             'data.month' => 'required|date_format:Y-m',
             'data.tenant_name' => 'required|string|max:255',
@@ -242,11 +257,6 @@ class PaymentController extends Controller
             'data.water_total' => 'required|numeric|min:0',
             'data.water_photos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'data.total' => 'required|numeric|min:0',
-            'data.services' => 'nullable|array',
-            'data.services.*.service_id' => 'required|integer',
-            'data.services.*.price' => 'required|numeric|min:0',
-            'data.services.*.qty' => 'required|integer|min:1',
-            'data.services.*.total' => 'required|numeric|min:0',
             'data.additional_fees' => 'nullable|array',
             'data.additional_fees.*.name' => 'required|string|max:255',
             'data.additional_fees.*.price' => 'required|numeric|min:0',
@@ -254,12 +264,19 @@ class PaymentController extends Controller
             'data.additional_fees.*.total' => 'required|numeric|min:0',
             'data.complaint_user_cost' => 'nullable|numeric|min:0',
             'data.complaint_landlord_cost' => 'nullable|numeric|min:0',
-
+            'data.services' => 'nullable|array',
+            'data.services.*.service_id' => ['required', 'integer', Rule::exists('services', 'service_id')],
+            'data.services.*.name' => 'required|string|max:255',
+            'data.services.*.price' => 'nullable|numeric|min:0',
+            'data.services.*.qty' => 'required|integer|min:1',
+            'data.services.*.total' => 'required|numeric|min:0',
+            'data.services.*.type_display' => 'nullable|string|max:255',
         ]);
 
-        DB::beginTransaction();
+        // DB::beginTransaction();
         try {
             $data = $validated['data'];
+            // dd($data);
             // Đảm bảo water_unit có giá trị mặc định
             $data['water_unit'] = $data['water_unit'] ?? 'per_m3';
             $data['electric_price'] = $data['electric_price'] ?? 3000;
@@ -343,19 +360,24 @@ class PaymentController extends Controller
             }
 
 
-            // Xóa và lưu dịch vụ
-            RoomBillService::where('room_bill_id', $bill->id)->delete();
-            if (!empty($data['services'])) {
-                foreach ($data['services'] as $sv) {
-                    RoomBillService::create([
-                        'room_bill_id' => $bill->id,
-                        'service_id' => $sv['service_id'],
-                        'price' => $sv['price'],
-                        'qty' => $sv['qty'],
-                        'total' => $sv['total'],
-                    ]);
+          // Xóa và lưu dịch vụ vào bảng bill_services
+                BillService::where('bill_id', $bill->id)->delete();
+
+                if (!empty($data['services'])) {
+                    foreach ($data['services'] as $sv) {
+
+                        BillService::create([
+                            'bill_id' => $bill->id,
+                            'service_id' => $sv['service_id'],
+                            'name' => $sv['name'] ?? 'Dịch vụ không xác định',
+                            'price' => $sv['price'],
+                            'qty' => $sv['qty'],
+                            'total' => $sv['total'],
+                            'type_display' => $sv['type_display'], // hoặc để trống nếu cần
+                        ]);
+                    }
                 }
-            }
+
 
             // Xóa và lưu chi phí phát sinh
             RoomBillAdditionalFee::where('room_bill_id', $bill->id)->delete();
@@ -459,6 +481,7 @@ class PaymentController extends Controller
             'additional_fees_total' => $additionalFeesTotal,
             'total' => $bill->total ?? 0,
         ];
+        // dd($data);
 
         return Excel::download(new RoomBillExport($room, $data), 'hoadon_' . $month . '.xlsx');
     }
