@@ -173,21 +173,6 @@ class DashboardRenterController extends Controller
     }
 }
 
-<?php
-
-namespace App\Http\Controllers\Renter;
-
-use App\Http\Controllers\Controller;
-use App\Models\Room;
-use App\Models\Landlord\Staff\Rooms\RoomBill;
-use App\Models\Landlord\Staff\Rooms\RoomBillService;
-
-use App\Models\Complaint;
-use App\Models\UserInfo;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DashboardRenterController extends Controller
 {
