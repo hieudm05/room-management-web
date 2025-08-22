@@ -93,6 +93,7 @@
                                                     @endif
                                                 </div>
                                                 </div>
+<<<<<<< HEAD
                                                 <div class="mt-2">
                                                     <small class="text-info">
                                                         <i class="fas fa-info-circle"></i>
@@ -107,6 +108,56 @@
                                                                 Tiền phòng, dịch vụ tính theo người và chi phí phát sinh sẽ được tính theo tỷ lệ ngày ở thực tế.
                                                         @endswitch
                                                         Tiền điện và nước (tính theo m³) giữ nguyên theo chỉ số sử dụng.
+=======
+                                            </div>
+                                            <div class="row mt-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Tiền thuê (VND)</label>
+                                                    <input type="text" class="form-control"
+                                                        value="{{ number_format($item['rent_price']) }}" readonly>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Tháng</label>
+                                                    <input type="text" class="form-control"
+                                                        value="{{ $item['month'] }}" readonly>
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Trạng thái thanh toán</label>
+                                                    <div class="input-group">
+                                                        @if (!empty($item['bill']))
+                                                            <select
+                                                                class="form-control status-select
+                                       @if ($item['bill']->status == 'unpaid') border-warning shadow-sm @endif"
+                                                                data-id="{{ $item['id_bill'] }}"
+                                                                @if (!$item['bill']->status == 'pending') disabled @endif
+                                                                title="Chọn trạng thái thanh toán">
+
+                                                                <option value="unpaid"
+                                                                    {{ $item['bill']->status == 'unpaid' ? 'selected' : '' }}>
+                                                                    ⏳ Chưa thanh toán
+                                                                </option>
+                                                                <option value="pending"
+                                                                    {{ $item['bill']->status == 'pending' ? 'selected' : '' }}>
+                                                                    🔄 Đang xử lý
+                                                                </option>
+                                                                <option value="paid"
+                                                                    {{ $item['bill']->status == 'paid' ? 'selected' : '' }}>
+                                                                    ✅ Đã thanh toán
+                                                                </option>
+                                                            </select>
+                                                        @else
+                                                            <input type="text" class="form-control text-muted bg-light"
+                                                                value="Chưa tạo hóa đơn" disabled>
+                                                        @endif
+                                                    </div>
+                                                    <small class="form-text text-muted">
+                                                        @if (!empty($item['bill']))
+                                                            Bấm để thay đổi nếu chưa thanh toán
+                                                        @else
+                                                            Không thể thao tác khi chưa có hóa đơn
+                                                        @endif
+>>>>>>> 466ba03bcde68b2f538482123108db543f4e3617
                                                     </small>
                                                 </div>
                                             </div>

@@ -44,19 +44,12 @@
                                     {{ $post->district }}, {{ $post->city }}
                                 </li>
                                 <li><i class="fa fa-home me-1 text-secondary"></i> {{ $post->address }}</li>
-                                <li><i class="fa fa-phone me-1 text-secondary"></i>
-                                    {{ $post->property->phone ?? 'Liên hệ chủ trọ' }}
-                                </li>
+                                
                             </ul>
 
-                            <p class="text-muted small flex-grow-1">
-                                {{ Str::limit(strip_tags($post->description), 100) }}
-                            </p>
+                            
 
                             <div class="d-flex justify-content-between align-items-center mt-auto">
-                                <small class="text-muted">
-                                    Mã tin: {{ $post->post_code ?? '---' }}
-                                </small>
                                 <a href="{{ route('posts.show', $post->slug) }}" class="btn btn-sm btn-outline-primary">
                                     Xem chi tiết
                                 </a>
@@ -71,15 +64,6 @@
                 </div>
             @endforelse
         </div>
-        {{-- Phân trang --}}
-        <div class="row mt-5">
-            <div class="col-lg-12 col-md-12 col-sm-12 text-center">
-                {{ $posts->links() }}
-            </div>
-        </div>
-
-
-
         <!-- Gợi ý bài viết gần bạn -->
         <div class="row justify-content-center mt-5">
             <div class="col-lg-7 col-md-10 text-center">
@@ -92,15 +76,12 @@
         <div class="row g-4" id="suggested-posts">
             <!-- Render từ JS -->
         </div>
-
-
-
+        {{-- Phân trang --}}
         <div class="row mt-5">
             <div class="col-lg-12 col-md-12 col-sm-12 text-center">
                 {{ $posts->links() }}
             </div>
         </div>
-
     </div>
 @endsection
 @push('scripts')

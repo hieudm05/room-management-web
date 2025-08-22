@@ -36,9 +36,9 @@ class DashboardRenterController extends Controller
         $totalCost = 0;
         $complaintCount = 0;
         $serviceTotals = collect();
-        
+
         $lineData = collect();
-       
+
         if ($type === 'year') {
             if (!preg_match('/^\d{4}$/', $period)) {
                 $period = date('Y');
@@ -63,7 +63,7 @@ class DashboardRenterController extends Controller
             $billIds = RoomBill::where('room_id', $roomId)
                 ->whereYear('created_at', $period)
                 ->pluck('id');
-              
+
 
             if ($billIds->isNotEmpty()) {
                 $serviceTotals = RoomBillService::join('services', 'room_bill_service.service_id', '=', 'services.service_id')
@@ -71,14 +71,14 @@ class DashboardRenterController extends Controller
                     ->select('services.name as service_name', DB::raw('SUM(room_bill_service.total) as total'))
                     ->groupBy('services.name')
                     ->pluck('total', 'service_name');
-                    
+
             }
 
         } elseif ($type === 'month') {
             if (!preg_match('/^\d{4}-\d{2}$/', $period)) {
                 $period = date('Y-m');
-                
-            
+
+
             }
 
             [$year, $month] = explode('-', $period);
@@ -88,7 +88,7 @@ class DashboardRenterController extends Controller
                 ->whereMonth('created_at', $month)
                 ->pluck('id');
             //  dd($billIds->toArray());
-            if ($billIds->isNotEmpty()) {
+if ($billIds->isNotEmpty()) {
                 $totalCost = RoomBill::whereIn('id', $billIds)->sum('total');
                 $complaintCount = Complaint::where('room_id', $roomId)
                     ->whereYear('created_at', $year)
@@ -102,9 +102,9 @@ class DashboardRenterController extends Controller
                     ->pluck('total', 'service_name');
                     // Chuẩn hóa lại:
 
-                //    dd($serviceTotals); 
+                //    dd($serviceTotals);
             }
-        
+
         }
 
         // So sánh 2 mốc thời gian
@@ -157,7 +157,7 @@ class DashboardRenterController extends Controller
 
     private function getServiceDataYear($roomId, $year)
     {
-        $billIds = RoomBill::where('room_id', $roomId)
+$billIds = RoomBill::where('room_id', $roomId)
             ->whereYear('created_at', $year)
 ->pluck('id');
 
@@ -172,3 +172,4 @@ class DashboardRenterController extends Controller
             ->pluck('total', 'service_name');
     }
 }
+

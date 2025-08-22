@@ -99,8 +99,7 @@
             left: 20px;
             z-index: 2;
         }
-
-        .gallery-side img:nth-child(3) {
+.gallery-side img:nth-child(3) {
             top: 40px;
             left: 40px;
             z-index: 1;
@@ -186,7 +185,7 @@
             <div class="gallery-carousel owl-carousel">
                 <div class="gallery-item">
                     <a href="{{ asset('storage/' . $post->thumbnail) }}" class="mfp-gallery">
-                        <img src="{{ asset('storage/' . $post->thumbnail) }}" alt="{{ $post->title }}"
+<img src="{{ asset('storage/' . $post->thumbnail) }}" alt="{{ $post->title }}"
                             class="img-fluid rounded" loading="lazy">
                     </a>
                 </div>
@@ -221,12 +220,15 @@
                                 <li><strong>Tiền Phòng/tháng:</strong> {{ number_format($post->price, 2) }} VND</li>
                                 <li><strong>Diện Tích:</strong> {{ $post->area }} m²</li>
                                 <li><strong>Địa Chỉ:</strong> {{ $post->address }}, {{ $post->ward }},
-                                    {{ $post->district }}, {{ $post->city }}</li>
+                                <li>
+                                    <strong>Ngày chuyển vào dự kiến:</strong>
+                                    {{ \Carbon\Carbon::parse($post->move_in_date)->format('d/m/Y') }}
+                                </li>
                                 <li><strong>Ngày đăng:</strong>
-                                    {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Chưa xác định' }}
+                                    {{ $post->published_at ? $post->published_at->format('d/m/Y') : 'Chưa xác định' }}
                                 </li>
                                 <li><strong>Hết hạn:</strong>
-                                    {{ $post->expired_at ? $post->expired_at->format('M d, Y') : 'Không giới hạn' }}</li>
+                                    {{ $post->expired_at ? $post->expired_at->format('d/m/Y') : 'Không giới hạn' }}
                             </ul>
                         </div>
                     </div>
@@ -237,7 +239,7 @@
                             <h4 class="mb-0 fw-semibold text-primary">Mô Tả</h4>
                         </div>
                         <div class="card-body p-4">
-                            <div class="description-content lh-lg text-black">
+<div class="description-content lh-lg text-black">
                                 {!! $post->description !!}
                             </div>
                         </div>
@@ -287,33 +289,6 @@
                             </select>
                         </div>
                     </div>
-
-                    <!-- Reviews -->
-                    <div class="card mb-4 shadow-sm border-0 rounded-3">
-                        <div class="card-header bg-light border-0 rounded-top-3">
-                            <h4 class="mb-0 fw-semibold text-primary">Đánh Giá</h4>
-                        </div>
-                        <div class="card-body">
-                            <p>Chưa có đánh giá. Hãy chia sẻ trải nghiệm của bạn!</p>
-                        </div>
-                    </div>
-
-                    <!-- Write a Review -->
-                    <div class="card shadow-sm border-0 rounded-3">
-                        <div class="card-header bg-light border-0 rounded-top-3">
-                            <h4 class="mb-0 fw-semibold text-primary">Viết Đánh Giá</h4>
-                        </div>
-                        <div class="card-body">
-                            <form action="#" method="POST">
-                                @csrf
-                                <div class="mb-3">
-                                    <label for="reviewMessage" class="form-label">Đánh giá của bạn</label>
-                                    <textarea id="reviewMessage" name="review" class="form-control" rows="5" placeholder="Viết đánh giá..." required></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary rounded-pill w-100">Gửi Đánh Giá</button>
-                            </form>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Sidebar -->
@@ -331,7 +306,7 @@
                                 <div class="row g-3">
                                     <!-- Check In Date -->
                                     <div class="col-12">
-                                        <label for="checkIn" class="form-label">Chọn ngày đặt lịch</label>
+                            <label for="checkIn" class="form-label">Chọn ngày đặt lịch</label>
                                         <div class="input-group">
                                             <span class="input-group-text" id="calendarTrigger" style="cursor: pointer;">
                                                 <i class="fas fa-calendar-alt"></i>
@@ -374,7 +349,7 @@
                                     @endguest
 
                                     <div class="col-12">
-                                        <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex justify-content-between align-items-center">
                                             <span>Tổng số tiền thanh toán</span>
                                             <h4 class="text-primary mb-0">${{ number_format($post->price, 2) }}</h4>
                                         </div>
@@ -388,44 +363,34 @@
                             </form>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Agent Contact -->
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-body text-center">
-                            <a href="#" class="btn btn-outline-primary rounded-pill" data-bs-toggle="modal"
-                                data-bs-target="#agentMessage">
-                                <i class="fas fa-comment-alt me-2"></i> Contact Agent
-                            </a>
-                        </div>
+                <!-- Similar Properties -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h4 class="mb-0">Bài Viết Liên Quan</h4>
                     </div>
-
-                    <!-- Similar Properties -->
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-light">
-                            <h4 class="mb-0">Similar Properties</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="property-list">
-                                @foreach ($post->category->posts()->where('post_id', '!=', $post->post_id)->where('status', 1)->where('is_public', 1)->take(4)->get() as $similar)
-                                    <div class="property-item d-flex mb-3">
-                                        <a href="{{ route('posts.show', $similar->slug) }}">
-                                            <img src="{{ asset('storage/' . $similar->thumbnail) }}"
-                                                class="img-fluid rounded me-3"
-                                                style="width: 100px; max-height: 100px; object-fit: cover;"
-                                                alt="{{ $similar->title }}" loading="lazy">
-                                        </a>
-                                        <div>
-                                            <h5>
-                                                <a href="{{ route('posts.show', $similar->slug) }}"
-                                                    class="text-decoration-none">
-                                                    {{ $similar->title }}
-                                                </a>
-                                            </h5>
-                                            <p class="mb-1"><i class="fas fa-map-marker-alt me-1"></i>
-                                                {{ $similar->city }}</p>
-                                            <span class="badge bg-primary">For Rent</span>
-                                            <h6 class="mt-1">${{ number_format($similar->price, 2) }}</h6>
-                                        </div>
+                    <div class="card-body">
+                        <div class="property-list">
+                            @foreach ($post->category->posts()->where('post_id', '!=', $post->post_id)->where('status', 1)->where('is_public', 1)->take(4)->get() as $similar)
+                                <div class="property-item d-flex mb-3">
+                                    <a href="{{ route('posts.show', $similar->slug) }}">
+                                        <img src="{{ asset('storage/' . $similar->thumbnail) }}"
+                                            class="img-fluid rounded me-3"
+                                            style="width: 100px; max-height: 100px; object-fit: cover;"
+                                            alt="{{ $similar->title }}" loading="lazy">
+                                    </a>
+                                    <div>
+                                        <h5>
+                                            <a href="{{ route('posts.show', $similar->slug) }}"
+                                                class="text-decoration-none">
+                                                {{ $similar->title }}
+                                            </a>
+                                        </h5>
+                                        <p class="mb-1"><i class="fas fa-map-marker-alt me-1"></i>
+                                            {{ $similar->city }}</p>
+                                        <span class="badge bg-primary">For Rent</span>
+                                        <h6 class="mt-1">${{ number_format($similar->price, 2) }}</h6>
                                     </div>
                                 @endforeach
                             </div>
@@ -518,7 +483,7 @@
     let userMarker = null;
     let routeLayer = null;
     let isSatellite = false;
-    
+
     const defaultLayer = L.tileLayer(
         `https://maps.vietmap.vn/api/tm/{z}/{x}/{y}.png?apikey={{ config('services.viet_map.key') }}`, {
             maxZoom: 22,
@@ -527,7 +492,7 @@
             attribution: '&copy; <a href="https://www.vietmap.vn/">VietMap</a>'
         }
     );
-    
+
     const satelliteLayer = L.tileLayer(
         `https://maps.vietmap.vn/api/satellite/{z}/{x}/{y}.png?apikey={{ config('services.viet_map.key') }}`, {
             maxZoom: 22,
@@ -539,18 +504,18 @@
 
     function initializeVietMap() {
         console.log('🗺️ Bắt đầu khởi tạo VietMap...');
-        
+
         if (typeof L === 'undefined') {
             console.error('❌ Leaflet chưa được load');
             return false;
         }
-        
+
         const mapElement = document.getElementById('map');
         if (!mapElement) {
             console.error('❌ Không tìm thấy phần tử #map');
             return false;
         }
-        
+
         // Xóa bản đồ cũ nếu có
         if (vietMapInstance) {
             try {
@@ -561,7 +526,7 @@
             }
             vietMapInstance = null;
         }
-        
+
         mapElement.innerHTML = '';
         mapElement.style.cssText = `
             width: 100% !important;
@@ -571,16 +536,16 @@
             background: #f8f9fa;
             border-radius: 8px;
         `;
-        
+
         const lat = {{ $post->latitude ?? 21.0278 }};
         const lng = {{ $post->longitude ?? 105.8342 }};
-        
+
         try {
             vietMapInstance = L.map('map').setView([lat, lng], 13);
             defaultLayer.addTo(vietMapInstance);
             L.control.zoom({ position: 'topright' }).addTo(vietMapInstance);
             L.control.scale().addTo(vietMapInstance);
-            
+
             const destinationMarker = L.marker([lat, lng]).addTo(vietMapInstance);
             destinationMarker.bindPopup(`
                 <div style="min-width: 200px;">
@@ -592,13 +557,13 @@
                     </small>
                 </div>
             `).openPopup();
-            
+
             setTimeout(() => vietMapInstance.invalidateSize(), 500);
             window.addEventListener('resize', () => vietMapInstance.invalidateSize());
-            
+
             console.log('🎉 VietMap khởi tạo thành công!');
             return true;
-            
+
         } catch (error) {
             console.error('💥 Lỗi khởi tạo VietMap:', error);
             mapElement.innerHTML = `
@@ -898,4 +863,5 @@
     console.log('📋 VietMap Script đã được load');
 </script>
 
-{{-- <script src="https://unpkg.com/@turf/polyline@6.x.x/dist/polyline.min.js"></script> --}}
+// {{-- <script src="https://unpkg.com/@turf/polyline@6.x.x/dist/polyline.min.js"></script> --}}
+

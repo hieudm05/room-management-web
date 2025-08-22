@@ -6,8 +6,7 @@
             <h2 class="fw-bold text-primary display-5">
                 <i class="bi bi-list-ul me-2"></i> Danh sách bài đăng
             </h2>
-            <a href="{{ route('landlord.posts.create') }}"
-                class="btn btn-gradient-primary px-5 py-3 rounded-pill fw-bold">
+            <a href="{{ route('landlord.posts.create') }}" class="btn btn-gradient-primary px-5 py-3 rounded-pill fw-bold">
                 <i class="bi bi-plus-circle-fill me-2"></i> Tạo bài đăng mới
             </a>
         </div>
@@ -89,6 +88,12 @@
                                                         class="btn btn-outline-primary btn-sm rounded-start-pill">
                                                         <i class="bi bi-eye-fill me-1"></i> Xem
                                                     </a>
+                                                    @if ($post->status == 0 || $post->status == 2)
+                                                        <a href="{{ route('landlord.posts.edit', $post->post_id) }}"
+                                                            class="btn btn-outline-warning btn-sm">
+                                                            <i class="bi bi-pencil-fill me-1"></i> Sửa
+                                                        </a>
+                                                    @endif
                                                     @if ($post->status == 0)
                                                         <form action="{{ route('landlord.posts.destroy', $post->post_id) }}"
                                                             method="POST" class="d-inline-block"
@@ -151,6 +156,10 @@
                                                         class="btn btn-outline-primary btn-sm rounded-start-pill">
                                                         <i class="bi bi-eye-fill me-1"></i> Xem
                                                     </a>
+                                                    <a href="{{ route('landlord.posts.edit', $post->post_id) }}"
+                                                        class="btn btn-outline-warning btn-sm">
+                                                        <i class="bi bi-pencil-fill me-1"></i> Sửa
+                                                    </a>
                                                     <form action="{{ route('landlord.posts.destroy', $post->post_id) }}"
                                                         method="POST" class="d-inline-block"
                                                         onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài đăng này?')">
@@ -159,7 +168,7 @@
                                                         <button type="submit"
                                                             class="btn btn-outline-danger btn-sm rounded-end-pill">
                                                             <i class="bi bi-trash3-fill me-1"></i> Xóa
-                                                            </button>
+                                                        </button>
                                                     </form>
                                                 </div>
                                             </td>
@@ -248,10 +257,16 @@
                                             <td><span class="badge bg-danger px-3 py-2">Từ chối</span></td>
                                             <td>{{ $post->created_at->format('d/m/Y H:i') }}</td>
                                             <td class="text-end pe-4">
-                                                <a href="{{ route('landlord.posts.show', $post->post_id) }}"
-                                                    class="btn btn-outline-primary btn-sm rounded-pill">
-                                                    <i class="bi bi-eye-fill me-1"></i> Xem
-                                                </a>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ route('landlord.posts.show', $post->post_id) }}"
+                                                        class="btn btn-outline-primary btn-sm rounded-start-pill">
+                                                        <i class="bi bi-eye-fill me-1"></i> Xem
+                                                    </a>
+                                                    <a href="{{ route('landlord.posts.edit', $post->post_id) }}"
+                                                        class="btn btn-outline-warning btn-sm rounded-end-pill">
+                                                        <i class="bi bi-pencil-fill me-1"></i> Sửa
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -356,6 +371,17 @@
 
         .btn-outline-primary:hover {
             background: #4facfe;
+            color: #fff;
+        }
+
+        .btn-outline-warning {
+            border-color: #f0ad4e;
+            color: #f0ad4e;
+            font-weight: 600;
+        }
+
+        .btn-outline-warning:hover {
+            background: #f0ad4e;
             color: #fff;
         }
 

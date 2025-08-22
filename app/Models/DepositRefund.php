@@ -18,6 +18,8 @@ class DepositRefund extends Model
         'user_id',
         'amount',
         'refund_date',
+        'proof_image',
+        'reason',
         'status',
     ];
 

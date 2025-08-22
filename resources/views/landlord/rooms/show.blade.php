@@ -77,24 +77,24 @@
                 {{-- Người thuê --}}
                 <div class="mb-4">
                     <label class="section-title">Người thuê</label>
-                    @if ($room->currentAgreementValid && !$room->is_contract_locked)
+                    @if ($room->currentAgreementValid)
+                        @php $agreement = $room->currentAgreementValid; @endphp
                         <div class="row g-2">
                             <div class="col-md-6">
                                 <input type="text" class="form-control"
-                                    value="{{ $room->renter?->info?->full_name ?? ($room->renter?->name ?? 'Chưa có tên') }}"
-                                    disabled>
+                                    value="{{ $agreement->full_name ?? 'Chưa có tên' }}" disabled>
                             </div>
                             <div class="col-md-6">
                                 <input type="text" class="form-control"
-                                    value="SĐT: {{ $room->renter->phone_number ?? 'Chưa có số điện thoại' }}" disabled>
+                                    value="SĐT: {{ $agreement->phone ?? 'Chưa có số điện thoại' }}" disabled>
                             </div>
                             <div class="col-md-6">
                                 <input type="text" class="form-control"
-                                    value="Email: {{ $room->renter->email ?? 'Chưa có email' }}" disabled>
+                                    value="Email: {{ $agreement->email ?? 'Chưa có email' }}" disabled>
                             </div>
                             <div class="col-md-6">
                                 <input type="text" class="form-control"
-                                    value="CCCD/CMND: {{ $room->renter->identity_number ?? 'Chưa có CCCD' }}" disabled>
+                                    value="CCCD/CMND: {{ $agreement->cccd ?? 'Chưa có CCCD' }}" disabled>
                             </div>
                         </div>
                     @else
@@ -159,8 +159,10 @@
                                 </div>
                             @endforeach
                         </div>
-                    </div>
-                @endif
+                    @else
+                        <p class="text-muted">Không có ảnh phòng.</p>
+                    @endif
+                </div>
 
                 {{-- Hợp đồng mẫu --}}
                 @if ($room->contract_pdf_file || $room->contract_word_file)
@@ -168,19 +170,32 @@
                         <label class="section-title">Hợp đồng mẫu</label><br>
                         @if ($room->contract_pdf_file)
                             <a href="{{ route('landlords.rooms.contract.pdf', $room) }}"
-                                class="btn btn-outline-success btn-sm me-2" target="_blank">
+                                class="btn btn-outline-success  me-2" target="_blank">
                                 👁️ Xem PDF
                             </a>
                             <a href="{{ route('landlords.rooms.contract.download', $room) }}"
-                                class="btn btn-outline-primary btn-sm me-2">
+                                class="btn btn-outline-primary  me-2">
                                 📄 Tải PDF
                             </a>
+                            <a href="{{ route('landlords.rooms.contract.contractIndex', $room) }}"
+                                class="btn btn-outline-primary ">
+                                📄 Hợp đồng
+                            </a>
+                            <a href="{{ route('landlords.rooms.contracts.create', $room) }}"
+                                class="btn btn-outline-primary ">
+                                📄 Điền form thông tin
+                            </a>
                         @endif
-
                         @if ($room->contract_word_file)
                             <a href="{{ route('landlords.rooms.contract.word', $room) }}"
-                                class="btn btn-outline-warning btn-sm">
+                                class="btn btn-outline-warning ">
                                 📝 Tải Word (.docx)
+                            </a>
+                        @endif
+                        @if ($room->status === 'Available')
+                            <a href="{{ route('landlords.rooms.deposit.form', $room) }}"
+                                class="btn btn-outline-info ">
+                                💰 Đặt cọc
                             </a>
                         @endif
                     </div>

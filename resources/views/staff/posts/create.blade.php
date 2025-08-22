@@ -10,7 +10,8 @@
                             <i class="bi bi-house-door-fill me-2"></i> Đăng bài cho thuê nhà trọ
                         </h2>
 
-                        <form action="{{ route('staff.posts.store') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('staff.posts.store') }}" method="POST" enctype="multipart/form-data"
+                            id="rental-form">
                             @csrf
 
                             <div class="row g-4">
@@ -19,7 +20,7 @@
                                     <label for="category_id" class="form-label fw-semibold text-dark">Loại chuyên
                                         mục</label>
                                     <select name="category_id" id="category_id" class="form-select shadow-sm rounded-3"
-                                        required>
+                                        required aria-label="Chọn loại chuyên mục">
                                         <option value="">-- Chọn loại chuyên mục --</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->category_id }}">{{ $category->name }}</option>
@@ -34,7 +35,7 @@
                                 <div class="col-md-6">
                                     <label for="landlord_id" class="form-label fw-semibold text-dark">Chủ trọ</label>
                                     <select name="landlord_id" id="landlord_id" class="form-select shadow-sm rounded-3"
-                                        required>
+                                        required aria-label="Chọn chủ trọ">
                                         <option value="">-- Chọn chủ trọ --</option>
                                         @foreach ($landlords as $landlord)
                                             <option value="{{ $landlord->id }}">{{ $landlord->name }}</option>
@@ -49,7 +50,7 @@
                                 <div class="col-md-6">
                                     <label for="property_id" class="form-label fw-semibold text-dark">Bất động sản</label>
                                     <select name="property_id" id="property_id" class="form-select shadow-sm rounded-3"
-                                        required>
+                                        required aria-label="Chọn bất động sản">
                                         <option value="">-- Chọn bất động sản --</option>
                                         @foreach ($properties as $property)
                                             <option value="{{ $property->property_id }}">{{ $property->name }}</option>
@@ -63,7 +64,7 @@
                                 <div class="col-md-6">
                                     <label for="room_id" class="form-label fw-semibold text-dark">Phòng</label>
                                     <select name="room_id" id="room_id" class="form-select shadow-sm rounded-3" required
-                                        disabled>
+                                        disabled aria-label="Chọn phòng">
                                         <option value="">-- Chọn Phòng --</option>
                                     </select>
                                     @error('room_id')
@@ -76,7 +77,7 @@
                                     <label for="title" class="form-label fw-semibold text-dark">Tiêu đề</label>
                                     <input type="text" name="title" id="title"
                                         class="form-control shadow-sm rounded-3" placeholder="Nhập tiêu đề bài viết"
-                                        value="{{ old('title') }}" required>
+                                        value="{{ old('title') }}" required aria-label="Tiêu đề bài viết">
                                     @error('title')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -88,7 +89,7 @@
                                         (VNĐ)</label>
                                     <input type="text" name="price" id="price"
                                         class="form-control shadow-sm rounded-3" placeholder="VD: 2,500,000"
-                                        value="{{ old('price') }}" required>
+                                        value="{{ old('price') }}" required aria-label="Giá cho thuê">
                                     @error('price')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -99,7 +100,7 @@
                                     <label for="area" class="form-label fw-semibold text-dark">Diện tích (m²)</label>
                                     <input type="number" name="area" id="area"
                                         class="form-control shadow-sm rounded-3" placeholder="VD: 25"
-                                        value="{{ old('area') }}" required>
+                                        value="{{ old('area') }}" min="1" required aria-label="Diện tích">
                                     @error('area')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -108,7 +109,8 @@
                                 {{-- Địa chỉ --}}
                                 <div class="col-md-6">
                                     <label for="province" class="form-label fw-semibold text-dark">Tỉnh/Thành phố</label>
-                                    <select id="province" name="province" class="form-select shadow-sm rounded-3" required>
+                                    <select id="province" name="province" class="form-select shadow-sm rounded-3" required
+                                        aria-label="Chọn tỉnh/thành phố">
                                         <option value="">-- Chọn Tỉnh/Thành --</option>
                                     </select>
                                     @error('province')
@@ -118,7 +120,8 @@
 
                                 <div class="col-md-6">
                                     <label for="district" class="form-label fw-semibold text-dark">Quận/Huyện</label>
-                                    <select id="district" name="district" class="form-select shadow-sm rounded-3" required>
+                                    <select id="district" name="district" class="form-select shadow-sm rounded-3" required
+                                        aria-label="Chọn quận/huyện">
                                         <option value="">-- Chọn Quận/Huyện --</option>
                                     </select>
                                     @error('district')
@@ -128,7 +131,8 @@
 
                                 <div class="col-md-6">
                                     <label for="ward" class="form-label fw-semibold text-dark">Phường/Xã</label>
-                                    <select id="ward" name="ward" class="form-select shadow-sm rounded-3" required>
+                                    <select id="ward" name="ward" class="form-select shadow-sm rounded-3"
+                                        required aria-label="Chọn phường/xã">
                                         <option value="">-- Chọn Phường/Xã --</option>
                                     </select>
                                     @error('ward')
@@ -141,11 +145,12 @@
                                         tiết</label>
                                     <input type="text" name="address" id="address"
                                         class="form-control shadow-sm rounded-3" placeholder="VD: Số 123, Ngõ 45"
-                                        value="{{ old('address') }}" required>
+                                        value="{{ old('address') }}" required aria-label="Địa chỉ chi tiết">
                                     @error('address')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
+
 
                                 {{-- Hidden fields for latitude and longitude --}}
                                 <div class="col-md-6">
@@ -160,18 +165,33 @@
                                     @enderror
                                 </div>
 
+                                {{-- Ngày dọn vào --}}
+                                <div class="col-md-6">
+                                    <label for="move_in_date" class="form-label fw-semibold text-dark">Ngày dọn
+                                        vào</label>
+                                    <input type="date" name="move_in_date" id="move_in_date"
+                                        class="form-control shadow-sm rounded-3" value="{{ old('move_in_date') }}"
+                                        min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}" required
+                                        aria-label="Ngày dọn vào">
+                                    @error('move_in_date')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+
                                 {{-- Bản đồ --}}
                                 <div class="col-12">
                                     <label class="form-label fw-semibold text-dark">Chọn vị trí trên bản đồ</label>
                                     <div class="input-group mb-3">
                                         <input type="text" id="search-map"
                                             class="form-control shadow-sm rounded-start-3"
-                                            placeholder="VD: Số 123, Ngõ 45, Phường Cống Vị, Quận Ba Đình, Hà Nội">
+                                            placeholder="VD: Số 123, Ngõ 45, Phường Cống Vị, Quận Ba Đình, Hà Nội"
+                                            aria-label="Tìm kiếm địa chỉ">
                                         <button class="btn btn-outline-primary" type="button" id="search-button">
                                             <i class="bi bi-search"></i> Tìm
                                         </button>
                                     </div>
-                                    <div id="map" class="rounded-3 shadow-sm" style="height: 400px;"></div>
+                                    <div id="map" class="rounded-3 shadow-sm" style="height: 400px;"
+                                        role="region" aria-label="Bản đồ chọn vị trí"></div>
                                     <small class="text-muted">Nhấn vào bản đồ để chọn vị trí hoặc sử dụng ô tìm kiếm. Nếu
                                         địa chỉ chi tiết không tìm thấy, hãy thử chọn trên bản đồ hoặc nhập địa chỉ tổng
                                         quát hơn.</small>
@@ -187,7 +207,8 @@
                                                     <input type="checkbox" name="features[]"
                                                         value="{{ $feature->feature_id }}"
                                                         id="feature{{ $feature->feature_id }}" class="form-check-input"
-                                                        {{ in_array($feature->feature_id, old('features', [])) ? 'checked' : '' }}>
+                                                        {{ in_array($feature->feature_id, old('features', [])) ? 'checked' : '' }}
+                                                        aria-label="Tính năng {{ $feature->name }}">
                                                     <label for="feature{{ $feature->feature_id }}"
                                                         class="form-check-label">
                                                         {{ $feature->name }}
@@ -205,7 +226,8 @@
                                 <div class="col-12">
                                     <label for="description" class="form-label fw-semibold text-dark">Mô tả chi
                                         tiết</label>
-                                    <textarea name="description" id="description" class="form-control shadow-sm rounded-3" rows="8">{{ old('description') }}</textarea>
+                                    <textarea name="description" id="description" class="form-control shadow-sm rounded-3" rows="8"
+                                        aria-label="Mô tả chi tiết">{{ old('description') }}</textarea>
                                     @error('description')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -215,13 +237,14 @@
                                 <div class="col-md-6">
                                     <label for="thumbnail" class="form-label fw-semibold text-dark">Ảnh thumbnail</label>
                                     <input type="file" name="thumbnail" id="thumbnail"
-                                        class="form-control shadow-sm rounded-3" accept="image/*">
+                                        class="form-control shadow-sm rounded-3" accept="image/*"
+                                        aria-label="Chọn ảnh thumbnail">
                                     @error('thumbnail')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                     <div id="thumbnail-preview" class="mt-3">
                                         <img id="thumbnail-img" class="img-fluid rounded-3 shadow-sm"
-                                            style="max-height: 200px; display: none;" alt="Thumbnail Preview">
+                                            style="max-height: 200px; display: none;" alt="Ảnh thumbnail">
                                     </div>
                                 </div>
 
@@ -229,7 +252,8 @@
                                 <div class="col-md-6">
                                     <label for="gallery" class="form-label fw-semibold text-dark">Album ảnh</label>
                                     <input type="file" name="gallery[]" id="gallery"
-                                        class="form-control shadow-sm rounded-3" accept="image/*" multiple>
+                                        class="form-control shadow-sm rounded-3" accept="image/*" multiple
+                                        aria-label="Chọn album ảnh">
                                     @error('gallery')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -249,7 +273,9 @@
         </div>
 
         {{-- CKEditor --}}
-        <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+        <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"
+            integrity="sha512-6zqQ3s3GyU3aChu6k3j2ZSQur1oI3djC5g7zQ3hTAF7gqSjoI4QZeY4I8S2vM0Uo3kT4q1d2yA1ENxt2nD6p2RQ=="
+            crossorigin="anonymous"></script>
         <script>
             ClassicEditor
                 .create(document.querySelector('#description'), {
@@ -257,18 +283,24 @@
                     placeholder: 'Nhập mô tả chi tiết về nhà trọ...'
                 })
                 .catch(error => {
-                    console.error(error);
+                    console.error('CKEditor initialization error:', error);
                 });
         </script>
 
-        {{-- VietMap GL JS --}}
-        <script src="https://unpkg.com/@vietmap/vietmap-gl-js@6.0.0/dist/vietmap-gl.js"></script>
-        <link href="https://unpkg.com/@vietmap/vietmap-gl-js@6.0.0/dist/vietmap-gl.css" rel="stylesheet" />
+        {{-- Leaflet JS --}}
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
 
-        {{-- JavaScript for Address Handling and Map Integration --}}
+        {{-- jQuery --}}
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+        {{-- JavaScript for Address Handling, Map Integration, and Form Validation --}}
         <script>
-            const LOCATIONIQ_API_KEY = 'pk.b295bf761714d3877d8357f90389f9d8';
-            const VIET_MAP_API_KEY = '7430bfb21940bf6132cee938f854579ba86abc2ca55c3748';
+            const VIET_MAP_API_KEY = '{{ env('VIET_MAP_API_KEY') }}';
+            const LOCATIONIQ_API_KEY = '{{ env('LOCATIONIQ_API_KEY') }}';
             const provinceSelect = document.getElementById('province');
             const districtSelect = document.getElementById('district');
             const wardSelect = document.getElementById('ward');
@@ -278,14 +310,17 @@
             const latitudeInput = document.getElementById('latitude');
             const longitudeInput = document.getElementById('longitude');
 
-            // Initialize VietMap GL JS
-            vietmapgl.accessToken = VIET_MAP_API_KEY;
-            const map = new vietmapgl.Map({
-                container: 'map',
-                style: `https://maps.vietmap.vn/maps/styles/tm/style.json?apikey=${VIET_MAP_API_KEY}`,
-                center: [106.7009, 10.7769], // Default: Ho Chi Minh City [lng, lat]
-                zoom: 13
+            // Initialize Leaflet Map with Raster Light style
+            const map = L.map('map', {
+                center: [10.7769, 106.7009], // Ho Chi Minh City [lat, lng]
+                zoom: 13,
+                attributionControl: true
             });
+
+            L.tileLayer(`https://maps.vietmap.vn/maps/tiles/lm/{z}/{x}/{y}@2x.png?apikey=${VIET_MAP_API_KEY}`, {
+                maxZoom: 18,
+                attribution: 'Map data &copy; <a href="https://vietmap.vn">VietMap</a>'
+            }).addTo(map);
 
             let marker = null;
 
@@ -293,6 +328,11 @@
             let provincesData = [];
             let districtsData = {};
             let wardsData = {};
+
+            // Cache keys for localStorage
+            const CACHE_KEY_PROVINCES = 'provinces_data';
+            const CACHE_KEY_DISTRICTS = 'districts_data';
+            const CACHE_KEY_WARDS = 'wards_data';
 
             // Normalize Vietnamese text for comparison
             function normalizeName(name) {
@@ -315,7 +355,7 @@
                     .trim();
             }
 
-            // Fetch address from LocationIQ (VietMap geocoding API not provided)
+            // Fetch address from LocationIQ
             async function fetchAddress(query) {
                 try {
                     const response = await fetch(
@@ -330,21 +370,33 @@
 
             // Load provinces
             async function loadProvinces() {
+                const cachedProvinces = localStorage.getItem(CACHE_KEY_PROVINCES);
+                if (cachedProvinces) {
+                    provincesData = JSON.parse(cachedProvinces);
+                    populateProvinces();
+                    return;
+                }
+
                 try {
                     const response = await fetch('https://provinces.open-api.vn/api/p/');
                     provincesData = await response.json();
-                    provinceSelect.innerHTML = '<option value="">-- Chọn Tỉnh/Thành --</option>';
-                    provincesData.forEach(item => {
-                        const option = document.createElement('option');
-                        option.value = item.name;
-                        option.textContent = item.name;
-                        option.dataset.code = item.code;
-                        provinceSelect.appendChild(option);
-                    });
+                    localStorage.setItem(CACHE_KEY_PROVINCES, JSON.stringify(provincesData));
+                    populateProvinces();
                 } catch (error) {
                     console.error('Error loading provinces:', error);
                     alert('Không thể tải danh sách tỉnh/thành. Vui lòng thử lại.');
                 }
+            }
+
+            function populateProvinces() {
+                provinceSelect.innerHTML = '<option value="">-- Chọn Tỉnh/Thành --</option>';
+                provincesData.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.name;
+                    option.textContent = item.name;
+                    option.dataset.code = item.code;
+                    provinceSelect.appendChild(option);
+                });
             }
 
             // Load districts
@@ -356,17 +408,21 @@
                 wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
 
                 if (provinceCode) {
+                    const cacheKey = `${CACHE_KEY_DISTRICTS}_${provinceCode}`;
+                    const cachedDistricts = localStorage.getItem(cacheKey);
+                    if (cachedDistricts) {
+                        districtsData[provinceCode] = JSON.parse(cachedDistricts);
+                        populateDistricts(provinceCode);
+                        updateMapFromAddress();
+                        return;
+                    }
+
                     try {
                         const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
                         const data = await response.json();
                         districtsData[provinceCode] = data.districts;
-                        data.districts.forEach(district => {
-                            const option = document.createElement('option');
-                            option.value = district.name;
-                            option.textContent = district.name;
-                            option.dataset.code = district.code;
-                            districtSelect.appendChild(option);
-                        });
+                        localStorage.setItem(cacheKey, JSON.stringify(data.districts));
+                        populateDistricts(provinceCode);
                         updateMapFromAddress();
                     } catch (error) {
                         console.error('Error loading districts:', error);
@@ -374,6 +430,16 @@
                     }
                 }
             });
+
+            function populateDistricts(provinceCode) {
+                districtsData[provinceCode].forEach(district => {
+                    const option = document.createElement('option');
+                    option.value = district.name;
+                    option.textContent = district.name;
+                    option.dataset.code = district.code;
+                    districtSelect.appendChild(option);
+                });
+            }
 
             // Load wards
             districtSelect.addEventListener('change', async function() {
@@ -383,17 +449,21 @@
                 wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
 
                 if (districtCode) {
+                    const cacheKey = `${CACHE_KEY_WARDS}_${districtCode}`;
+                    const cachedWards = localStorage.getItem(cacheKey);
+                    if (cachedWards) {
+                        wardsData[districtCode] = JSON.parse(cachedWards);
+                        populateWards(districtCode);
+                        updateMapFromAddress();
+                        return;
+                    }
+
                     try {
                         const response = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
                         const data = await response.json();
                         wardsData[districtCode] = data.wards;
-                        data.wards.forEach(ward => {
-                            const option = document.createElement('option');
-                            option.value = ward.name;
-                            option.textContent = ward.name;
-                            option.dataset.code = ward.code;
-                            wardSelect.appendChild(option);
-                        });
+                        localStorage.setItem(cacheKey, JSON.stringify(data.wards));
+                        populateWards(districtCode);
                         updateMapFromAddress();
                     } catch (error) {
                         console.error('Error loading wards:', error);
@@ -401,6 +471,16 @@
                     }
                 }
             });
+
+            function populateWards(districtCode) {
+                wardsData[districtCode].forEach(ward => {
+                    const option = document.createElement('option');
+                    option.value = ward.name;
+                    option.textContent = ward.name;
+                    option.dataset.code = ward.code;
+                    wardSelect.appendChild(option);
+                });
+            }
 
             // Update map based on address fields
             async function updateMapFromAddress() {
@@ -411,18 +491,15 @@
 
                 if (!provinceName) return;
 
-                // Try full address first
                 let query = [address, wardName, districtName, provinceName].filter(Boolean).join(', ');
                 let data = await fetchAddress(query);
 
-                // If no results, try simplified address
                 if (!data.length) {
                     const simplifiedAddress = simplifyAddress(address);
                     query = [simplifiedAddress, wardName, districtName, provinceName].filter(Boolean).join(', ');
                     data = await fetchAddress(query);
                 }
 
-                // If still no results, try without address
                 if (!data.length && (wardName || districtName || provinceName)) {
                     query = [wardName, districtName, provinceName].filter(Boolean).join(', ');
                     data = await fetchAddress(query);
@@ -431,16 +508,14 @@
                 if (data.length > 0) {
                     const lat = parseFloat(data[0].lat);
                     const lon = parseFloat(data[0].lon);
-                    map.setCenter([lon, lat]);
-                    map.setZoom(data[0].importance < 0.3 ? 13 : 17);
+                    map.setView([lat, lon], data[0].importance < 0.3 ? 13 : 17);
 
                     if (marker) {
-                        marker.setLngLat([lon, lat]);
+                        marker.setLatLng([lat, lon]);
                     } else {
-                        marker = new vietmapgl.Marker().setLngLat([lon, lat]).addTo(map);
+                        marker = L.marker([lat, lon]).addTo(map);
                     }
 
-                    // Update hidden inputs with latitude and longitude
                     latitudeInput.value = lat.toFixed(6);
                     longitudeInput.value = lon.toFixed(6);
                 } else {
@@ -452,16 +527,15 @@
 
             // Map click event for reverse geocoding
             map.on('click', async function(e) {
-                const lng = e.lngLat.lng;
-                const lat = e.lngLat.lat;
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
 
                 if (marker) {
-                    marker.setLngLat([lng, lat]);
+                    marker.setLatLng([lat, lng]);
                 } else {
-                    marker = new vietmapgl.Marker().setLngLat([lng, lat]).addTo(map);
+                    marker = L.marker([lat, lng]).addTo(map);
                 }
 
-                // Update hidden inputs with latitude and longitude
                 latitudeInput.value = lat.toFixed(6);
                 longitudeInput.value = lng.toFixed(6);
 
@@ -479,7 +553,6 @@
                             road,
                             house_number
                         } = data.address;
-
                         const provinceName = state || city || '';
                         const province = provincesData.find(p => normalizeName(p.name).includes(normalizeName(
                             provinceName)));
@@ -489,38 +562,40 @@
                             districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
                             wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
 
-                            const districtResponse = await fetch(
-                                `https://provinces.open-api.vn/api/p/${province.code}?depth=2`);
-                            const districtData = await districtResponse.json();
-                            districtsData[province.code] = districtData.districts;
-                            districtData.districts.forEach(district => {
-                                const option = document.createElement('option');
-                                option.value = district.name;
-                                option.textContent = district.name;
-                                option.dataset.code = district.code;
-                                districtSelect.appendChild(option);
-                            });
+                            const cacheKey = `${CACHE_KEY_DISTRICTS}_${province.code}`;
+                            const cachedDistricts = localStorage.getItem(cacheKey);
+                            if (cachedDistricts) {
+                                districtsData[province.code] = JSON.parse(cachedDistricts);
+                            } else {
+                                const districtResponse = await fetch(
+                                    `https://provinces.open-api.vn/api/p/${province.code}?depth=2`);
+                                const districtData = await districtResponse.json();
+                                districtsData[province.code] = districtData.districts;
+                                localStorage.setItem(cacheKey, JSON.stringify(districtData.districts));
+                            }
 
-                            const district = districtData.districts.find(d => normalizeName(d.name).includes(
+                            populateDistricts(province.code);
+                            const district = districtsData[province.code].find(d => normalizeName(d.name).includes(
                                 normalizeName(county)));
                             if (district) {
                                 districtSelect.value = district.name;
                                 wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
 
-                                const wardResponse = await fetch(
-                                    `https://provinces.open-api.vn/api/d/${district.code}?depth=2`);
-                                const wardData = await wardResponse.json();
-                                wardsData[district.code] = wardData.wards;
-                                wardData.wards.forEach(ward => {
-                                    const option = document.createElement('option');
-                                    option.value = ward.name;
-                                    option.textContent = ward.name;
-                                    option.dataset.code = ward.code;
-                                    wardSelect.appendChild(option);
-                                });
+                                const wardCacheKey = `${CACHE_KEY_WARDS}_${district.code}`;
+                                const cachedWards = localStorage.getItem(wardCacheKey);
+                                if (cachedWards) {
+                                    wardsData[district.code] = JSON.parse(cachedWards);
+                                } else {
+                                    const wardResponse = await fetch(
+                                        `https://provinces.open-api.vn/api/d/${district.code}?depth=2`);
+                                    const wardData = await wardResponse.json();
+                                    wardsData[district.code] = wardData.wards;
+                                    localStorage.setItem(wardCacheKey, JSON.stringify(wardData.wards));
+                                }
 
-                                const ward = wardData.wards.find(w => normalizeName(w.name).includes(normalizeName(
-                                    suburb)));
+                                populateWards(district.code);
+                                const ward = wardsData[district.code].find(w => normalizeName(w.name).includes(
+                                    normalizeName(suburb)));
                                 if (ward) {
                                     wardSelect.value = ward.name;
                                 }
@@ -551,10 +626,7 @@
                     return;
                 }
 
-                // Try full address first
                 let data = await fetchAddress(query);
-
-                // If no results, try simplified address
                 if (!data.length) {
                     const simplified = simplifyAddress(query);
                     if (simplified !== query) {
@@ -562,7 +634,6 @@
                     }
                 }
 
-                // If still no results, try broader components
                 if (!data.length) {
                     const parts = query.split(',').map(part => part.trim());
                     if (parts.length > 1) {
@@ -574,23 +645,20 @@
                 if (data.length > 0) {
                     const lat = parseFloat(data[0].lat);
                     const lon = parseFloat(data[0].lon);
-                    map.setCenter([lon, lat]);
-                    map.setZoom(data[0].importance < 0.3 ? 13 : 17);
+                    map.setView([lat, lon], data[0].importance < 0.3 ? 13 : 17);
 
                     if (marker) {
-                        marker.setLngLat([lon, lat]);
+                        marker.setLatLng([lat, lon]);
                     } else {
-                        marker = new vietmapgl.Marker().setLngLat([lon, lat]).addTo(map);
+                        marker = L.marker([lat, lon]).addTo(map);
                     }
 
-                    // Update hidden inputs with latitude and longitude
                     latitudeInput.value = lat.toFixed(6);
                     longitudeInput.value = lon.toFixed(6);
 
-                    // Update form fields
                     try {
                         const addressResponse = await fetch(
-                            `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${lat}&lon=${lon}&format=json&addressdetails=1&countrycodes=vn`
+                            `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${lat}&lon=${lng}&format=json&addressdetails=1&countrycodes=vn`
                         );
                         const addressData = await addressResponse.json();
                         if (addressData.address) {
@@ -602,7 +670,6 @@
                                 road,
                                 house_number
                             } = addressData.address;
-
                             const provinceName = state || city || '';
                             const province = provincesData.find(p => normalizeName(p.name).includes(normalizeName(
                                 provinceName)));
@@ -612,38 +679,40 @@
                                 districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
                                 wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
 
-                                const districtResponse = await fetch(
-                                    `https://provinces.open-api.vn/api/p/${province.code}?depth=2`);
-                                const districtData = await districtResponse.json();
-                                districtsData[province.code] = districtData.districts;
-                                districtData.districts.forEach(district => {
-                                    const option = document.createElement('option');
-                                    option.value = district.name;
-                                    option.textContent = district.name;
-                                    option.dataset.code = district.code;
-                                    districtSelect.appendChild(option);
-                                });
+                                const cacheKey = `${CACHE_KEY_DISTRICTS}_${province.code}`;
+                                const cachedDistricts = localStorage.getItem(cacheKey);
+                                if (cachedDistricts) {
+                                    districtsData[province.code] = JSON.parse(cachedDistricts);
+                                } else {
+                                    const districtResponse = await fetch(
+                                        `https://provinces.open-api.vn/api/p/${province.code}?depth=2`);
+                                    const districtData = await districtResponse.json();
+                                    districtsData[province.code] = districtData.districts;
+                                    localStorage.setItem(cacheKey, JSON.stringify(districtData.districts));
+                                }
 
-                                const district = districtData.districts.find(d => normalizeName(d.name).includes(
+                                populateDistricts(province.code);
+                                const district = districtsData[province.code].find(d => normalizeName(d.name).includes(
                                     normalizeName(county)));
                                 if (district) {
                                     districtSelect.value = district.name;
                                     wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
 
-                                    const wardResponse = await fetch(
-                                        `https://provinces.open-api.vn/api/d/${district.code}?depth=2`);
-                                    const wardData = await wardResponse.json();
-                                    wardsData[district.code] = wardData.wards;
-                                    wardData.wards.forEach(ward => {
-                                        const option = document.createElement('option');
-                                        option.value = ward.name;
-                                        option.textContent = ward.name;
-                                        option.dataset.code = ward.code;
-                                        wardSelect.appendChild(option);
-                                    });
+                                    const wardCacheKey = `${CACHE_KEY_WARDS}_${district.code}`;
+                                    const cachedWards = localStorage.getItem(wardCacheKey);
+                                    if (cachedWards) {
+                                        wardsData[district.code] = JSON.parse(cachedWards);
+                                    } else {
+                                        const wardResponse = await fetch(
+                                            `https://provinces.open-api.vn/api/d/${district.code}?depth=2`);
+                                        const wardData = await wardResponse.json();
+                                        wardsData[district.code] = wardData.wards;
+                                        localStorage.setItem(wardCacheKey, JSON.stringify(wardData.wards));
+                                    }
 
-                                    const ward = wardData.wards.find(w => normalizeName(w.name).includes(normalizeName(
-                                        suburb)));
+                                    populateWards(district.code);
+                                    const ward = wardsData[district.code].find(w => normalizeName(w.name).includes(
+                                        normalizeName(suburb)));
                                     if (ward) {
                                         wardSelect.value = ward.name;
                                     }
@@ -676,11 +745,10 @@
                 }
             });
 
-            // Update map when address fields change
             wardSelect.addEventListener('change', updateMapFromAddress);
             addressInput.addEventListener('input', debounce(updateMapFromAddress, 500));
 
-            // Debounce function to prevent excessive API calls
+            // Debounce function
             function debounce(func, wait) {
                 let timeout;
                 return function(...args) {
@@ -721,6 +789,7 @@
                             img.src = e.target.result;
                             img.className = 'img-fluid rounded-3 shadow-sm';
                             img.style.maxHeight = '100px';
+                            img.alt = 'Ảnh trong album';
                             galleryPreview.appendChild(img);
                         };
                         reader.readAsDataURL(file);
@@ -728,44 +797,80 @@
                 });
             });
 
-            // Load provinces on page load
-            loadProvinces();
-        </script>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script>
+            // Room selection
             $(document).ready(function() {
                 $('#property_id').change(function() {
-                    var propertyId = $(this).val();
-                    var roomSelect = $('#room_id');
+                    const propertyId = $(this).val();
+                    const roomSelect = $('#room_id');
 
-                    // Xóa các tùy chọn hiện tại trong dropdown phòng
                     roomSelect.empty().append('<option value="">-- Chọn Phòng --</option>');
                     roomSelect.prop('disabled', true);
 
                     if (propertyId) {
-                        // Gửi yêu cầu AJAX để lấy danh sách phòng
                         $.ajax({
-                            url: '/get-rooms/' + propertyId, // URL endpoint để lấy danh sách phòng
+                            url: '/get-rooms/' + propertyId,
                             type: 'GET',
+                            dataType: 'json',
                             success: function(data) {
-                                console.log(data);
-
-                                // Kích hoạt dropdown phòng
-                                roomSelect.prop('disabled', false);
-
-                                // Thêm các phòng vào dropdown
-                                $.each(data.rooms, function(index, room) {
-                                    roomSelect.append('<option value="' + room.room_id +
-                                        '">' + room.room_number + '</option>');
-                                });
+                                if (data.rooms && Array.isArray(data.rooms)) {
+                                    roomSelect.prop('disabled', false);
+                                    $.each(data.rooms, function(index, room) {
+                                        roomSelect.append(
+                                            `<option value="${room.room_id}">${room.room_number}</option>`
+                                        );
+                                    });
+                                } else {
+                                    alert('Không tìm thấy phòng cho bất động sản này.');
+                                }
                             },
-                            error: function() {
+                            error: function(jqXHR, textStatus, errorThrown) {
+                                console.error('Error fetching rooms:', textStatus, errorThrown);
                                 alert('Không thể tải danh sách phòng. Vui lòng thử lại.');
                             }
                         });
                     }
                 });
+
+                // Client-side validation
+                $('#rental-form').on('submit', function(e) {
+                    const price = $('#price').val().replace(/[^0-9]/g, '');
+                    const area = $('#area').val();
+                    const latitude = $('#latitude').val();
+                    const longitude = $('#longitude').val();
+
+                    if (!price || isNaN(price) || Number(price) <= 0) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập giá cho thuê hợp lệ.');
+                        $('#price').focus();
+                        return;
+                    }
+
+                    if (!area || isNaN(area) || Number(area) <= 0) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập diện tích hợp lệ.');
+                        $('#area').focus();
+                        return;
+                    }
+
+                    if (!latitude || !longitude) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn vị trí trên bản đồ.');
+                        $('#search-map').focus();
+                        return;
+                    }
+                });
+
+                // Format price input
+                $('#price').on('input', function() {
+                    let value = $(this).val().replace(/[^0-9]/g, '');
+                    if (value) {
+                        $(this).val(Number(value).toLocaleString('vi-VN'));
+                    }
+                });
             });
+
+            // Load provinces on page load
+            loadProvinces();
         </script>
 
         {{-- Custom Styles --}}
@@ -795,7 +900,6 @@
                 box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
             }
 
-            /* Green glow for filled inputs */
             .form-control:not(:placeholder-shown):not([type="file"]),
             .form-control[type="file"]:valid,
             .form-select option[value]:not([value=""]):checked,

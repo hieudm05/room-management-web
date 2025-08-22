@@ -176,6 +176,8 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::post('/room-users/{id}/suscess', [RoomController::class, 'ConfirmAllUser'])->name('room_users.suscess');
         Route::get('/{room}/staffs', [RoomStaffController::class, 'edit'])->name('staffs.edit');
         Route::post('/{room}/staffs', [RoomStaffController::class, 'update'])->name('staffs.update');
+          Route::post('{room}/kick', [RoomController::class, 'kickTenants'])
+    ->name('rooms.kick');
     });
 
     // Staff quản lý phòng

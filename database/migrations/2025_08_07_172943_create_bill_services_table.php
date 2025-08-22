@@ -28,7 +28,7 @@ return new class extends Migration
 
                 // Foreign keys
                 $table->foreign('bill_id')->references('id')->on('room_bills')->onDelete('cascade');
-                $table->foreign('service_id')->references('id')->on('services')->onDelete('set null');
+                $table->foreign('service_id')->references('service_id')->on('services')->onDelete('set null');
             });
         }
     }

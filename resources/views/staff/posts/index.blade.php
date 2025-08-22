@@ -10,7 +10,6 @@
                 class="btn btn-gradient-primary px-5 py-3 rounded-pill fw-bold">
                 <i class="bi bi-plus-circle-fill me-2"></i> Tạo bài đăng mới
             </a>
-
         </div>
 
         @if (session('success'))
@@ -70,7 +69,7 @@
                                 <tbody>
                                     @foreach ($posts as $key => $post)
                                         <tr>
-                                            <td class="ps-4">{{ $key + 1 }}</td>
+                                            <td class="ps-4">{{ $posts->firstItem() + $key }}</td>
                                             <td>{{ Str::limit($post->title, 40) }}</td>
                                             <td>{{ number_format((float) $post->price, 0, ',', '.') }} VNĐ</td>
                                             <td>{{ $post->area }} m²</td>
@@ -90,6 +89,12 @@
                                                         class="btn btn-outline-primary btn-sm rounded-start-pill">
                                                         <i class="bi bi-eye-fill me-1"></i> Xem
                                                     </a>
+                                                    @if ($post->status == 0 || $post->status == 2)
+                                                        <a href="{{ route('staff.posts.edit', $post->post_id) }}"
+                                                            class="btn btn-outline-warning btn-sm">
+                                                            <i class="bi bi-pencil-fill me-1"></i> Sửa
+                                                        </a>
+                                                    @endif
                                                     @if ($post->status == 0)
                                                         <form action="{{ route('staff.posts.destroy', $post->post_id) }}"
                                                             method="POST" class="d-inline-block"
@@ -109,6 +114,9 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div class="mt-4">
+                        {{ $posts->links() }}
                     </div>
                 @else
                     <div class="alert alert-info shadow-lg rounded-4" role="alert">
@@ -148,6 +156,10 @@
                                                     <a href="{{ route('staff.posts.show', $post->post_id) }}"
                                                         class="btn btn-outline-primary btn-sm rounded-start-pill">
                                                         <i class="bi bi-eye-fill me-1"></i> Xem
+                                                    </a>
+                                                    <a href="{{ route('staff.posts.edit', $post->post_id) }}"
+                                                        class="btn btn-outline-warning btn-sm">
+                                                        <i class="bi bi-pencil-fill me-1"></i> Sửa
                                                     </a>
                                                     <form action="{{ route('staff.posts.destroy', $post->post_id) }}"
                                                         method="POST" class="d-inline-block"
@@ -246,10 +258,16 @@
                                             <td><span class="badge bg-danger px-3 py-2">Từ chối</span></td>
                                             <td>{{ $post->created_at->format('d/m/Y H:i') }}</td>
                                             <td class="text-end pe-4">
-                                                <a href="{{ route('staff.posts.show', $post->post_id) }}"
-                                                    class="btn btn-outline-primary btn-sm rounded-pill">
-                                                    <i class="bi bi-eye-fill me-1"></i> Xem
-                                                </a>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ route('staff.posts.show', $post->post_id) }}"
+                                                        class="btn btn-outline-primary btn-sm rounded-start-pill">
+                                                        <i class="bi bi-eye-fill me-1"></i> Xem
+                                                    </a>
+                                                    <a href="{{ route('staff.posts.edit', $post->post_id) }}"
+                                                        class="btn btn-outline-warning btn-sm rounded-end-pill">
+                                                        <i class="bi bi-pencil-fill me-1"></i> Sửa
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -264,17 +282,14 @@
                 @endif
             </div>
         </div>
-
     </div>
 
     <style>
         .btn-gradient-primary {
             background-color: orangered;
-            /* Màu xanh dương cơ bản */
             color: #fff;
             border: none;
             border-radius: 3px;
-            /* Giảm bo tròn lại */
             transition: all 0.2s ease-in-out;
             font-weight: 600;
             letter-spacing: 0.5px;
@@ -282,7 +297,6 @@
 
         .btn-gradient-primary:hover {
             background-color: white;
-            /* Màu hover đậm hơn */
             transform: translateY(-1px);
             box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
         }
@@ -358,6 +372,17 @@
 
         .btn-outline-primary:hover {
             background: #4facfe;
+            color: #fff;
+        }
+
+        .btn-outline-warning {
+            border-color: #f0ad4e;
+            color: #f0ad4e;
+            font-weight: 600;
+        }
+
+        .btn-outline-warning:hover {
+            background: #f0ad4e;
             color: #fff;
         }
 
