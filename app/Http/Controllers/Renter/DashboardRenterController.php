@@ -172,3 +172,4 @@ $billIds = RoomBill::where('room_id', $roomId)
             ->pluck('total', 'service_name');
     }
 }
+

@@ -209,11 +209,4 @@
         @endforelse
     </div>
 @endsection
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
 
-
-=======
->>>>>>> 483a3e81cd1c275e67241250987e97165fb59796
->>>>>>> origin/main

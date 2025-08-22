@@ -171,6 +171,14 @@ public function bookings()
 {
     return $this->hasMany(Booking::class, 'room_id');
 }
-
+public function allUserInfos()
+{
+    return $this->hasMany(UserInfo::class, 'room_id', 'room_id');
+}
+public function getCanKickAttribute()
+{
+    // return true nếu phòng có tenant và hóa đơn quá hạn 5 ngày
+    return $this->tenants()->count() > 0 && $this->latestInvoice?->isOverdue();
+}
 }
 

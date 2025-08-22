@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Landlord\Room;
+use Illuminate\Database\Eloquent\Model;
+use App\Models\Landlord\Staff\Rooms\RoomBill;
 
 class UserInfo extends Model
 {
@@ -25,4 +26,7 @@ class UserInfo extends Model
     {
         return $this->belongsTo(RentalAgreement::class, 'rental_id');
     }
+public function bills() {
+    return $this->hasMany(RoomBill::class, 'room_id', 'room_id');
+}
 }

@@ -47,156 +47,115 @@ public function index(Request $request)
      */
 public function search(Request $request)
 {
-    // Lấy keyword và chuẩn hóa
-    $keyword = trim(preg_replace('/\s+/', ' ', $request->input('keyword')));
+    // Lấy keyword và chuẩn hóa (giữ nguyên từ code cũ)
+    $keyword = trim(preg_replace('/\s+/', ' ', $request->input('keyword', '')));
 
-    // Tách theo dấu phẩy để người dùng có thể nhập nhiều phần
+    // Tách keyword theo dấu phẩy
     $parts = array_map('trim', explode(',', $keyword));
 
-    $posts = StaffPost::query()
-        ->when($parts, function ($query) use ($parts) {
+    // Bắt đầu query
+    $query = StaffPost::query();
+
+    // --- Xử lý keyword ---
+    if ($request->filled('keyword')) {
+        \Log::info('KEYWORD PROCESSING:', [
+            'original' => $request->keyword,
+            'cleaned' => $keyword,
+            'parts' => $parts,
+            'parts_count' => count($parts)
+        ]);
+
+        $query->where(function ($q) use ($parts) {
             foreach ($parts as $part) {
-                $query->where(function ($sub) use ($part) {
-                    $sub->orWhere('city', 'like', "%{$part}%")
-                        ->orWhere('district', 'like', "%{$part}%")
-                        ->orWhere('ward', 'like', "%{$part}%")
-                        ->orWhere('title', 'like', "%{$part}%")
-                        ->orWhere('description', 'like', "%{$part}%");
-                });
+                $partLower = strtolower($part);
+                $q->orWhereRaw('LOWER(title) LIKE ?', ["%{$partLower}%"])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ["%{$partLower}%"])
+                  ->orWhereRaw('LOWER(city) LIKE ?', ["%{$partLower}%"])
+                  ->orWhereRaw('LOWER(district) LIKE ?', ["%{$partLower}%"])
+                  ->orWhereRaw('LOWER(ward) LIKE ?', ["%{$partLower}%"]);
             }
-        })
-        ->latest()
-        ->paginate(10);
+        });
+    }
+
+    // --- Lọc theo giá (bỏ nhân *1000000 vì value đã là đồng) ---
+    if ($request->filled('price')) {
+        $raw = preg_replace('/[^0-9\-]/', '', $request->price);
+        if (!preg_match('/^\d+-\d+$/', $raw)) {
+            \Log::warning('INVALID PRICE FORMAT:', ['input' => $request->price]);
+        } else {
+            $parts = explode('-', $raw);
+            $numbers = array_map('intval', array_filter($parts, function($value) {
+                return trim($value) !== '';
+            }));
+
+            if (count($numbers) >= 2) {
+                $min = $numbers[0]; // Không nhân nữa
+                $max = $numbers[1]; // Không nhân nữa
+
+                if ($min > $max) {
+                    [$min, $max] = [$max, $min];
+                }
+
+                if ($min < 0 || $max < 0) {
+                    \Log::warning('NEGATIVE PRICE DETECTED:', ['min' => $min, 'max' => $max]);
+                } else {
+                    \Log::info('PRICE FILTER APPLIED:', [
+                        'min' => $min,
+                        'max' => $max,
+                        'min_formatted' => number_format($min) . ' VND',
+                        'max_formatted' => number_format($max) . ' VND'
+                    ]);
+
+                    $query->whereBetween('price', [$min, $max]);
+                }
+            } else {
+                \Log::warning('PRICE FILTER SKIPPED - Not enough numbers:', [
+                    'numbers' => $numbers,
+                    'count' => count($numbers)
+                ]);
+            }
+        }
+    }
+
+    // --- Lọc theo diện tích ---
+    if ($request->filled('area')) {
+        [$min, $max] = explode('-', $request->area);
+        $min = (int) $min;
+        $max = (int) $max;
+        \Log::info('AREA FILTER APPLIED:', ['min' => $min, 'max' => $max]);
+        $query->whereBetween('area', [$min, $max]);
+    }
+
+    // --- Lọc theo danh mục ---
+    if ($request->filled('category_id')) {
+        \Log::info('CATEGORY FILTER APPLIED:', ['category_id' => $request->category_id]);
+        $query->where('category_id', $request->category_id);
+    }
+
+    // --- Lọc theo đặc điểm (amenities) ---
+   if ($request->filled('amenities')) {
+    $amenities = array_filter($request->input('amenities', []));
+
+    if (!empty($amenities)) {
+        $query->whereHas('features', function ($q) use ($amenities) {
+            $q->whereIn('name', $amenities);
+        });
+    }
+    }
+    // Debug SQL query (không dùng echo, dùng Log để tránh hỏng output)
+    \Log::info('FINAL SQL QUERY:', [
+        'sql' => $query->toSql(),
+        'bindings' => $query->getBindings()
+    ]);
+
+    // Lấy kết quả với paginate và sắp xếp latest
+    $posts = $query->latest()->paginate(10);
 
     return view('home.search', [
         'posts' => $posts,
         'keyword' => $keyword,
     ]);
-}    /**
-     * Lọc bài đăng dựa trên input tìm kiếm
-     */
-   private function filterPosts(Request $request)
-    {
-        $query = StaffPost::query();
-
-        if ($request->filled('keyword')) {
-            $keyword = $request->keyword;
-            $keywordNormalized = $this->removeVietnameseAccents(strtolower($keyword));
-            $query->where(function($q) use ($keyword, $keywordNormalized) {
-                $q->whereRaw('LOWER(title) LIKE ?', ["%{$keyword}%"])
-                  ->orWhereRaw('LOWER(description) LIKE ?', ["%{$keyword}%"])
-                  ->orWhereRaw('LOWER(city) LIKE ?', ["%{$keyword}%"])
-                  ->orWhereRaw('LOWER(district) LIKE ?', ["%{$keyword}%"])
-                  ->orWhereRaw('LOWER(ward) LIKE ?', ["%{$keyword}%"]);
-            });
-        }
-
-        return $query;
-    }
-
-// public function apiSuggestions(Request $request)
-// {
-//     $query = trim($request->input('query'));
-
-//     try {
-//         // Lấy dữ liệu từ cache, ưu tiên data.json đầy đủ phường/xã
-//         $locations = Cache::remember('vn_locations_full', 86400, function() {
-//             $endpoints = [
-//                 'https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json', // full
-//                 'https://provinces.open-api.vn/api/?depth=3'
-//             ];
-
-//             foreach ($endpoints as $endpoint) {
-//                 try {
-//                     \Log::info("Trying endpoint: " . $endpoint);
-//                     $response = Http::timeout(30)->get($endpoint);
-
-//                     if ($response->successful()) {
-//                         $data = $response->json();
-//                         if (!empty($data)) {
-//                             \Log::info("Success with endpoint: " . $endpoint);
-//                             return $data;
-//                         }
-//                     }
-//                 } catch (\Exception $e) {
-//                     \Log::error("Failed endpoint {$endpoint}: " . $e->getMessage());
-//                     continue;
-//                 }
-//             }
-
-//             \Log::error("All API endpoints failed");
-//             return [];
-//         });
-
-//         if (empty($locations)) {
-//             \Log::error("No location data available");
-//             return response()->json([]);
-//         }
-
-//         $suggestions = [];
-
-//         foreach ($locations as $province) {
-//             // Tên tỉnh
-//             $provinceName = $province['name'] ?? $province['Name'] ?? '';
-//             if (!empty($provinceName)) $suggestions[] = $provinceName;
-
-//             $districts = $province['districts'] ?? $province['Districts'] ?? $province['district'] ?? [];
-//             foreach ($districts as $district) {
-//                 // Tên huyện/quận
-//                 $districtName = $district['name'] ?? $district['Name'] ?? '';
-//                 if (!empty($districtName)) $suggestions[] = $districtName;
-
-//                 // Lấy phường/xã
-//                 $wards = [];
-//                 if (!empty($district['wards']) && is_array($district['wards'])) $wards = $district['wards'];
-//                 elseif (!empty($district['xas']) && is_array($district['xas'])) $wards = $district['xas'];
-//                 elseif (!empty($district['communes']) && is_array($district['communes'])) $wards = $district['communes'];
-//                 elseif (!empty($district['xaPhuong']) && is_array($district['xaPhuong'])) $wards = $district['xaPhuong'];
-
-//                 foreach ($wards as $ward) {
-//                     $wardName = $ward['name'] ?? $ward['Name'] ?? $ward['title'] ?? '';
-//                     if (!empty($wardName)) $suggestions[] = $wardName;
-//                 }
-//             }
-//             // \Log::info('Sample ward:', $wards[0] ?? 'empty');
-//         }
-
-//         // Loại bỏ trùng rỗng
-//         $suggestions = array_values(array_unique(array_filter($suggestions)));
-
-//         // Nếu có query, filter và sort
-//         if ($query) {
-//             $queryNormalized = $this->removeVietnameseAccents(strtolower($query));
-
-//             $filteredSuggestions = array_filter($suggestions, function($item) use ($queryNormalized) {
-//                 $itemNormalized = $this->removeVietnameseAccents(strtolower($item));
-//                 return stripos($itemNormalized, $queryNormalized) !== false;
-//             });
-
-//             // Sort theo vị trí query xuất hiện, rồi độ dài
-//             usort($filteredSuggestions, function($a, $b) use ($queryNormalized) {
-//                 $aNormalized = $this->removeVietnameseAccents(strtolower($a));
-//                 $bNormalized = $this->removeVietnameseAccents(strtolower($b));
-
-//                 $posA = stripos($aNormalized, $queryNormalized);
-//                 $posB = stripos($bNormalized, $queryNormalized);
-
-//                 if ($posA === $posB) return strlen($a) - strlen($b);
-//                 return $posA - $posB;
-//             });
-
-//             $suggestions = array_slice($filteredSuggestions, 0, 10);
-//         } else {
-//             $suggestions = array_slice($suggestions, 0, 10);
-//         }
-
-//         return response()->json(array_values($suggestions));
-
-//     } catch (\Exception $e) {
-//         \Log::error("Lỗi gợi ý API: " . $e->getMessage());
-//         return response()->json([]);
-//     }
-// }
+}
 
     /** =========================
      *        RENTER
