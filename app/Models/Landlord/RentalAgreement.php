@@ -31,13 +31,3 @@ class RentalAgreement extends Model
         return $this->hasMany(RoomLeaveRequest::class, 'rental_agreement_id');
     }
 }
- public function leaveRequests()
-{
-    return $this->hasMany(RoomLeaveRequest::class, 'rental_agreement_id');
-}
-}
-
-
-
-
-

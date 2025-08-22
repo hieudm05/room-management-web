@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\BookingController;
@@ -96,9 +97,15 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     // Duyệt hợp đồng
     Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
 
-    Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])
+    // Duyệt hợp đồng (theo approval_id)
+    Route::post('/approvals/{id}/approve-contract', [ApprovalController::class, 'approveContract'])
         ->whereNumber('id')
-        ->name('approvals.approve');
+        ->name('approvals.approve.contract');
+
+    // Duyệt minh chứng đặt cọc (theo approval_id)
+    Route::post('/approvals/{id}/approve-deposit', [ApprovalController::class, 'approveDeposit'])
+        ->whereNumber('id')
+        ->name('approvals.approve.deposit');
 
     Route::delete('/approvals/{id}/reject', [ApprovalController::class, 'reject'])
         ->whereNumber('id')
@@ -141,7 +148,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::put('/{id}', [LandlordBankAccountController::class, 'update'])->name('update');
         Route::delete('/{id}', [LandlordBankAccountController::class, 'destroy'])->name('destroy');
     });
-     // Dịch vụ
+    // Dịch vụ
     Route::resource('services', \App\Http\Controllers\Landlord\ServiceController::class);
     Route::patch('services/{service}/hide', [\App\Http\Controllers\Landlord\ServiceController::class, 'hide'])->name('services.hide');
     Route::patch('services/{service}/unhide', [\App\Http\Controllers\Landlord\ServiceController::class, 'unhide'])->name('services.unhide');
@@ -150,7 +157,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
 
 
     // Tiện nghi
-     Route::resource('facilities', \App\Http\Controllers\Landlord\FacilityController::class);
+    Route::resource('facilities', \App\Http\Controllers\Landlord\FacilityController::class);
 
     // Rooms
     Route::prefix('rooms')->name('rooms.')->group(function () {
@@ -174,6 +181,8 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/{room}/contract-download', [RoomController::class, 'downloadContract'])->name('contract.download');
         Route::get('/{room}/contract', [RoomController::class, 'contractIndex'])->name('contract.contractIndex');
         Route::post('/{room}/contract-upload', [RoomController::class, 'uploadContract'])->name('contract.upload');
+        Route::get('/{room}/contracts/create', [RoomController::class, 'showForm'])->name('contracts.create');
+        Route::post('/{room}/contracts/generate', [RoomController::class, 'generate'])->name('contracts.generate');
         Route::post('/{room}/contract-confirm', [RoomController::class, 'confirmContract2'])->name('contract.confirm');
         Route::get('/{room}/contract-word', [RoomController::class, 'downloadContractWord'])->name('contract.word');
         Route::get('/{room}/contract-form', [RoomController::class, 'formShowContract'])->name('contract.info');
@@ -200,6 +209,8 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
             Route::post('/{room}/upload', [ContractController::class, 'uploadAgreementFile'])->name('upload');
             Route::post('/{room}/preview', [ContractController::class, 'preview'])->name('preview');
             Route::post('/{room}/confirm', [ContractController::class, 'confirm'])->name('confirm');
+            Route::get('/{room}/form', [ContractController::class, 'showForm'])->name('form');
+            Route::post('/{room}/generate', [ContractController::class, 'generate'])->name('generate');
         });
 
         // Form upload đặt cọc
@@ -237,11 +248,11 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::get('/bills/exportproperty/{month}', [LandlordBillController::class, 'exportAllBills'])->name('bills.exportproperty');
     // Nhập hoá đơn của chủ trọ
     Route::prefix('payment')->name('payment.')->group(function () {
-    Route::get('/', [BillController::class, 'list'])->name('list');
-    Route::get('/list', [BillController::class, 'index'])->name('index');
-    Route::post('/{room}', [BillController::class, 'store'])->name('store');
-    Route::get('/{room}/export', [BillController::class, 'exportExcel'])->name('exportExcel');
-    Route::post('/room-bills/{id}/update-status', [BillController::class, 'updateStatus']);
+        Route::get('/', [BillController::class, 'list'])->name('list');
+        Route::get('/list', [BillController::class, 'index'])->name('index');
+        Route::post('/{room}', [BillController::class, 'store'])->name('store');
+        Route::get('/{room}/export', [BillController::class, 'exportExcel'])->name('exportExcel');
+        Route::post('/room-bills/{id}/update-status', [BillController::class, 'updateStatus']);
     });
 
     // Staff yêu cầu chỉnh sửa phòng
@@ -312,8 +323,8 @@ Route::get('password/reset/{token}', [ResetPasswordController::class, 'showReset
 Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
 Route::get('password/change', [ChangePasswordController::class, 'showChangeForm'])->name('password.change');
 
-    // Xử lý đổi mật khẩu
-    Route::post('password/change', [ChangePasswordController::class, 'updatePassword'])->name('password.change.update');
+// Xử lý đổi mật khẩu
+Route::post('password/change', [ChangePasswordController::class, 'updatePassword'])->name('password.change.update');
 
 // Trang chủ
 Route::get('/', [HomeController::class, 'renter'])->name('renter');
@@ -368,6 +379,7 @@ Route::middleware(['auth'])->prefix('staff/contract')->name('staff.contract.')->
 Route::middleware('auth')->group(function () {
     Route::get('/add-user', [AddUserRequestController::class, 'create'])->name('renter.addUserRequest.create');
     Route::post('/add-user', [AddUserRequestController::class, 'store'])->name('renter.storeuser');
+    Route::post('/parse-cccd', [AddUserRequestController::class, 'parseCCCD'])->name('renter.parseCCCD');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -473,7 +485,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/transfer/accept', [RoomLeaveController::class, 'acceptTransfer'])->name('renter.transfer.accept');
         Route::get('/transfer/confirm', [RoomLeaveController::class, 'confirmTransfer'])->name('roomleave.confirmTransfer');
         Route::get('/transfer/deposits', [RoomLeaveController::class, 'depositHistory'])->name('home.roomleave.deposits');
-
     });
     // Staff xử lý yêu cầu rời phòng
     Route::prefix('staff')->name('landlord.staff.')->group(function () {
@@ -551,7 +562,7 @@ Route::prefix('landlord/bookings')->middleware(['auth'])->name('landlord.booking
     Route::post('/{booking}/approve', [BookingsController::class, 'approve'])->name('approve');
     Route::post('/{booking}/reject', [BookingsController::class, 'reject'])->name('reject');
     Route::post('/{booking}/waiting', [BookingsController::class, 'waiting'])->name('waiting');
-Route::post('/{booking}/completed', [BookingsController::class, 'completed'])->name('completed');
+    Route::post('/{booking}/completed', [BookingsController::class, 'completed'])->name('completed');
     Route::post('/{booking}/no-cancel', [BookingsController::class, 'noCancel'])->name('noCancel');
     Route::post('/{booking}/completed-with-image', [BookingsController::class, 'doneWithImage'])->name('completedWithImage');
 });
@@ -577,10 +588,9 @@ Route::middleware(['auth', 'role:Landlord'])->prefix('landlord')->group(function
 
 
 Route::prefix('search')->group(function () {
-   Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/search', [HomeController::class, 'search'])->name('search.results');
-Route::get('/search/api-suggestions', [HomeController::class, 'apiSuggestions'])->name('search.api-suggestions');
-
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/search', [HomeController::class, 'search'])->name('search.results');
+    Route::get('/search/api-suggestions', [HomeController::class, 'apiSuggestions'])->name('search.api-suggestions');
 });
 // Trong routes/web.php hoặc routes/api.php
 Route::get('/debug-api-structure', [HomeController::class, 'debugApiStructure']);

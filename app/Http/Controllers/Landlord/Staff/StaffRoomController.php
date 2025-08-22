@@ -129,7 +129,7 @@ class StaffRoomController extends Controller
             'room_id'     => $room->room_id,
             'staff_id'    => Auth::id(),
             'landlord_id' => $landlordId,
-            'file_path'   => $path,
+            'file_path'   => '/storage/' . $path,
             'type'        => 'deposit_image',
             'status'      => 'pending',
             'note'        => 'Staff tải ảnh đặt cọc, chờ landlord duyệt.',
