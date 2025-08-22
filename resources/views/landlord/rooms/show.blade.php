@@ -78,24 +78,24 @@
                 {{-- Người thuê --}}
                 <div class="mb-4">
                     <label class="section-title">Người thuê</label>
-                    @if ($room->currentAgreementValid && !$room->is_contract_locked)
+                    @if ($room->currentAgreementValid)
+                        @php $agreement = $room->currentAgreementValid; @endphp
                         <div class="row g-2">
                             <div class="col-md-6">
                                 <input type="text" class="form-control"
-                                    value="{{ $room->renter?->info?->full_name ?? ($room->renter?->name ?? 'Chưa có tên') }}"
-                                    disabled>
+                                    value="{{ $agreement->full_name ?? 'Chưa có tên' }}" disabled>
                             </div>
                             <div class="col-md-6">
                                 <input type="text" class="form-control"
-                                    value="SĐT: {{ $room->renter->phone_number ?? 'Chưa có số điện thoại' }}" disabled>
+                                    value="SĐT: {{ $agreement->phone ?? 'Chưa có số điện thoại' }}" disabled>
                             </div>
                             <div class="col-md-6">
                                 <input type="text" class="form-control"
-                                    value="Email: {{ $room->renter->email ?? 'Chưa có email' }}" disabled>
+                                    value="Email: {{ $agreement->email ?? 'Chưa có email' }}" disabled>
                             </div>
                             <div class="col-md-6">
                                 <input type="text" class="form-control"
-                                    value="CCCD/CMND: {{ $room->renter->identity_number ?? 'Chưa có CCCD' }}" disabled>
+                                    value="CCCD/CMND: {{ $agreement->cccd ?? 'Chưa có CCCD' }}" disabled>
                             </div>
                         </div>
                     @else
