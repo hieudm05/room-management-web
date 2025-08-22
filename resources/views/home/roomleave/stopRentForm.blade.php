@@ -23,6 +23,13 @@
                     @csrf
                     <button type="submit" class="btn btn-success mt-2">✅ Tôi đồng ý nhận chuyển nhượng</button>
                 </form>
+                <form method="POST" action="{{ route('renter.transfer.reject',  $incomingTransferRequest->id) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('Bạn có chắc chắn muốn từ chối chuyển nhượng hợp đồng?')">
+                        ❌ Tôi từ chối
+                </button>
+            </form>
             </div>
         @endif
         {{-- Thông báo --}}
@@ -158,7 +165,7 @@
 <div class="modal fade" id="leaveModal-{{ $user->id }}" tabindex="-1">
                     <div class="modal-dialog">
                         <div class="modal-content">
-                            <form method="POST" action="{{ route('home.roomleave.send') }}" >
+                            <form method="POST" action="{{ route('home.roomleave.send') }}">
                                 @csrf
                                 <input type="hidden" name="room_id" value="{{ $room->room_id }}">
                                 <input type="hidden" name="user_id" value="{{ $userId }}">
@@ -203,7 +210,7 @@
                                 <strong>{{ $user->name }}{{ $user->id == $userId ? ' (Bạn)' : '' }}</strong><br>
                                 📅 <strong>Ngày rời:</strong>
                                 {{ \Carbon\Carbon::parse($req->leave_date)->format('d/m/Y') }}<br>
-📝 <strong>Lý do:</strong> {{ $req->note ?? 'Không có' }}<br>
+                                📝 <strong>Lý do:</strong> {{ $req->note ?? 'Không có' }}<br>
                                 ⏳ <strong>Trạng thái:</strong>
                                 Trạng thái gốc: <code>{{ $req->status }}</code><br>
                                 ⏳ <strong>Trạng thái:</strong>
@@ -266,7 +273,8 @@
                         <div class="modal-header">
                             <h5 class="modal-title text-danger" id="terminateContractModalLabel">🛑 Kết thúc hoặc Nhượng hợp
                                 đồng</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body">
@@ -274,22 +282,39 @@
                                 Bạn là <strong>chủ hợp đồng</strong>. Vui lòng điền yêu cầu:
                             </p>
 
+                            @php
+                                $isOwner = optional($room->rentalAgreement)->renter_id === $userId;
+                                $otherUsersCount = $room->userInfos->count(); // số người trong phòng
+                            @endphp
+
+                            @if ($isOwner && $otherUsersCount > 1)
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="radio" name="action_type" value="transfer"
+                                        id="transferOption">
+                                    <label class="form-check-label" for="transferOption">
+                                        🔄 Nhượng quyền cho người khác
+                                    </label>
+                                </div>
+                            @endif
+          @php
+    $otherUsersCount = $room->userInfos->where('active', 1)->where('user_id', '!=', $userId)->count();
+@endphp
+                            @if ($otherUsersCount === 0)
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="radio" name="action_type" value="leave"
+                                        id="terminateOption">
+                                    <label class="form-check-label" for="terminateOption">
+                                        🛑 Kết thúc hợp đồng
+                                    </label>
+                                </div>
+                            @endif
                             <div class="form-check mt-2">
-                                <input class="form-check-input" type="radio" name="action_type" value="transfer"
-                                    id="transferOption">
-                                <label class="form-check-label" for="transferOption">
-                                    🔄 Nhượng quyền cho người khác
+                                <input class="form-check-input" type="radio" name="action_type" value="leave_all"
+                                    id="leaveAllOption">
+                                <label class="form-check-label" for="leaveAllOption">
+                                    👥 Tất cả thành viên rời khỏi phòng
                                 </label>
                             </div>
-
-                            <div class="form-check mt-2">
-                                <input class="form-check-input" type="radio" name="action_type" value="leave"
-                                    id="terminateOption">
-                                <label class="form-check-label" for="terminateOption">
-                                    🛑 Kết thúc hợp đồng
-                                </label>
-                            </div>
-
                             <div class="mt-3" id="transferTarget" style="display: none;">
                                 <label for="new_renter_id" class="form-label">📋 Chọn người nhận quyền</label>
                                 <select name="new_renter_id" id="new_renter_id" class="form-select">
@@ -302,6 +327,7 @@
                                     @endforeach
                                 </select>
                             </div>
+                 
                             <label for="leave_date" class="form-label mt-3">📅 Ngày áp dụng</label>
                             <input type="date" name="leave_date" id="leave_date" class="form-control" required
                                 min="{{ now()->toDateString() }}" value="{{ old('leave_date') }}">
@@ -309,8 +335,10 @@
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                             <div class="mt-3" id="qrUpload" style="display: none;">
-                                <label for="deposit_file" class="form-label">📷 Tải QR deposit</label>
-                                <input type="file" name="deposit_qr_image" id="deposit_file" class="form-control">
+                                <label for="deposit_file" class="form-label">📷 Tải QR nhận lại tiền cọc</label>
+                                <input type="file" name="deposit_qr_image" id="deposit_file" class="form-control"
+                                    accept="image/*">
+                                <small class="text-muted">Hãy tải lên ảnh QR để nhận lại tiền cọc.</small>
                             </div>
 
                             <label for="note" class="form-label mt-3">📝 Ghi chú (tuỳ chọn)</label>
@@ -409,7 +437,7 @@ finalizeForms.forEach(form => {
                 const transferTarget = document.getElementById('transferTarget');
 
                 function toggleTransfer() {
-transferTarget.style.display = transferOption.checked ? 'block' : 'none';
+                    transferTarget.style.display = transferOption.checked ? 'block' : 'none';
                 }
 
                 transferOption.addEventListener('change', toggleTransfer);
@@ -419,18 +447,33 @@ transferTarget.style.display = transferOption.checked ? 'block' : 'none';
     const modal = document.getElementById('terminateContractModal');
     if (!modal) return;
 
-    const transferOption  = modal.querySelector('#transferOption');
-    const terminateOption = modal.querySelector('#terminateOption');
-    const transferTarget  = modal.querySelector('#transferTarget');
-    const qrUpload        = modal.querySelector('#qrUpload');
+                const transferOption = modal.querySelector('#transferOption');
+                const terminateOption = modal.querySelector('#terminateOption');
+                const transferTarget = modal.querySelector('#transferTarget');
+                const qrUpload = modal.querySelector('#qrUpload');
+                const leaveDateInput = modal.querySelector('#leave_date');
+                const depositFile = modal.querySelector('#deposit_file');
 
-    function toggleFields() {
-        // Nếu chọn nhượng thì hiện select người nhận
-        transferTarget.style.display = transferOption && transferOption.checked ? 'block' : 'none';
+                function parseDate(str) {
+                    if (!str) return null;
+                    const [y, m, d] = str.split('-').map(Number);
+                    return new Date(y, m - 1, d);
+                }
 
-        // Nếu chọn kết thúc hợp đồng thì hiện QR
-        qrUpload.style.display = terminateOption && terminateOption.checked ? 'block' : 'none';
-    }
+                const rentalEndDate = parseDate("{{ optional($room->rentalAgreement)->end_date }}");
+
+                function toggleFields() {
+                    // Nếu chọn nhượng thì hiện select người nhận
+                    transferTarget.style.display = transferOption?.checked ? 'block' : 'none';
+
+                    // Nếu chọn kết thúc hợp đồng thì check ngày
+                    const leaveDate = parseDate(leaveDateInput.value);
+                    if (terminateOption?.checked && leaveDate && leaveDate >= rentalEndDate) {
+                        qrUpload.style.display = 'block';
+                    } else {
+                        qrUpload.style.display = 'none';
+                    }
+                }
 
     transferOption?.addEventListener('change', toggleFields);
     terminateOption?.addEventListener('change', toggleFields);
@@ -439,8 +482,10 @@ transferTarget.style.display = transferOption.checked ? 'block' : 'none';
 
     toggleFields();
 });
-
+    
         </script>
+
+
     @endif
 
 @endsection

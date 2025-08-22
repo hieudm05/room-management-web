@@ -101,6 +101,12 @@ class StaffPost extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function room()
+    {
+        return $this->belongsTo(\App\Models\Landlord\Room::class, 'room_id', 'room_id');
+    }
+
+
     /*
     |--------------------------------------------------------------------------
     | Accessors / Mutators

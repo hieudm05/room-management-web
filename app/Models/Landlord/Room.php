@@ -20,6 +20,7 @@ class Room extends Model
 {
     protected $primaryKey = 'room_id';
     protected $fillable = [
+        'room_id',
         'property_id',
         'room_number',
         'area',
@@ -173,6 +174,7 @@ class Room extends Model
         return $this->hasMany(Booking::class, 'room_id');
     }
 
+
     public static function hidePostsIfFull($roomId)
     {
         $room = self::find($roomId);
@@ -211,5 +213,38 @@ class Room extends Model
     {
         // return true nếu phòng có tenant và hóa đơn quá hạn 5 ngày
         return $this->tenants()->count() > 0 && $this->latestInvoice?->isOverdue();
+
+
+    // public function getCurrentAgreementValidAttribute()
+    // {
+    //     // Lấy hợp đồng đang hoạt động gần nhất của phòng
+    //     return $this->rentalAgreements()
+    //         ->whereIn('status', ['Active', 'Signed'])
+    //         ->latest('start_date')
+    //         ->first();
+    // }
+
+    public function getCurrentAgreementValidAttribute()
+    {
+        // Nếu phòng đã gán id_rental_agreements, chỉ lấy khi nó còn hiệu lực
+        if ($this->id_rental_agreements) {
+            return $this->rentalAgreements()
+                ->where('rental_id', $this->id_rental_agreements)
+                ->whereIn('status', ['Active', 'Signed'])
+                ->first();
+        }
+
+        // Nếu chưa, trả về hợp đồng Active/Signed gần nhất
+        return $this->rentalAgreements()
+            ->whereIn('status', ['Active', 'Signed'])
+            ->latest('start_date')
+            ->first();
+    }
+
+
+    public function getRouteKeyName()
+    {
+        return 'room_id';
+
     }
 }
