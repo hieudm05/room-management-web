@@ -213,6 +213,7 @@ class Room extends Model
     {
         // return true nếu phòng có tenant và hóa đơn quá hạn 5 ngày
         return $this->tenants()->count() > 0 && $this->latestInvoice?->isOverdue();
+    }
 
 
     // public function getCurrentAgreementValidAttribute()

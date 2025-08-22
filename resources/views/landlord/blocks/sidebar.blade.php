@@ -64,7 +64,21 @@ $user = Auth::user(); ?>
                 <div class="collapse menu-dropdown" id="sidebarPost">
                     <ul class="nav nav-sm flex-column">
                         <li class="nav-item">
+                            <a href="{{ route('staff.posts.index') }}" class="nav-link">Đăng bài</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('staff.categories.index') }}" class="nav-link">Danh mục bài đăng</a>
+                        </li>
+                    @endif
+                    @if ($user->role === 'Landlord')
+                     <li class="nav-item">
+                            <a href="{{ route('staff.categories.index') }}" class="nav-link">Danh mục bài đăng</a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{{ route('landlord.posts.approval.index') }}" class="nav-link">Duyệt bài đăng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('staff.posts.index') }}" class="nav-link">Đăng bài</a>
                         </li>
                     </ul>
                 </div>
@@ -283,10 +297,6 @@ $user = Auth::user(); ?>
             </ul>
         </div>
     </li>
-@endif
-
-<!-- QUYỀN STAFF -->
-
 @endif
 <!-- Room Management Menu for Staff -->
 

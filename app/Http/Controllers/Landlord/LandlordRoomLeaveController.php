@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Landlord;
 
 use App\Http\Controllers\Controller;
+use App\Models\DepositRefund;
 use App\Models\Landlord\RoomLeaveRequest;
 use App\Models\RoomLeaveLog;
 use App\Models\Landlord\RentalAgreement;
@@ -327,7 +328,6 @@ if ($roomLeaveRequest->action_type === 'leave') {
         return redirect()->route('my-room')->with('success', '✅ Bạn đã xác nhận nhận quyền thuê phòng.');
     }
 
-
     public function rejectForm($id)
     {
         $request = RoomLeaveRequest::findOrFail($id);
@@ -341,7 +341,7 @@ if ($roomLeaveRequest->action_type === 'leave') {
         ]);
 
         $leaveRequest = RoomLeaveRequest::findOrFail($id);
-        $leaveRequest->status = 'rejected';
+$leaveRequest->status = 'rejected';
         $leaveRequest->reject_reason = $request->reject_reason;
         $leaveRequest->handled_by = Auth::id();
         $leaveRequest->handled_at = now();

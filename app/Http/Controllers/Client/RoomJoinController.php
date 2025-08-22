@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Landlord\Room;
-use App\Models\RentalAgreement;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\RoomJoinSuccessNotification;
 use App\Mail\TenantMovedNotification;
+use App\Models\Landlord\RentalAgreement;
 
 class RoomJoinController extends Controller
 {

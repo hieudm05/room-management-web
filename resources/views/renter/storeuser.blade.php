@@ -24,7 +24,7 @@
                     </div>
                     @endif
 
-                    <form action="{{ route('renter.storeuser') }}" method="POST">
+                    <form action="{{ route('renter.storeuser') }}" method="POST" id="addUserForm" enctype="multipart/form-data">
                         @csrf
 
                         <div id="member-list">
@@ -35,6 +35,13 @@
                                         value="{{ $rental?->rental_id ?? 'Không có hợp đồng' }}" readonly>
                                 </div>
                                 <input type="hidden" name="rental_id" value="{{ $rentalId }}">
+
+                                {{-- Upload ảnh CCCD --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">📄 Ảnh CCCD</label>
+                                    <input type="file" name="cccd_image[]" class="form-control cccd-upload" accept="image/*" required>
+                                </div>
+
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">Họ và Tên</label>
                                     <input type="text" name="full_name[]" class="form-control" placeholder="Nhập đầy đủ họ tên" required>
@@ -45,7 +52,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">📱 Số điện thoại</label>
-                                    <input type="text" name="phone[]" class="form-control" placeholder="Nhập số điện thoại" required>
+<input type="text" name="phone[]" class="form-control" placeholder="Nhập số điện thoại" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">📧 Email</label>
@@ -73,25 +80,68 @@
 
 {{-- Script --}}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const memberList = document.getElementById('member-list');
-        const addBtn = document.getElementById('add-member');
+document.addEventListener('DOMContentLoaded', function() {
+    const memberList = document.getElementById('member-list');
+    const addBtn = document.getElementById('add-member');
 
-        addBtn.addEventListener('click', function() {
-            const firstMember = memberList.querySelector('.member');
-            const newMember = firstMember.cloneNode(true);
+    if (!memberList || !addBtn) {
+        console.error('Không tìm thấy #member-list hoặc #add-member');
+        return;
+    }
 
-            newMember.querySelectorAll('input').forEach(input => input.value = '');
-            newMember.querySelector('.remove-member').classList.remove('d-none');
+    // Clone member
+    addBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const firstMember = memberList.querySelector('.member');
+        if (!firstMember) return;
 
-            memberList.appendChild(newMember);
+        const newMember = firstMember.cloneNode(true);
+        newMember.querySelectorAll('input').forEach(input => {
+            if(input.type !== 'hidden') input.value = '';
         });
+        newMember.querySelector('.remove-member').classList.remove('d-none');
 
-        memberList.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-member')) {
-                e.target.closest('.member').remove();
-            }
-        });
+        memberList.appendChild(newMember);
     });
+
+    // Xóa member
+    memberList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-member')) {
+            e.target.closest('.member').remove();
+        }
+    });
+
+    // Upload ảnh CCCD -> tự fill form
+    memberList.addEventListener('change', async function(e) {
+        if (!e.target.classList.contains('cccd-upload')) return;
+
+        const fileInput = e.target;
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('cccd_image', file);
+
+        try {
+            const res = await fetch('{{ route("renter.parseCCCD") }}', {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                body: formData
+            });
+            const data = await res.json();
+
+            if (data.success) {
+const memberDiv = fileInput.closest('.member');
+                memberDiv.querySelector('input[name="full_name[]"]').value = data.full_name ?? '';
+                memberDiv.querySelector('input[name="cccd[]"]').value = data.cccd ?? '';
+            } else {
+                alert('Không đọc được thông tin CCCD. Vui lòng thử lại.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Lỗi khi gửi ảnh lên server.');
+        }
+    });
+});
 </script>
 @endsection
