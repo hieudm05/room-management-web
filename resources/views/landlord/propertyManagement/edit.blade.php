@@ -560,10 +560,6 @@
         // alert('Không thể định vị địa chỉ bạn vừa kéo.');
     }
 }
-
-
-
-
             function updateMapWithAddress() {
                 let detail = detailedAddressInput.value.trim();
                 let provinceText = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';

@@ -355,6 +355,7 @@ Route::middleware(['auth'])->prefix('staff/contract')->name('staff.contract.')->
 Route::middleware('auth')->group(function () {
     Route::get('/add-user', [AddUserRequestController::class, 'create'])->name('renter.addUserRequest.create');
     Route::post('/add-user', [AddUserRequestController::class, 'store'])->name('renter.storeuser');
+    Route::post('/parse-cccd', [AddUserRequestController::class, 'parseCCCD'])->name('renter.parseCCCD');
 });
 
 Route::middleware(['auth'])->group(function () {

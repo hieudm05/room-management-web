@@ -23,52 +23,120 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
-
 class BillController extends Controller
 {
-     public function list()
+     // Tính số ngày thực tế cần tính tiền trong tháng
+    private function calculateBillingDays($roomId, $month)
 {
-    $idLandlord = Auth::id();
+    $rentalAgreement = RentalAgreement::where('room_id', $roomId)
+        ->where('status', 'active')
+        ->first();
 
-    // Lấy danh sách room_id mà landlord đang quản lý (qua property)
-    $roomIds = Room::whereHas('property', function ($query) use ($idLandlord) {
-        $query->where('landlord_id', $idLandlord);
-    })
-    ->where('status', 'Rented')
-    ->pluck('room_id');
-
-    if ($roomIds->isEmpty()) {
-        return view('landlord.bills.bill_Input.listBill', compact('roomIds'))
-            ->with('properties', collect());
+    if (!$rentalAgreement) {
+        $monthStart = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $monthEnd = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+        $totalDays = $monthStart->daysInMonth;
+        
+        return [
+            'billing_start_date' => $monthStart,
+            'billing_end_date' => $monthEnd,
+            'billing_days' => $totalDays,
+            'total_days_in_month' => $totalDays,
+            'billing_ratio' => 1.0
+        ];
     }
 
-    // Lấy danh sách property_id từ các room đã lấy
-    $propertyIds = Room::whereIn('room_id', $roomIds->toArray())
-        ->pluck('property_id')
-        ->unique();
+    $monthStart = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+    $monthEnd = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+    $contractStart = Carbon::parse($rentalAgreement->start_date);
+    $contractEnd = $rentalAgreement->end_date ? Carbon::parse($rentalAgreement->end_date) : null;
 
-    if ($propertyIds->isEmpty()) {
-        return view('landlord.bills.bill_Input.listBill', compact('propertyIds'))
-            ->with('properties', collect());
+    // Xác định ngày bắt đầu tính tiền
+    $billingStart = $contractStart->greaterThan($monthStart) ? $contractStart : $monthStart;
+    
+    // Xác định ngày kết thúc tính tiền
+    $billingEnd = $monthEnd;
+    if ($contractEnd && $contractEnd->lessThan($monthEnd)) {
+        $billingEnd = $contractEnd;
     }
 
-    // Lấy danh sách property
-    $properties = Property::whereIn('property_id', $propertyIds)->get();
+    $totalDaysInMonth = $monthStart->daysInMonth;
+    
+    // FIX: Tính số ngày chính xác
+    // Nếu ở từ đầu tháng đến cuối tháng = full tháng
+    if ($billingStart->isSameDay($monthStart) && $billingEnd->isSameDay($monthEnd)) {
+        $billingDays = $totalDaysInMonth;
+        $billingRatio = 1.0;
+    } else {
+        // Tính số ngày thực tế (bao gồm cả ngày đầu và ngày cuối)
+        $billingDays = $billingStart->diffInDays($billingEnd) + 1;
+        
+        // Đảm bảo không vượt quá số ngày trong tháng
+        $billingDays = min($billingDays, $totalDaysInMonth);
+        
+        // Tính tỷ lệ và làm tròn đến 4 chữ số thập phân
+        $billingRatio = round($billingDays / $totalDaysInMonth, 4);
+        
+        // Nếu tỷ lệ >= 99.9% thì coi như 100%
+        if ($billingRatio >= 0.999) {
+            $billingRatio = 1.0;
+            $billingDays = $totalDaysInMonth;
+        }
+    }
 
-    return view('landlord.bills.bill_Input.listBill', compact('properties', 'propertyIds', 'roomIds'));
+    return [
+        'billing_start_date' => $billingStart,
+        'billing_end_date' => $billingEnd,
+        'billing_days' => (int) $billingDays, // Ép kiểu int để tránh số thập phân
+        'total_days_in_month' => $totalDaysInMonth,
+        'billing_ratio' => $billingRatio
+    ];
 }
 
+    public function list()
+    {
+        $idLandlord = Auth::id();
+
+        // Lấy danh sách room_id mà landlord đang quản lý (qua property)
+        $roomIds = Room::whereHas('property', function ($query) use ($idLandlord) {
+            $query->where('landlord_id', $idLandlord);
+        })
+        ->where('status', 'Rented')
+        ->pluck('room_id');
+
+        if ($roomIds->isEmpty()) {
+            return view('landlord.bills.bill_Input.listBill', compact('roomIds'))
+                ->with('properties', collect());
+        }
+
+        // Lấy danh sách property_id từ các room đã lấy
+        $propertyIds = Room::whereIn('room_id', $roomIds->toArray())
+            ->pluck('property_id')
+            ->unique();
+
+        if ($propertyIds->isEmpty()) {
+            return view('landlord.bills.bill_Input.listBill', compact('propertyIds'))
+                ->with('properties', collect());
+        }
+
+        // Lấy danh sách property
+        $properties = Property::whereIn('property_id', $propertyIds)->get();
+
+        return view('landlord.bills.bill_Input.listBill', compact('properties', 'propertyIds', 'roomIds'));
+    }
 
     public function index(Request $request)
     {
         $idLandlord = Auth::id();
-        $propertyId = $request->input('property_id'); // Lấy property_id từ query string
+        $propertyId = $request->input('property_id');
         $month = $request->input('month', now()->format('Y-m'));
+        
         $roomIds = Room::whereHas('property', function ($query) use ($idLandlord) {
-        $query->where('landlord_id', $idLandlord);
-            })
-            ->where('status', 'Rented')
-            ->pluck('room_id');
+            $query->where('landlord_id', $idLandlord);
+        })
+        ->where('status', 'Rented')
+        ->pluck('room_id');
+
         $rooms = Room::whereIn('room_id', $roomIds)
             ->where('property_id', $propertyId)
             ->with([
@@ -77,12 +145,17 @@ class BillController extends Controller
                 'services',
             ])
             ->get();
-            $data = [];
+
+        $data = [];
         foreach ($rooms as $room) {
+            // Tính toán ngày tính tiền
+            $billingInfo = $this->calculateBillingDays($room->room_id, $month);
+            
             $rentalAgreement = $room->rentalAgreement;
             $tenant = $rentalAgreement ? User::find($rentalAgreement->renter_id) : null;
             $bill = $room->bills->first();
             $billService = BillService::where('bill_id', $bill ? $bill->id : null)->get();
+
             // Lấy chỉ số đầu từ tháng trước
             $previousMonth = date('Y-m', strtotime($month . '-01 -1 month'));
             $previousBill = RoomBill::where('room_id', $room->room_id)
@@ -95,6 +168,37 @@ class BillController extends Controller
             $waterPrice = $bill ? $bill->water_price : ($waterService ? $waterService->pivot->price : 20000);
             $waterUnit = $waterService ? $waterService->pivot->unit : 'per_m3';
 
+            // Tính tiền phòng theo tỷ lệ ngày
+            $originalRentPrice = $bill ? $bill->rent_price : ($room->rental_price ?? 0);
+            $actualRentPrice = $originalRentPrice * $billingInfo['billing_ratio'];
+
+            // XÁC ĐỊNH THÔNG TIN BILLING
+            $shouldShowBillingInfo = false;
+            $billingReason = 'normal_month';
+            
+            if ($rentalAgreement) {
+                $contractStart = Carbon::parse($rentalAgreement->start_date);
+                $contractEnd = $rentalAgreement->end_date ? Carbon::parse($rentalAgreement->end_date) : null;
+                $monthStart = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+                $monthEnd = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+                
+                // Hợp đồng bắt đầu trong tháng này
+                if ($contractStart->greaterThan($monthStart) && $contractStart->lessThanOrEqualTo($monthEnd)) {
+                    $shouldShowBillingInfo = true;
+                    $billingReason = 'contract_start_in_month';
+                }
+                // Hợp đồng kết thúc trong tháng này
+                elseif ($contractEnd && $contractEnd->lessThan($monthEnd) && $contractEnd->greaterThanOrEqualTo($monthStart)) {
+                    $shouldShowBillingInfo = true;
+                    $billingReason = 'contract_end_in_month';
+                }
+                // Tháng này nằm ngoài thời gian hợp đồng
+                elseif ($contractEnd && ($monthStart->greaterThan($contractEnd) || $monthEnd->lessThan($contractStart))) {
+                    $shouldShowBillingInfo = true;
+                    $billingReason = 'outside_contract_period';
+                }
+            }
+
             $services = [];
             $serviceTotal = 0;
 
@@ -104,56 +208,58 @@ class BillController extends Controller
                     continue;
                 }
 
+               
                 $pivot = $service->pivot;
                 $isFree = $pivot->is_free;
                 $isPerPerson = $pivot->unit === 'per_person';
                 $price = $pivot->price;
                 $qty = $isFree ? 1 : ($isPerPerson ? ($room->people_renter ?? 1) : 1);
-                $total = $isFree ? 0 : $price * $qty;
+                
+                // Apply billing ratio for services
+                $originalTotal = $isFree ? 0 : $price * $qty;
+                $actualTotal = ($isPerPerson || !$isFree) ? $originalTotal * $billingInfo['billing_ratio'] : $originalTotal;
 
                 $services[] = [
                     'service_id' => $service->service_id,
                     'name' => $service->name,
                     'price' => $price,
                     'qty' => $qty,
-                    'total' => $total,
+                    'original_total' => $originalTotal,
+                    'actual_total' => $actualTotal,
+                    'billing_ratio' => $billingInfo['billing_ratio'],
                     'type_display' => $isFree ? 'Miễn phí' : ($isPerPerson ? 'Tính theo người' : 'Tính cố định'),
                 ];
 
-                $serviceTotal += $total;
+                $serviceTotal += $actualTotal;
             }
-            ;
 
             // Khiếu nại
             $target = Carbon::createFromFormat('Y-m', $month);
-
-            // dd($target);
             $complaints = Complaint::where('room_id', $room->room_id)
                 ->where('status', 'resolved')
                 ->whereMonth('updated_at', $target->month)
                 ->whereYear('updated_at', $target->year)
                 ->get();
-
+            // dd($complaints);
             $complaintUserCost = $complaints->sum('user_cost');
+            // dd($complaints->sum('user_cost'));
             $complaintLandlordCost = $complaints->sum('landlord_cost');
-
-
-            // 3. Tổng cuối cùng
-            $totalAfterComplaint = $complaintUserCost - $complaintLandlordCost;
-
-            // end khiếu nại
+            $totalAfterComplaint =    $complaintUserCost - $complaintLandlordCost;
+            // dd($totalAfterComplaint);
+            // Chi phí phát sinh (tính theo tỷ lệ)
             $additionalFees = [];
             $additionalFeesTotal = 0;
             if ($bill) {
                 $billAdditionalFees = RoomBillAdditionalFee::where('room_bill_id', $bill->id)->get();
                 foreach ($billAdditionalFees as $fee) {
-                    $additionalFees[] = [
+                  $originalTotal = $fee->total;
+                   $additionalFees[] = [
                         'name' => $fee->name,
                         'price' => $fee->price,
                         'qty' => $fee->qty,
                         'total' => $fee->total,
                     ];
-                    $additionalFeesTotal += $fee->total;
+                    $additionalFeesTotal += $fee->total; // KHÔNG nhân với billing_ratio
                 }
             }
 
@@ -171,11 +277,18 @@ class BillController extends Controller
                     ->toArray()
                 : [];
 
-
-            $rentPrice = $bill ? $bill->rent_price : ($room->rental_price ?? 0);
             $electricTotal = $bill ? $bill->electric_total : 0;
-            $waterTotal = $bill ? $bill->water_total : 0;
-            $total = $rentPrice + $electricTotal + $waterTotal + $additionalFeesTotal + $serviceTotal + $totalAfterComplaint;
+            
+            // Tính nước: nếu per_person thì tính theo tỷ lệ, per_m3 thì giữ nguyên
+            if ($waterUnit === 'per_person') {
+                $originalWaterTotal = ($bill ? $bill->water_occupants : $room->people_renter) * $waterPrice;
+                $waterTotal = $originalWaterTotal * $billingInfo['billing_ratio'];
+            } else {
+                $waterTotal = $bill ? $bill->water_total : 0; // per_m3 không tính theo tỷ lệ
+            }
+            // dd($additionalFeesTotal);
+            // Ưu tiên lấy total từ bill nếu có, nếu không thì tính toán
+            $totalS = $bill ? $bill->total : ($actualRentPrice + $electricTotal + $waterTotal + $additionalFeesTotal + $serviceTotal + $totalAfterComplaint);
 
             // Kiểm tra hóa đơn đã đầy đủ thông tin chưa
             $isBillLocked = $bill &&
@@ -184,6 +297,7 @@ class BillController extends Controller
                     ($bill->water_unit == 'per_m3' && $bill->water_m3 > 0 && $bill->water_total > 0)
                     || ($bill->water_unit == 'per_person' && $bill->water_occupants > 0 && $bill->water_total > 0)
                 );
+
             $data[] = [
                 'id_bill' => $bill ? $bill->id : null,
                 'bill' => $bill ?? null,
@@ -191,7 +305,22 @@ class BillController extends Controller
                 'room_name' => $room->room_number ?? $room->room_name ?? 'P101',
                 'tenant_name' => $tenant ? $tenant->name : 'Chưa có',
                 'area' => $room->area ?? 0,
-                'rent_price' => $rentPrice,
+                
+                // Thông tin tính tiền theo ngày
+                'billing_start_date' => $billingInfo['billing_start_date']->format('d/m/Y'),
+                'billing_end_date' => $billingInfo['billing_end_date']->format('d/m/Y'),
+                'billing_days' => $billingInfo['billing_days'],
+                'total_days_in_month' => $billingInfo['total_days_in_month'],
+                'billing_ratio' => $billingInfo['billing_ratio'],
+                
+                // THÊM CÁC KEY CẦN THIẾT
+                'should_show_billing_info' => $shouldShowBillingInfo,
+                'billing_reason' => $billingReason,
+                
+                // Giá phòng
+                'original_rent_price' => $originalRentPrice,
+                'rent_price' => $bill ? $bill->rent_price : $actualRentPrice,
+                
                 'month' => $month,
                 'electric_start' => $previousBill ? $previousBill->electric_end : ($bill ? $bill->electric_start : 0),
                 'electric_end' => $bill ? $bill->electric_end : 0,
@@ -200,8 +329,8 @@ class BillController extends Controller
                 'electric_total' => $electricTotal,
                 'electric_photos' => $electricPhotos,
                 'water_price' => $waterPrice,
-                'water_unit' =>   $bill ? $bill->water_unit :  $waterUnit ?? 'per_m3',
-                'water_occupants' => $bill ? $bill->water_occupants : ( $room ? $room->people_renter : 1 ) ,
+                'water_unit' => $bill ? $bill->water_unit : $waterUnit ?? 'per_m3',
+                'water_occupants' => $bill ? $bill->water_occupants : ($room ? $room->people_renter : 1),
                 'water_start' => $waterUnit == 'per_m3'
                     ? ($previousBill ? $previousBill->water_end : 0)
                     : ($bill ? $bill->water_start : 0),
@@ -210,13 +339,15 @@ class BillController extends Controller
                 'water_total' => $waterTotal,
                 'water_photos' => $waterPhotos,
                 'services' => $billService->isNotEmpty()
-                    ? $billService->map(function ($sv) {
+                    ? $billService->map(function ($sv) use ($billingInfo) {
                         return [
                             'service_id' => $sv->service_id,
                             'name' => $sv->name,
                             'price' => $sv->price,
                             'qty' => $sv->qty,
-                            'total' => $sv->total,
+                            'original_total' => $sv->total,
+                            'actual_total' => $sv->total, // Đã được lưu theo actual
+                            'billing_ratio' => $billingInfo['billing_ratio'],
                             'type_display' => $sv->type_display ?? 'Tùy chỉnh',
                         ];
                     })->toArray()
@@ -228,23 +359,29 @@ class BillController extends Controller
                 'total_after_complaint' => $totalAfterComplaint,
                 'additional_fees' => $additionalFees,
                 'additional_fees_total' => $additionalFeesTotal,
-                'total' => $total,
+                'total' => $totalS,
                 'status' => $bill ? $bill->status : 'unpaid',
                 'is_bill_locked' => $isBillLocked,
             ];
+            // dd($data);
         }
         return view('landlord.bills.bill_Input.index', compact('rooms', 'data'));
     }
 
-      public function store(Request $request, Room $room)
+    public function store(Request $request, Room $room)
     {
         $staffId = Auth::id();
         // dd($request->all());
+        
         $validated = $request->validate([
             'data.month' => 'required|date_format:Y-m',
             'data.tenant_name' => 'required|string|max:255',
             'data.area' => 'required|numeric|min:0',
             'data.rent_price' => 'required|numeric|min:0',
+            'data.original_rent_price' => 'nullable|numeric|min:0',
+            'data.billing_days' => 'nullable|integer|min:0',
+            'data.total_days_in_month' => 'nullable|integer|min:0',
+            'data.billing_ratio' => 'nullable|numeric|min:0|max:1',
             'data.electric_start' => 'nullable|integer|min:0',
             'data.electric_end' => 'nullable|integer|min:0|gte:data.electric_start',
             'data.electric_kwh' => 'required|numeric|min:0',
@@ -272,14 +409,15 @@ class BillController extends Controller
             'data.services.*.name' => 'required|string|max:255',
             'data.services.*.price' => 'nullable|numeric|min:0',
             'data.services.*.qty' => 'required|integer|min:1',
-            'data.services.*.total' => 'required|numeric|min:0',
+            'data.services.*.actual_total' => 'required|numeric|min:0',
             'data.services.*.type_display' => 'nullable|string|max:255',
         ]);
 
-        // DB::beginTransaction();
         try {
+            DB::beginTransaction();
+            
             $data = $validated['data'];
-            // dd($data);
+            
             // Đảm bảo water_unit có giá trị mặc định
             $data['water_unit'] = $data['water_unit'] ?? 'per_m3';
             $data['electric_price'] = $data['electric_price'] ?? 3000;
@@ -304,7 +442,6 @@ class BillController extends Controller
                 }
             }
 
-
             // Lưu vào bảng room_bills
             $bill = RoomBill::updateOrCreate(
                 [
@@ -315,7 +452,11 @@ class BillController extends Controller
                     'bank_account_id' => $bankAccountId,
                     'tenant_name' => $data['tenant_name'],
                     'area' => $data['area'],
-                    'rent_price' => $data['rent_price'],
+                    'rent_price' => $data['rent_price'], // Lưu giá đã tính theo tỷ lệ
+                    'original_rent_price' => $data['original_rent_price'] ?? $data['rent_price'],
+                    'billing_days' => $data['billing_days'] ?? null,
+                    'total_days_in_month' => $data['total_days_in_month'] ?? null,
+                    'billing_ratio' => $data['billing_ratio'] ?? 1.0,
                     'electric_start' => $data['electric_start'],
                     'electric_end' => $data['electric_end'],
                     'electric_kwh' => $data['electric_kwh'] ?? 0,
@@ -362,25 +503,22 @@ class BillController extends Controller
                 }
             }
 
+            // Xóa và lưu dịch vụ vào bảng bill_services
+            BillService::where('bill_id', $bill->id)->delete();
 
-          // Xóa và lưu dịch vụ vào bảng bill_services
-                BillService::where('bill_id', $bill->id)->delete();
-
-                if (!empty($data['services'])) {
-                    foreach ($data['services'] as $sv) {
-
-                        BillService::create([
-                            'bill_id' => $bill->id,
-                            'service_id' => $sv['service_id'],
-                            'name' => $sv['name'] ?? 'Dịch vụ không xác định',
-                            'price' => $sv['price'],
-                            'qty' => $sv['qty'],
-                            'total' => $sv['total'],
-                            'type_display' => $sv['type_display'], // hoặc để trống nếu cần
-                        ]);
-                    }
+            if (!empty($data['services'])) {
+                foreach ($data['services'] as $sv) {
+                    BillService::create([
+                        'bill_id' => $bill->id,
+                        'service_id' => $sv['service_id'],
+                        'name' => $sv['name'] ?? 'Dịch vụ không xác định',
+                        'price' => $sv['price'],
+                        'qty' => $sv['qty'],
+                        'total' => $sv['actual_total'], // Lưu giá đã tính theo tỷ lệ
+                        'type_display' => $sv['type_display'],
+                    ]);
                 }
-
+            }
 
             // Xóa và lưu chi phí phát sinh
             RoomBillAdditionalFee::where('room_bill_id', $bill->id)->delete();
@@ -391,7 +529,7 @@ class BillController extends Controller
                         'name' => $fee['name'],
                         'price' => $fee['price'],
                         'qty' => $fee['qty'],
-                        'total' => $fee['total'],
+                        'total' => $fee['total'], // Lưu giá đã tính theo tỷ lệ
                     ]);
                 }
             }
@@ -463,6 +601,10 @@ class BillController extends Controller
             'tenant_name' => $tenant ? $tenant->name : 'Chưa có',
             'area' => $room->area ?? 0,
             'rent_price' => $bill->rent_price ?? 0,
+            'original_rent_price' => $bill->original_rent_price ?? $bill->rent_price,
+            'billing_days' => $bill->billing_days,
+            'total_days_in_month' => $bill->total_days_in_month,
+            'billing_ratio' => $bill->billing_ratio ?? 1.0,
             'month' => $month,
             'electric_start' => $bill->electric_start ?? 0,
             'electric_end' => $bill->electric_end ?? 0,
@@ -485,7 +627,6 @@ class BillController extends Controller
             'additional_fees_total' => $additionalFeesTotal,
             'total' => $bill->total ?? 0,
         ];
-        // dd($data);
 
         return Excel::download(new RoomBillExport($room, $data), 'hoadon_' . $month . '.xlsx');
     }
@@ -514,7 +655,4 @@ class BillController extends Controller
 
         return response()->json(['success' => '✅ Đã cập nhật trạng thái!', 'status' => $newStatus]);
     }
-
-
-
 }

@@ -12,7 +12,10 @@ class RoomBill extends Model
 {
     protected $fillable = [
         'room_id', 'month', 'tenant_name', 'bank_account_id', 'area', 'rent_price',
-        'electric_start', 'electric_end', 'electric_kwh', 'electric_unit_price',
+        'electric_start', 'electric_end', 'electric_kwh', 'electric_unit_price','original_rent_price',   // Giá phòng gốc
+        'billing_days',          // Số ngày tính tiền
+        'total_days_in_month',   // Tổng số ngày trong tháng
+        'billing_ratio',         // Tỷ lệ tính tiền
         'electric_total', 'water_price', 'water_unit', 'water_occupants', 'water_start', 'water_end',
         'water_m3', 'water_total', 'total', 'status', 'complaint_user_cost', 'complaint_landlord_cost',
     ];

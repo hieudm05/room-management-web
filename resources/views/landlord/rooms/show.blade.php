@@ -30,7 +30,6 @@
             </div>
 
             <div class="card-body">
-
                 {{-- Thông tin cơ bản --}}
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">

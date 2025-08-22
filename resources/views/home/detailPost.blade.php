@@ -438,11 +438,13 @@
 @endsection
 
 <!-- JavaScript Libraries -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <!-- Flatpickr Script -->
-{{-- <script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         const checkInInput = document.getElementById('checkIn');
         const calendarIcon = document.getElementById('calendarTrigger');
@@ -460,138 +462,54 @@
             picker.open();
         });
     });
-</script> --}}
-
-<script>
-// 1. KIỂM TRA CƠ BẢN
-function checkGeolocationSupport() {
-    console.log('🔍 KIỂM TRA HỖ TRỢ GEOLOCATION:');
-    console.log('navigator.geolocation:', !!navigator.geolocation);
-    console.log('Protocol:', window.location.protocol);
-    console.log('Host:', window.location.host);
-    console.log('User Agent:', navigator.userAgent);
-    
-    // Kiểm tra permissions API
-    if (navigator.permissions) {
-        navigator.permissions.query({name: 'geolocation'}).then(result => {
-            console.log('Permission status:', result.state);
-            console.log('Permission onchange:', result.onchange);
-        }).catch(err => {
-            console.log('Permission query failed:', err);
-        });
-    }
-    
-    return !!navigator.geolocation;
-}
-
-// 2. TEST ĐƠN GIẢN GEOLOCATION
-function testGeolocation() {
-    console.log('🧪 BẮT ĐẦU TEST GEOLOCATION...');
-    
-    if (!checkGeolocationSupport()) {
-        alert('❌ Trình duyệt không hỗ trợ Geolocation');
-        return;
-    }
-
-    const startTime = Date.now();
-    
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
-            const endTime = Date.now();
-            console.log('✅ THÀNH CÔNG!');
-            console.log('Latitude:', position.coords.latitude);
-            console.log('Longitude:', position.coords.longitude);
-            console.log('Accuracy:', position.coords.accuracy, 'meters');
-            console.log('Time taken:', (endTime - startTime), 'ms');
-            console.log('Timestamp:', new Date(position.timestamp));
-            
-            alert(`✅ Lấy vị trí thành công!\nLat: ${position.coords.latitude}\nLng: ${position.coords.longitude}\nAccuracy: ${position.coords.accuracy}m`);
-        },
-        function(error) {
-            const endTime = Date.now();
-            console.log('❌ THẤT BẠI!');
-            console.log('Error code:', error.code);
-            console.log('Error message:', error.message);
-            console.log('Time taken:', (endTime - startTime), 'ms');
-            
-            let errorDetails = '';
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    errorDetails = `
-PERMISSION_DENIED (${error.code}):
-- Người dùng từ chối quyền truy cập
-- Hoặc quyền bị chặn bởi policy
-- Message: ${error.message}`;
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    errorDetails = `
-POSITION_UNAVAILABLE (${error.code}):
-- Không thể xác định vị trí
-- GPS tắt hoặc không có tín hiệu
-- Message: ${error.message}`;
-                    break;
-                case error.TIMEOUT:
-                    errorDetails = `
-TIMEOUT (${error.code}):
-- Quá thời gian chờ
-- Kết nối chậm hoặc GPS không phản hồi
-- Message: ${error.message}`;
-                    break;
-                default:
-                    errorDetails = `
-UNKNOWN ERROR (${error.code}):
-- Lỗi không xác định
-- Message: ${error.message}`;
-            }
-            
-            console.error(errorDetails);
-            alert('❌ Lỗi Geolocation:\n' + errorDetails);
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 30000, // 30 giây
-            maximumAge: 60000 // 1 phút
+    document.addEventListener('DOMContentLoaded', function() {
+        const phoneInput = document.getElementById('guestPhone');
+        if (phoneInput) {
+            const form = phoneInput.closest('form');
+            form.addEventListener('submit', function(e) {
+                // Regex kiểm tra số điện thoại VN: bắt đầu bằng 0 hoặc +84, sau đó là 9 số
+                const phonePattern = /^(0[1-9][0-9]{8}|\+84[1-9][0-9]{8})$/;
+                if (!phonePattern.test(phoneInput.value.trim())) {
+                    e.preventDefault();
+                    alert(
+                        'Số điện thoại không hợp lệ! Hãy nhập theo định dạng: 0xxxxxxxxx hoặc +84xxxxxxxxx'
+                    );
+                    phoneInput.focus();
+                }
+            });
         }
-    );
-}
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        const phoneInput = document.getElementById('guestPhone');
+        const emailInput = document.getElementById('guestEmail');
+        if (phoneInput || emailInput) {
+            const form = (phoneInput || emailInput).closest('form');
+            form.addEventListener('submit', function(e) {
+                // Regex kiểm tra số điện thoại VN
+                const phonePattern = /^(0[1-9][0-9]{8}|\+84[1-9][0-9]{8})$/;
 
-// 3. KIỂM TRA HTTPS
-function checkHTTPS() {
-    const isHTTPS = window.location.protocol === 'https:';
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    console.log('🔒 HTTPS Check:');
-    console.log('Protocol:', window.location.protocol);
-    console.log('Is HTTPS:', isHTTPS);
-    console.log('Is localhost:', isLocalhost);
-    
-    if (!isHTTPS && !isLocalhost) {
-        console.warn('⚠️ CẢNH BÁO: Geolocation cần HTTPS để hoạt động trên production!');
-        return false;
-    }
-    return true;
-}
+                // Regex kiểm tra email hợp lệ
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// 4. KHỞI TẠO DEBUG
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 BẮT ĐẦU DEBUG GEOLOCATION...');
-    console.log('==========================================');
-    
-    checkHTTPS();
-    checkGeolocationSupport();
-    
-    // Thêm nút test vào trang
-    const testButton = document.createElement('button');
-    testButton.innerHTML = '🧪 Test Geolocation';
-    testButton.className = 'btn btn-warning mt-2';
-    testButton.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 9999;';
-    testButton.onclick = testGeolocation;
-    document.body.appendChild(testButton);
-    
-    console.log('📋 Debug script loaded. Click "Test Geolocation" button to test.');
-    console.log('==========================================');
-});
+                if (phoneInput && !phonePattern.test(phoneInput.value.trim())) {
+                    e.preventDefault();
+                    alert(
+                        'Số điện thoại không hợp lệ! Hãy nhập theo định dạng: 0xxxxxxxxx hoặc +84xxxxxxxxx');
+                    phoneInput.focus();
+                    return;
+                }
+
+                if (emailInput && !emailPattern.test(emailInput.value.trim())) {
+                    e.preventDefault();
+                    alert('Email không hợp lệ! Hãy nhập theo định dạng: example@gmail.com');
+                    emailInput.focus();
+                    return;
+                }
+            });
+        }
+    });
 </script>
+
 <!-- VietMap Script -->
 <script src="https://cdn.jsdelivr.net/npm/@mapbox/polyline@1.2.0/src/polyline.min.js"></script>
 
@@ -981,54 +899,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 {{-- <script src="https://unpkg.com/@turf/polyline@6.x.x/dist/polyline.min.js"></script> --}}
-
-
-<script>
-     document.addEventListener('DOMContentLoaded', function() {
-        const phoneInput = document.getElementById('guestPhone');
-        if (phoneInput) {
-            const form = phoneInput.closest('form');
-            form.addEventListener('submit', function(e) {
-                // Regex kiểm tra số điện thoại VN: bắt đầu bằng 0 hoặc +84, sau đó là 9 số
-                const phonePattern = /^(0[1-9][0-9]{8}|\+84[1-9][0-9]{8})$/;
-                if (!phonePattern.test(phoneInput.value.trim())) {
-                    e.preventDefault();
-                    alert(
-                        'Số điện thoại không hợp lệ! Hãy nhập theo định dạng: 0xxxxxxxxx hoặc +84xxxxxxxxx'
-                    );
-                    phoneInput.focus();
-                }
-            });
-        }
-    });
-    document.addEventListener('DOMContentLoaded', function() {
-        const phoneInput = document.getElementById('guestPhone');
-        const emailInput = document.getElementById('guestEmail');
-        if (phoneInput || emailInput) {
-            const form = (phoneInput || emailInput).closest('form');
-            form.addEventListener('submit', function(e) {
-                // Regex kiểm tra số điện thoại VN
-                const phonePattern = /^(0[1-9][0-9]{8}|\+84[1-9][0-9]{8})$/;
-
-                // Regex kiểm tra email hợp lệ
-                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-                if (phoneInput && !phonePattern.test(phoneInput.value.trim())) {
-                    e.preventDefault();
-                    alert(
-                        'Số điện thoại không hợp lệ! Hãy nhập theo định dạng: 0xxxxxxxxx hoặc +84xxxxxxxxx');
-                    phoneInput.focus();
-                    return;
-                }
-
-                if (emailInput && !emailPattern.test(emailInput.value.trim())) {
-                    e.preventDefault();
-                    alert('Email không hợp lệ! Hãy nhập theo định dạng: example@gmail.com');
-                    emailInput.focus();
-                    return;
-                }
-            });
-        }
-    });
-</script>
-

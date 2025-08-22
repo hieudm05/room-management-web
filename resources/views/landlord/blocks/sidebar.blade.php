@@ -95,34 +95,28 @@ $user = Auth::user(); ?>
                 <ul class="nav nav-sm flex-column">
                     @if ($user->role === 'Staff')
                         <li class="nav-item">
-                            <a href="{{ route('landlords.staff.index') }}" class="nav-link">Quản lý BĐS dành cho nhân
-                                viên</a>
+                            <a href="{{ route('staff.posts.index') }}" class="nav-link">Đăng bài</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('staff.categories.index') }}" class="nav-link">Danh mục bài đăng</a>
+                        </li>
+                    @endif
+                    @if ($user->role === 'Landlord')
+                     <li class="nav-item">
+                            <a href="{{ route('staff.categories.index') }}" class="nav-link">Danh mục bài đăng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('landlord.posts.approval.index') }}" class="nav-link">Duyệt bài đăng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('staff.posts.index') }}" class="nav-link">Đăng bài</a>
                         </li>
                     @endif
                 </ul>
             </div>
         </li>
 
-      @if ($user->role === 'Landlord')
-    <li class="nav-item">
-        <a class="nav-link menu-link" href="#sidebarLeaveRoom" data-bs-toggle="collapse" role="button"
-           aria-expanded="false" aria-controls="sidebarLeaveRoom">
-            <i class="ri-door-open-line"></i> 
-            <span data-key="t-leave-room">Rời Phòng</span>
-        </a>
-        <div class="collapse menu-dropdown" id="sidebarLeaveRoom">
-            <ul class="nav nav-sm flex-column">
-                <li class="nav-item">
-                    <a href="{{ route('landlord.roomleave.index') }}" class="nav-link">Yêu cầu rời phòng</a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('landlord.roomleave.processed') }}" class="nav-link">Lịch sử duyệt</a>
-                </li>
-              
-            </ul>
-        </div>
-    </li>
-@endif
+  
 
 
 

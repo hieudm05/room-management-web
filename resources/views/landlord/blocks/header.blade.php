@@ -137,7 +137,6 @@
 
                     $user = auth()->user();
                     $userType = $user->role;
-
                     $notifications = $user
                         ->customNotifications()
                         ->orderByDesc('notification_user.received_at') // hoặc 'notifications.created_at'
