@@ -31,8 +31,6 @@ use App\Models\Landlord\RoomEditRequest;
 use Illuminate\Support\Facades\Response;
 use PhpOffice\PhpWord\TemplateProcessor;
 use PhpOffice\PhpWord\Writer\HTML;
-use Smalot\PdfParser\Parser;
-use App\Mail\RoomUpdatedNotification;
 
 
 
