@@ -6,8 +6,6 @@ use App\Models\User;
 use App\Models\Booking;
 use App\Models\RoomUser;
 use App\Models\UserInfo;
-
-use App\Models\RentalAgreement;
 use App\Models\Landlord\Facility;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Landlord\ContractRenewal;

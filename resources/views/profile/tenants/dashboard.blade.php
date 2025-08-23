@@ -1,8 +1,5 @@
 
 @extends('profile.tenants.layouts.app')
-
-{{-- Fake dữ liệu demo nếu chưa có --}}
-
 @extends('home.layouts.app')
 
 

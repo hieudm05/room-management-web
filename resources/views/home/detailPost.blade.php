@@ -351,7 +351,7 @@
                                     <div class="col-12">
                                 <div class="d-flex justify-content-between align-items-center">
                                             <span>Tổng số tiền thanh toán</span>
-                                            <h4 class="text-primary mb-0">${{ number_format($post->price, 2) }}</h4>
+                                            <h4 class="text-primary mb-0">{{ number_format($post->price, 2) }} VND</h4>
                                         </div>
                                     </div>
 
@@ -579,110 +579,346 @@
         }
     }
 
-    function getUserLocationAndDrawRoute() {
-        console.log('🔍 Bắt đầu lấy vị trí người dùng...');
-        
-        // Kiểm tra xem trình duyệt có hỗ trợ geolocation không
-        if (!navigator.geolocation) {
-            showLocationError('Trình duyệt của bạn không hỗ trợ Geolocation. Vui lòng sử dụng trình duyệt khác.');
-            return;
+  // Thay thế hàm getUserLocationAndDrawRoute() trong file Blade của bạn bằng version cải tiến này:
+
+function getUserLocationAndDrawRoute() {
+    console.log('🔍 Bắt đầu lấy vị trí người dùng với độ chính xác cao...');
+    
+    // Kiểm tra hỗ trợ geolocation
+    if (!navigator.geolocation) {
+        showLocationError(`
+            <div class="alert alert-danger">
+                <strong>❌ Trình duyệt không hỗ trợ</strong><br>
+                Trình duyệt của bạn không hỗ trợ Geolocation.<br>
+                Vui lòng sử dụng Chrome, Firefox, Safari hoặc Edge phiên bản mới.
+            </div>
+        `);
+        return;
+    }
+
+    // Hiển thị loading với thông tin chi tiết
+    const getDirectionsBtn = document.getElementById('getDirections');
+    const originalText = getDirectionsBtn.innerHTML;
+    
+    // Animation loading đẹp hơn
+    getDirectionsBtn.innerHTML = `
+        <i class="fas fa-spinner fa-spin me-2"></i>
+        <span id="loadingText">Đang khởi tạo GPS...</span>
+    `;
+    getDirectionsBtn.disabled = true;
+
+    // Cấu hình lấy vị trí với độ chính xác cao nhất
+    const options = {
+        enableHighAccuracy: true,    // Bắt buộc sử dụng GPS
+        timeout: 20000,              // Tăng timeout lên 20 giây
+        maximumAge: 0                // Không dùng cache, luôn lấy vị trí mới
+    };
+
+    // Thêm loading animation với các bước
+    const loadingSteps = [
+        'Đang khởi tạo GPS...',
+        'Đang tìm kiếm vệ tinh...',
+        'Đang tính toán vị trí...',
+        'Đang tối ưu độ chính xác...'
+    ];
+    
+    let currentStep = 0;
+    const loadingInterval = setInterval(() => {
+        const loadingTextEl = document.getElementById('loadingText');
+        if (loadingTextEl && currentStep < loadingSteps.length - 1) {
+            currentStep++;
+            loadingTextEl.textContent = loadingSteps[currentStep];
         }
+    }, 2000);
 
-        // Hiển thị loading
-        const getDirectionsBtn = document.getElementById('getDirections');
-        const originalText = getDirectionsBtn.innerHTML;
-        getDirectionsBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang lấy vị trí...';
-        getDirectionsBtn.disabled = true;
+    // Lấy vị trí với watchPosition để có độ chính xác cao hơn
+    let watchId;
+    let bestAccuracy = Infinity;
+    let bestPosition = null;
+    let attempts = 0;
+    const maxAttempts = 3;
 
-        const options = {
-            enableHighAccuracy: true,    // Yêu cầu độ chính xác cao
-            timeout: 15000,              // Timeout 15 giây
-            maximumAge: 300000           // Cache trong 5 phút
-        };
-
-        navigator.geolocation.getCurrentPosition(
-            // Success callback
+    function startWatching() {
+        watchId = navigator.geolocation.watchPosition(
             function(position) {
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
+                attempts++;
                 const accuracy = position.coords.accuracy;
                 
-                console.log(`📍 Vị trí hiện tại: ${userLat}, ${userLng} (độ chính xác: ${accuracy}m)`);
+                console.log(`📍 Lần đo ${attempts}: Vị trí ${position.coords.latitude}, ${position.coords.longitude} (±${accuracy}m)`);
                 
-                // Reset button
-                getDirectionsBtn.innerHTML = originalText;
-                getDirectionsBtn.disabled = false;
-                
-                drawRoute(userLat, userLng);
-            },
-            // Error callback
-            function(error) {
-                console.error('❌ Lỗi khi lấy vị trí:', error);
-                
-                // Reset button
-                getDirectionsBtn.innerHTML = originalText;
-                getDirectionsBtn.disabled = false;
-                
-                let message = '';
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        message = `
-                            <div style="text-align: left;">
-                                <strong>⚠️ Quyền truy cập vị trí bị từ chối</strong><br><br>
-                                <strong>Để sử dụng tính năng này, vui lòng:</strong><br>
-                                1. Nhấp vào biểu tượng 🔒 trên thanh địa chỉ<br>
-                                2. Chọn "Cho phép" cho Location/Vị trí<br>
-                                3. Refresh trang và thử lại<br><br>
-                                <small><em>Hoặc vào Settings → Privacy → Location để bật quyền truy cập vị trí.</em></small>
-                            </div>
-                        `;
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        message = `
-                            <strong>📡 Không thể xác định vị trí</strong><br>
-                            Vui lòng kiểm tra:<br>
-                            • GPS đã được bật<br>
-                            • Kết nối internet ổn định<br>
-                            • Không ở trong tòa nhà che chắn tín hiệu
-                        `;
-                        break;
-                    case error.TIMEOUT:
-                        message = `
-                            <strong>⏱️ Hết thời gian chờ</strong><br>
-                            Việc lấy vị trí mất quá nhiều thời gian.<br>
-                            Vui lòng thử lại hoặc kiểm tra kết nối mạng.
-                        `;
-                        break;
-                    default:
-                        message = `
-                            <strong>❌ Lỗi không xác định</strong><br>
-                            Không thể lấy vị trí hiện tại.<br>
-                            Vui lòng thử lại sau.
-                        `;
+                // Lưu vị trí tốt nhất
+                if (accuracy < bestAccuracy) {
+                    bestAccuracy = accuracy;
+                    bestPosition = position;
                 }
-                showLocationError(message);
+                
+                // Nếu đạt độ chính xác tốt (≤ 20m) hoặc đã thử đủ số lần
+                if (accuracy <= 20 || attempts >= maxAttempts) {
+                    clearInterval(loadingInterval);
+                    navigator.geolocation.clearWatch(watchId);
+                    
+                    // Reset button
+                    getDirectionsBtn.innerHTML = originalText;
+                    getDirectionsBtn.disabled = false;
+                    
+                    onLocationSuccess(bestPosition || position);
+                }
+            },
+            function(error) {
+                clearInterval(loadingInterval);
+                navigator.geolocation.clearWatch && navigator.geolocation.clearWatch(watchId);
+                
+                // Reset button
+                getDirectionsBtn.innerHTML = originalText;
+                getDirectionsBtn.disabled = false;
+                
+                onLocationError(error);
             },
             options
         );
     }
 
-    function showLocationError(message) {
-        // Hiển thị modal hoặc alert với thông tin chi tiết
-        const alertHtml = `
-            <div class="alert alert-warning alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', alertHtml);
-        
-        // Tự động ẩn sau 10 giây
-        setTimeout(() => {
-            const alert = document.querySelector('.alert');
-            if (alert) alert.remove();
-        }, 10000);
+    // Bắt đầu theo dõi vị trí
+    startWatching();
+    
+    // Timeout backup
+    setTimeout(() => {
+        if (bestPosition) {
+            clearInterval(loadingInterval);
+            navigator.geolocation.clearWatch && navigator.geolocation.clearWatch(watchId);
+            getDirectionsBtn.innerHTML = originalText;
+            getDirectionsBtn.disabled = false;
+            onLocationSuccess(bestPosition);
+        }
+    }, options.timeout);
+}
+
+function onLocationSuccess(position) {
+    const userLat = position.coords.latitude;
+    const userLng = position.coords.longitude;
+    const accuracy = position.coords.accuracy;
+    const timestamp = new Date(position.timestamp);
+    
+    console.log(`✅ Vị trí tốt nhất: ${userLat}, ${userLng} (±${accuracy}m)`);
+    
+    // Hiển thị thông tin vị trí chi tiết
+    showLocationInfo(position);
+    
+    // Vẽ route
+    drawRoute(userLat, userLng);
+}
+
+function onLocationError(error) {
+    console.error('❌ Lỗi khi lấy vị trí:', error);
+    
+    let title = '';
+    let message = '';
+    let solutions = '';
+
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            title = '🔒 Quyền truy cập vị trí bị từ chối';
+            message = 'Bạn đã từ chối quyền truy cập vị trí.';
+            solutions = `
+                <div class="mt-3">
+                    <strong>💡 Cách khắc phục:</strong>
+                    <ol class="mt-2">
+                        <li>Nhấp vào biểu tượng <strong>🔒</strong> hoặc <strong>ℹ️</strong> bên trái thanh địa chỉ</li>
+                        <li>Chọn <strong>"Cho phép"</strong> cho Location/Vị trí</li>
+                        <li>Refresh trang và thử lại</li>
+                        <li>Hoặc vào <strong>Settings → Privacy → Location</strong> để bật quyền</li>
+                    </ol>
+                    <div class="alert alert-info mt-2">
+                        <small><strong>Lưu ý:</strong> Trên mobile, hãy đảm bảo Location Services được bật trong Settings hệ thống.</small>
+                    </div>
+                </div>
+            `;
+            break;
+            
+        case error.POSITION_UNAVAILABLE:
+            title = '📡 Không thể xác định vị trí';
+            message = 'Hệ thống định vị không khả dụng.';
+            solutions = `
+                <div class="mt-3">
+                    <strong>🔧 Hãy kiểm tra:</strong>
+                    <ul class="mt-2">
+                        <li><strong>GPS</strong> đã được bật trên thiết bị</li>
+                        <li><strong>Kết nối internet</strong> ổn định</li>
+                        <li><strong>Location Services</strong> được bật trong cài đặt</li>
+                        <li>Không ở trong <strong>tòa nhà che chắn</strong> tín hiệu</li>
+                        <li>Thử <strong>ra ngoài trời</strong> để có tín hiệu GPS tốt hơn</li>
+                    </ul>
+                </div>
+            `;
+            break;
+            
+        case error.TIMEOUT:
+            title = '⏱️ Hết thời gian chờ';
+            message = 'Việc lấy vị trí mất quá nhiều thời gian.';
+            solutions = `
+                <div class="mt-3">
+                    <strong>🚀 Thử các cách sau:</strong>
+                    <ul class="mt-2">
+                        <li><strong>Ra ngoài trời</strong> để GPS hoạt động tốt hơn</li>
+                        <li><strong>Khởi động lại</strong> ứng dụng GPS/Maps trên điện thoại</li>
+                        <li><strong>Đợi vài phút</strong> rồi thử lại</li>
+                        <li><strong>Kiểm tra kết nối mạng</strong> và thử lại</li>
+                        <li>Đảm bảo <strong>không có ứng dụng nào khác</strong> đang sử dụng GPS</li>
+                    </ul>
+                </div>
+            `;
+            break;
+            
+        default:
+            title = '❌ Lỗi không xác định';
+            message = 'Đã xảy ra lỗi khi lấy vị trí.';
+            solutions = `
+                <div class="mt-3">
+                    <strong>🔄 Vui lòng:</strong>
+                    <ul class="mt-2">
+                        <li>Refresh trang và thử lại</li>
+                        <li>Kiểm tra cài đặt trình duyệt</li>
+                        <li>Thử trên trình duyệt khác</li>
+                        <li>Liên hệ hỗ trợ nếu vấn đề vẫn tiếp diễn</li>
+                    </ul>
+                </div>
+            `;
     }
 
+    const errorHtml = `
+        <div class="alert alert-warning alert-dismissible fade show" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h5 class="alert-heading">${title}</h5>
+            <p class="mb-2">${message}</p>
+            ${solutions}
+            <hr>
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-outline-primary btn-sm" onclick="getUserLocationAndDrawRoute()">
+                    <i class="fas fa-redo me-1"></i> Thử lại
+                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    `;
+    
+    // Xóa alert cũ nếu có
+    const oldAlert = document.querySelector('.alert[style*="position: fixed"]');
+    if (oldAlert) oldAlert.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', errorHtml);
+    
+    // Tự động ẩn sau 15 giây
+    setTimeout(() => {
+        const alert = document.querySelector('.alert[style*="position: fixed"]');
+        if (alert) alert.remove();
+    }, 15000);
+}
+
+function showLocationInfo(position) {
+    const { latitude, longitude, accuracy, altitude, speed, heading } = position.coords;
+    const timestamp = new Date(position.timestamp);
+    
+    // Xác định mức độ chính xác
+    let accuracyLevel, accuracyColor, accuracyIcon;
+    if (accuracy <= 10) {
+        accuracyLevel = 'Rất chính xác';
+        accuracyColor = 'success';
+        accuracyIcon = 'fa-bullseye';
+    } else if (accuracy <= 30) {
+        accuracyLevel = 'Chính xác';
+        accuracyColor = 'primary';
+        accuracyIcon = 'fa-crosshairs';
+    } else if (accuracy <= 100) {
+        accuracyLevel = 'Khá chính xác';
+        accuracyColor = 'warning';
+        accuracyIcon = 'fa-dot-circle';
+    } else {
+        accuracyLevel = 'Ít chính xác';
+        accuracyColor = 'danger';
+        accuracyIcon = 'fa-circle';
+    }
+
+    const infoHtml = `
+        <div class="alert alert-info mt-3" style="background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%); border-left: 4px solid #2196F3;">
+            <h5 class="alert-heading">
+                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                Thông tin vị trí của bạn
+            </h5>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong><i class="fas fa-globe me-1"></i> Tọa độ:</strong><br>
+                    <code style="background: #fff; padding: 2px 6px; border-radius: 4px;">
+                        ${latitude.toFixed(6)}, ${longitude.toFixed(6)}
+                    </code>
+                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyToClipboard('${latitude}, ${longitude}')">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <strong><i class="fas ${accuracyIcon} me-1"></i> Độ chính xác:</strong><br>
+                    <span class="badge bg-${accuracyColor}">${accuracyLevel} (±${Math.round(accuracy)}m)</span>
+                </div>
+            </div>
+            
+            ${altitude !== null ? `
+                <div class="mt-2">
+                    <strong><i class="fas fa-mountain me-1"></i> Độ cao:</strong>
+                    <span class="badge bg-info">${Math.round(altitude)}m</span>
+                </div>
+            ` : ''}
+            
+            <div class="mt-2">
+                <strong><i class="fas fa-clock me-1"></i> Thời gian:</strong>
+                <small>${timestamp.toLocaleString('vi-VN')}</small>
+            </div>
+            
+            <div class="mt-3">
+                <button class="btn btn-primary btn-sm me-2" onclick="window.open('https://maps.google.com/?q=${latitude},${longitude}', '_blank')">
+                    <i class="fab fa-google me-1"></i> Mở Google Maps
+                </button>
+                <button class="btn btn-success btn-sm" onclick="copyCoordinates(${latitude}, ${longitude})">
+                    <i class="fas fa-share me-1"></i> Chia sẻ vị trí
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Thêm thông tin vào container map
+    const mapContainer = document.querySelector('.map-container');
+    let infoContainer = document.getElementById('locationInfoContainer');
+    if (!infoContainer) {
+        infoContainer = document.createElement('div');
+        infoContainer.id = 'locationInfoContainer';
+        mapContainer.parentNode.insertBefore(infoContainer, mapContainer.nextSibling);
+    }
+    infoContainer.innerHTML = infoHtml;
+}
+
+// Hàm tiện ích
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Hiển thị thông báo thành công
+        const toast = document.createElement('div');
+        toast.className = 'toast show position-fixed';
+        toast.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999;';
+        toast.innerHTML = `
+            <div class="toast-body bg-success text-white">
+                <i class="fas fa-check me-2"></i>Đã copy: ${text}
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.remove(), 3000);
+    }).catch(err => {
+        console.error('Không thể copy:', err);
+        alert('Không thể copy tự động. Vui lòng copy thủ công: ' + text);
+    });
+}
+
+function copyCoordinates(lat, lng) {
+    const text = `Vị trí của tôi: ${lat.toFixed(6)}, ${lng.toFixed(6)}\nGoogle Maps: https://maps.google.com/?q=${lat},${lng}`;
+    copyToClipboard(text);
+}
     function drawRoute(userLat, userLng) {
         console.log('🗺️ Bắt đầu vẽ tuyến đường...');
         
@@ -863,5 +1099,5 @@
     console.log('📋 VietMap Script đã được load');
 </script>
 
-// {{-- <script src="https://unpkg.com/@turf/polyline@6.x.x/dist/polyline.min.js"></script> --}}
+{{-- <script src="https://unpkg.com/@turf/polyline@6.x.x/dist/polyline.min.js"></script> --}}
 
