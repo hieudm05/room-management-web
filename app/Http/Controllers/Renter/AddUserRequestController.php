@@ -35,9 +35,9 @@ class AddUserRequestController extends Controller
         $rentalId = $rental?->rental_id ?? null;
 
         return view('renter.storeuser', [
-            'roomId'   => $roomId,
-            'rooms'    => $room,
-            'rental'   => $rental,
+            'roomId' => $roomId,
+            'rooms' => $room,
+            'rental' => $rental,
             'rentalId' => $rentalId,
         ]);
     }
@@ -45,16 +45,16 @@ class AddUserRequestController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'rental_id'   => 'required|exists:rental_agreements,rental_id',
-            'full_name'   => 'required|array',
-            'cccd'        => 'required|array',
-            'phone'       => 'required|array',
-            'email'       => 'required|array',
+            'rental_id' => 'required|exists:rental_agreements,rental_id',
+            'full_name' => 'required|array',
+            'cccd' => 'required|array',
+            'phone' => 'required|array',
+            'email' => 'required|array',
 
             'full_name.*' => 'required|string|max:100',
-            'cccd.*'      => 'required|string|max:20|distinct|unique:user_infos,cccd',
-            'phone.*'     => 'required|string|max:20',
-            'email.*'     => 'required|email|distinct|unique:user_infos,email',
+            'cccd.*' => 'required|string|max:20|distinct|unique:user_infos,cccd',
+            'phone.*' => 'required|string|max:20',
+            'email.*' => 'required|email|distinct|unique:user_infos,email',
         ]);
 
         $renter = Auth::user();
@@ -94,32 +94,69 @@ class AddUserRequestController extends Controller
         }
 
         foreach ($request->full_name as $index => $name) {
-            $cccd  = $request->cccd[$index];
+            $cccd = $request->cccd[$index];
             $phone = $request->phone[$index];
             $email = $request->email[$index];
 
             UserInfo::create([
-                'room_id'   => $roomId,
-                'cccd'      => $cccd,
-                'phone'     => $phone,
-                'email'     => $email,
-                'user_id'   => null,
+                'room_id' => $roomId,
+                'cccd' => $cccd,
+                'phone' => $phone,
+                'email' => $email,
+                'user_id' => null,
                 'full_name' => $name,
                 'rental_id' => $rentalId,
             ]);
 
             Approval::create([
-                'room_id'     => $roomId,
+                'room_id' => $roomId,
                 'landlord_id' => $landlordId,
-                'user_id'     => $renter->id,
-                'rental_id'   => $rentalId,
-                'type'        => 'add_user',
-                'note'        => "Tên: {$name} | Email: {$email} | CCCD: {$cccd} | SĐT: {$phone}",
-                'status'      => 'pending',
-                'file_path'   => null,
+                'user_id' => $renter->id,
+                'rental_id' => $rentalId,
+                'type' => 'add_user',
+                'note' => "Tên: {$name} | Email: {$email} | CCCD: {$cccd} | SĐT: {$phone}",
+                'status' => 'pending',
+                'file_path' => null,
             ]);
         }
 
         return back()->with('success', '✅ Yêu cầu thêm người đã được gửi.');
+    }
+    public function parseCCCD(Request $request)
+    {
+        $request->validate([
+            'cccd_image' => 'required|image|max:5120', // 5MB
+        ]);
+
+        $image = $request->file('cccd_image');
+
+        // Lưu tạm
+        $path = $image->store('tmp', 'public');
+
+        // Gọi Tesseract OCR
+        $text = $this->extractTextFromImage(storage_path('app/public/' . $path));
+
+        // Parse text ra họ tên và số CCCD
+        $info = $this->parseCCCDText($text);
+
+        // Xoá file tạm
+        Storage::disk('public')->delete($path);
+
+        return response()->json([
+            'success' => !empty($info),
+            'full_name' => $info['full_name'] ?? '',
+            'cccd' => $info['cccd'] ?? '',
+        ]);
+    }
+
+    /**
+     * Gọi Tesseract OCR
+     */
+    private function extractTextFromImage($filePath)
+    {
+        $output = null;
+        $returnVar = null;
+        exec("tesseract " . escapeshellarg($filePath) . " stdout", $output, $returnVar);
+        return implode("\n", $output);
     }
 }

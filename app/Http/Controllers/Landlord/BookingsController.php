@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Landlord;
 
-use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -94,7 +93,7 @@ class BookingsController extends Controller
 
     // ✅ Tạo notification cho user (nếu có tài khoản)
     if ($booking->user) {
-        $notification = Notification::create([
+$notification = Notification::create([
             'title'      => 'Thông báo lịch hẹn xem phòng',
             'message'    => 'Chủ trọ ' . $landlord->name . ' đã hẹn bạn xem phòng ' . ($booking->room->room_number ?? ''),
             'type'       => 'system',

@@ -81,7 +81,7 @@
                                 @endif
                             </td>
                             <td>{{ $booking->room->room_number ?? 'Không xác định' }}</td>
-                            <td>{{ $booking->check_in->format('d/m/Y H:i') }}</td>
+<td>{{ $booking->check_in->format('d/m/Y H:i') }}</td>
                             <td>
                                 @if ($booking->proof_image)
                                     <a href="{{ Storage::url($booking->proof_image) }}" target="_blank">
@@ -127,7 +127,7 @@
 
                                         <button class="btn btn-success btn-sm btn-approve" data-id="{{ $booking->id }}">
                                             <i class="bi bi-check-circle"></i> Duyệt
-                                        </button>
+</button>
                                         <button class="btn btn-danger btn-sm btn-reject" data-id="{{ $booking->id }}">
                                             <i class="bi bi-x-circle"></i> Từ chối
                                         </button>
@@ -176,7 +176,7 @@
                         <input type="hidden" name="booking_id" id="proofBookingId">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title"><i class="bi bi-upload"></i> Tải lên hình xác nhận</h5>
+<h5 class="modal-title"><i class="bi bi-upload"></i> Tải lên hình xác nhận</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                             </div>
                             <div class="modal-body">
@@ -241,7 +241,7 @@
             proofForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const bookingId = proofBookingId.value;
-                const formData = new FormData(proofForm);
+const formData = new FormData(proofForm);
 
                 fetch(`/staff/bookings/${bookingId}/done-with-image`, {
                         method: 'POST',

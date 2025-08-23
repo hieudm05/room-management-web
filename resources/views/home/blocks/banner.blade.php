@@ -311,6 +311,8 @@
     }
 
 
+            // Log danh sách tỉnh/thành trong dropdown
+          
     document.getElementById('searchForm').addEventListener('submit', function(e) {
         const keyword = document.getElementById('search-input').value.trim();
         const amenitiesChecked = document.querySelectorAll('input[name="amenities[]"]:checked').length;

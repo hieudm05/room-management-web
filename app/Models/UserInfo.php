@@ -10,7 +10,20 @@ class UserInfo extends Model
 {
     protected $table = 'user_infos';
     protected $primaryKey = 'id';
-    protected $fillable = ['user_id', 'cccd', 'phone', 'email', 'room_id','rental_id' , 'full_name'];
+    protected $fillable = [
+        'full_name',
+        'user_id',
+        'tenant_id',
+        'room_id',
+        'rental_id',
+        'active',
+        'left_at',
+        'cccd',
+        'phone',
+        'email',
+        'days_stayed',
+
+    ];
 
     public function user()
     {
@@ -24,7 +37,11 @@ class UserInfo extends Model
     }
     public function rental()
     {
-        return $this->belongsTo(RentalAgreement::class, 'rental_id');
+        return $this->belongsTo(RentalAgreement::class, 'rental_id', 'rental_id');
+    }
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
     }
 public function bills() {
     return $this->hasMany(RoomBill::class, 'room_id', 'room_id');

@@ -4,8 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
-use App\Models\StaffPost;
-use App\Observers\StaffPostObserver;
+use App\Models\Landlord\Room;
+use App\Observers\RoomObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,7 +22,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Pagination style
         Paginator::useBootstrap();
         Paginator::useBootstrapFive();
+
+        // Gắn observer cho Room
+        Room::observe(RoomObserver::class);
     }
 }

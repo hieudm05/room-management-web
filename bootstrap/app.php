@@ -6,6 +6,7 @@ use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Console\Scheduling\Schedule;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,9 +21,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => Authenticate::class,
             'is_admin' => IsAdmin::class,
-            'role' => RoleMiddleware::class, // Ensure this line is present
+            'role' => RoleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
-    })->create();
+    })
+    ->withSchedule(function (Schedule $schedule) {
+        // chạy job tăng ngày ở mỗi ngày 00:05
+        $schedule->command('users:update-days-stayed')->dailyAt('00:05');
+    })
+    ->create();

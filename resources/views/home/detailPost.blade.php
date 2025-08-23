@@ -220,12 +220,15 @@
                                 <li><strong>Tiền Phòng/tháng:</strong> {{ number_format($post->price, 2) }} VND</li>
                                 <li><strong>Diện Tích:</strong> {{ $post->area }} m²</li>
                                 <li><strong>Địa Chỉ:</strong> {{ $post->address }}, {{ $post->ward }},
-                                    {{ $post->district }}, {{ $post->city }}</li>
+                                <li>
+                                    <strong>Ngày chuyển vào dự kiến:</strong>
+                                    {{ \Carbon\Carbon::parse($post->move_in_date)->format('d/m/Y') }}
+                                </li>
                                 <li><strong>Ngày đăng:</strong>
-                                    {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Chưa xác định' }}
+                                    {{ $post->published_at ? $post->published_at->format('d/m/Y') : 'Chưa xác định' }}
                                 </li>
                                 <li><strong>Hết hạn:</strong>
-                                    {{ $post->expired_at ? $post->expired_at->format('M d, Y') : 'Không giới hạn' }}</li>
+                                    {{ $post->expired_at ? $post->expired_at->format('d/m/Y') : 'Không giới hạn' }}
                             </ul>
                         </div>
                     </div>
@@ -279,38 +282,11 @@
                                 <p><strong>Thời gian:</strong> <span id="duration"></span></p>
                                 <ul id="instructions" class="list-unstyled"></ul>
                             </div>
-<select id="vehicleType" class="form-select mt-2" style="width: 200px;">
+                            <select id="vehicleType" class="form-select mt-2" style="width: 200px;">
                                 <option value="motorcycle">Xe máy</option>
                                 <option value="car">Ô tô</option>
                                 <option value="foot">Đi bộ</option>
                             </select>
-                        </div>
-                    </div>
-
-                    <!-- Reviews -->
-                    <div class="card mb-4 shadow-sm border-0 rounded-3">
-                        <div class="card-header bg-light border-0 rounded-top-3">
-                            <h4 class="mb-0 fw-semibold text-primary">Đánh Giá</h4>
-                        </div>
-                        <div class="card-body">
-                            <p>Chưa có đánh giá. Hãy chia sẻ trải nghiệm của bạn!</p>
-                        </div>
-                    </div>
-
-                    <!-- Write a Review -->
-                    <div class="card shadow-sm border-0 rounded-3">
-                        <div class="card-header bg-light border-0 rounded-top-3">
-                            <h4 class="mb-0 fw-semibold text-primary">Viết Đánh Giá</h4>
-                        </div>
-                        <div class="card-body">
-                            <form action="#" method="POST">
-                                @csrf
-                                <div class="mb-3">
-                                    <label for="reviewMessage" class="form-label">Đánh giá của bạn</label>
-                                    <textarea id="reviewMessage" name="review" class="form-control" rows="5" placeholder="Viết đánh giá..." required></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary rounded-pill w-100">Gửi Đánh Giá</button>
-                            </form>
                         </div>
                     </div>
                 </div>
@@ -330,7 +306,7 @@
                                 <div class="row g-3">
                                     <!-- Check In Date -->
                                     <div class="col-12">
-<label for="checkIn" class="form-label">Chọn ngày đặt lịch</label>
+                            <label for="checkIn" class="form-label">Chọn ngày đặt lịch</label>
                                         <div class="input-group">
                                             <span class="input-group-text" id="calendarTrigger" style="cursor: pointer;">
                                                 <i class="fas fa-calendar-alt"></i>
@@ -373,7 +349,7 @@
                                     @endguest
 
                                     <div class="col-12">
-<div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex justify-content-between align-items-center">
                                             <span>Tổng số tiền thanh toán</span>
                                             <h4 class="text-primary mb-0">${{ number_format($post->price, 2) }}</h4>
                                         </div>
@@ -387,44 +363,34 @@
                             </form>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Agent Contact -->
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-body text-center">
-                            <a href="#" class="btn btn-outline-primary rounded-pill" data-bs-toggle="modal"
-                                data-bs-target="#agentMessage">
-                                <i class="fas fa-comment-alt me-2"></i> Contact Agent
-                            </a>
-                        </div>
+                <!-- Similar Properties -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h4 class="mb-0">Bài Viết Liên Quan</h4>
                     </div>
-
-                    <!-- Similar Properties -->
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-light">
-                            <h4 class="mb-0">Similar Properties</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="property-list">
-                                @foreach ($post->category->posts()->where('post_id', '!=', $post->post_id)->where('status', 1)->where('is_public', 1)->take(4)->get() as $similar)
-                                    <div class="property-item d-flex mb-3">
-                                        <a href="{{ route('posts.show', $similar->slug) }}">
-                                            <img src="{{ asset('storage/' . $similar->thumbnail) }}"
-                                                class="img-fluid rounded me-3"
-                                                style="width: 100px; max-height: 100px; object-fit: cover;"
-                                                alt="{{ $similar->title }}" loading="lazy">
-                                        </a>
-                                        <div>
-                                            <h5>
-                                                <a href="{{ route('posts.show', $similar->slug) }}"
-                                                    class="text-decoration-none">
-                                                    {{ $similar->title }}
-                                                </a>
-                                            </h5>
-<p class="mb-1"><i class="fas fa-map-marker-alt me-1"></i>
-                                                {{ $similar->city }}</p>
-                                            <span class="badge bg-primary">For Rent</span>
-                                            <h6 class="mt-1">${{ number_format($similar->price, 2) }}</h6>
-                                        </div>
+                    <div class="card-body">
+                        <div class="property-list">
+                            @foreach ($post->category->posts()->where('post_id', '!=', $post->post_id)->where('status', 1)->where('is_public', 1)->take(4)->get() as $similar)
+                                <div class="property-item d-flex mb-3">
+                                    <a href="{{ route('posts.show', $similar->slug) }}">
+                                        <img src="{{ asset('storage/' . $similar->thumbnail) }}"
+                                            class="img-fluid rounded me-3"
+                                            style="width: 100px; max-height: 100px; object-fit: cover;"
+                                            alt="{{ $similar->title }}" loading="lazy">
+                                    </a>
+                                    <div>
+                                        <h5>
+                                            <a href="{{ route('posts.show', $similar->slug) }}"
+                                                class="text-decoration-none">
+                                                {{ $similar->title }}
+                                            </a>
+                                        </h5>
+                                        <p class="mb-1"><i class="fas fa-map-marker-alt me-1"></i>
+                                            {{ $similar->city }}</p>
+                                        <span class="badge bg-primary">For Rent</span>
+                                        <h6 class="mt-1">${{ number_format($similar->price, 2) }}</h6>
                                     </div>
                                 @endforeach
                             </div>
@@ -483,7 +449,7 @@
         const emailInput = document.getElementById('guestEmail');
         if (phoneInput || emailInput) {
             const form = (phoneInput || emailInput).closest('form');
-form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', function(e) {
                 // Regex kiểm tra số điện thoại VN
                 const phonePattern = /^(0[1-9][0-9]{8}|\+84[1-9][0-9]{8})$/;
 
@@ -566,7 +532,7 @@ form.addEventListener('submit', function(e) {
             width: 100% !important;
             height: 500px !important;
             display: block !important;
-position: relative !important;
+            position: relative !important;
             background: #f8f9fa;
             border-radius: 8px;
         `;
@@ -615,7 +581,7 @@ position: relative !important;
 
     function getUserLocationAndDrawRoute() {
         console.log('🔍 Bắt đầu lấy vị trí người dùng...');
-
+        
         // Kiểm tra xem trình duyệt có hỗ trợ geolocation không
         if (!navigator.geolocation) {
             showLocationError('Trình duyệt của bạn không hỗ trợ Geolocation. Vui lòng sử dụng trình duyệt khác.');
@@ -630,7 +596,7 @@ position: relative !important;
 
         const options = {
             enableHighAccuracy: true,    // Yêu cầu độ chính xác cao
-timeout: 15000,              // Timeout 15 giây
+            timeout: 15000,              // Timeout 15 giây
             maximumAge: 300000           // Cache trong 5 phút
         };
 
@@ -640,23 +606,23 @@ timeout: 15000,              // Timeout 15 giây
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
                 const accuracy = position.coords.accuracy;
-
+                
                 console.log(`📍 Vị trí hiện tại: ${userLat}, ${userLng} (độ chính xác: ${accuracy}m)`);
-
+                
                 // Reset button
                 getDirectionsBtn.innerHTML = originalText;
                 getDirectionsBtn.disabled = false;
-
+                
                 drawRoute(userLat, userLng);
             },
             // Error callback
             function(error) {
                 console.error('❌ Lỗi khi lấy vị trí:', error);
-
+                
                 // Reset button
                 getDirectionsBtn.innerHTML = originalText;
                 getDirectionsBtn.disabled = false;
-
+                
                 let message = '';
                 switch (error.code) {
                     case error.PERMISSION_DENIED:
@@ -690,7 +656,7 @@ timeout: 15000,              // Timeout 15 giây
                     default:
                         message = `
                             <strong>❌ Lỗi không xác định</strong><br>
-Không thể lấy vị trí hiện tại.<br>
+                            Không thể lấy vị trí hiện tại.<br>
                             Vui lòng thử lại sau.
                         `;
                 }
@@ -709,7 +675,7 @@ Không thể lấy vị trí hiện tại.<br>
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', alertHtml);
-
+        
         // Tự động ẩn sau 10 giây
         setTimeout(() => {
             const alert = document.querySelector('.alert');
@@ -719,7 +685,7 @@ Không thể lấy vị trí hiện tại.<br>
 
     function drawRoute(userLat, userLng) {
         console.log('🗺️ Bắt đầu vẽ tuyến đường...');
-
+        
         // Xóa marker và route cũ
         if (userMarker) vietMapInstance.removeLayer(userMarker);
         if (routeLayer) vietMapInstance.removeLayer(routeLayer);
@@ -742,10 +708,10 @@ Không thể lấy vị trí hiện tại.<br>
         const vehicleSelect = document.getElementById('vehicleType');
         const vehicle = vehicleSelect ? vehicleSelect.value : 'motorcycle';
 
-        const url = `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${apiKey}&point=${use...d=true`;
-
+        const url = `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${apiKey}&point=${userLat},${userLng}&point=${destinationLat},${destinationLng}&vehicle=${vehicle}&points_encoded=true`;
+        
         console.log(`🔗 Gọi API VietMap: ${url}`);
-
+        
         // Hiển thị loading trong route info
         const routeInfoDiv = document.getElementById('routeInfo');
         routeInfoDiv.innerHTML = `
@@ -759,13 +725,13 @@ Không thể lấy vị trí hiện tại.<br>
         fetch(url)
             .then(response => {
                 if (!response.ok) {
-throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
                 console.log('📊 Dữ liệu từ VietMap API:', data);
-
+                
                 if (data.code === 'OK' && data.paths && data.paths.length > 0) {
                     const path = data.paths[0];
                     const distance = (path.distance / 1000).toFixed(2);
@@ -775,7 +741,7 @@ throw new Error(`HTTP error! status: ${response.status}`);
                     // Hiển thị thông tin tuyến đường
                     routeInfoDiv.innerHTML = `
                         <h5>
-                            Thông tin tuyến đường
+                            Thông tin tuyến đường 
                             <button id="closeRouteInfo" class="btn btn-sm btn-danger float-end">×</button>
                         </h5>
                         <p><strong>Khoảng cách:</strong> <span id="distance">${distance} km</span></p>
@@ -795,9 +761,9 @@ throw new Error(`HTTP error! status: ${response.status}`);
                             if (typeof polyline === 'undefined') {
                                 throw new Error('Polyline library chưa được load');
                             }
-
+                            
                             const decodedPoints = polyline.decode(path.points).map(coord => [coord[0], coord[1]]);
-
+                            
                             routeLayer = L.polyline(decodedPoints, {
                                 color: '#007bff',
                                 weight: 5,
@@ -808,9 +774,10 @@ throw new Error(`HTTP error! status: ${response.status}`);
                             // Fit map để hiển thị toàn bộ tuyến đường
                             const bounds = L.latLngBounds([[userLat, userLng], [destinationLat, destinationLng]]);
                             vietMapInstance.fitBounds(bounds, { padding: [50, 50] });
-
+                            
                             console.log('✅ Vẽ tuyến đường thành công!');
-} catch (decodeError) {
+                            
+                        } catch (decodeError) {
                             console.error('❌ Lỗi khi decode polyline:', decodeError);
                             routeInfoDiv.innerHTML += `<div class="alert alert-warning mt-2">Không thể vẽ tuyến đường trên bản đồ, nhưng thông tin đã được hiển thị ở trên.</div>`;
                         }
@@ -828,7 +795,7 @@ throw new Error(`HTTP error! status: ${response.status}`);
                         </div>
                     `;
                 }
-
+                
                 // Thêm event listener cho nút đóng
                 const closeBtn = document.getElementById('closeRouteInfo');
                 if (closeBtn) {
@@ -836,7 +803,7 @@ throw new Error(`HTTP error! status: ${response.status}`);
                         routeInfoDiv.style.display = 'none';
                     });
                 }
-
+                
             })
             .catch(error => {
                 console.error('💥 Lỗi khi gọi API:', error);
@@ -858,20 +825,20 @@ throw new Error(`HTTP error! status: ${response.status}`);
     // Khởi tạo khi DOM đã sẵn sàng
     document.addEventListener('DOMContentLoaded', function() {
         console.log('📋 DOM Content Loaded - Khởi tạo VietMap...');
-
+        
         // Đợi một chút để đảm bảo tất cả resources đã load
         setTimeout(() => {
             if (initializeVietMap()) {
                 // Thêm event listeners sau khi map đã khởi tạo thành công
                 const getDirectionsBtn = document.getElementById('getDirections');
                 const toggleSatelliteBtn = document.getElementById('toggleSatellite');
-
+                
                 if (getDirectionsBtn) {
-getDirectionsBtn.addEventListener('click', getUserLocationAndDrawRoute);
+                    getDirectionsBtn.addEventListener('click', getUserLocationAndDrawRoute);
                 } else {
                     console.warn('⚠️ Không tìm thấy nút getDirections');
                 }
-
+                
                 if (toggleSatelliteBtn) {
                     toggleSatelliteBtn.addEventListener('click', () => {
                         if (isSatellite) {
@@ -896,4 +863,5 @@ getDirectionsBtn.addEventListener('click', getUserLocationAndDrawRoute);
     console.log('📋 VietMap Script đã được load');
 </script>
 
-{{-- <script src="https://unpkg.com/@turf/polyline@6.x.x/dist/polyline.min.js"></script> --}}
+// {{-- <script src="https://unpkg.com/@turf/polyline@6.x.x/dist/polyline.min.js"></script> --}}
+

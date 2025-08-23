@@ -164,11 +164,15 @@ public function search(Request $request)
     {
         $rooms = Room::latest()->paginate(6);
 
-        $allPosts = StaffPost::with(['category', 'features', 'property'])
+        $allPosts = StaffPost::with(['category', 'features', 'property', 'room'])
             ->where('status', 1)
             ->where('is_public', true)
+            ->whereHas('room', function ($q) {
+                $q->where('is_contract_locked', false);
+            })
             ->orderByDesc('approved_at')
             ->get();
+
 
         $grouped = $allPosts->groupBy('property_id');
 

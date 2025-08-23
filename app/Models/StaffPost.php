@@ -50,6 +50,7 @@ class StaffPost extends Model
         'latitude',
         'longitude',
         'is_public', // New field added
+        'move_in_date'
     ];
 
     protected $casts = [
@@ -57,6 +58,7 @@ class StaffPost extends Model
         'furnitures' => 'array',
         'gallery' => 'array',
         'published_at' => 'datetime',
+        'move_in_date' => 'date',
     ];
 
     /*
@@ -98,6 +100,12 @@ class StaffPost extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function room()
+    {
+        return $this->belongsTo(\App\Models\Landlord\Room::class, 'room_id', 'room_id');
+    }
+
 
     /*
     |--------------------------------------------------------------------------

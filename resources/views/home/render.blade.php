@@ -44,19 +44,12 @@
                                     {{ $post->district }}, {{ $post->city }}
                                 </li>
                                 <li><i class="fa fa-home me-1 text-secondary"></i> {{ $post->address }}</li>
-                                <li><i class="fa fa-phone me-1 text-secondary"></i>
-                                    {{ $post->property->phone ?? 'Liên hệ chủ trọ' }}
-                                </li>
+                                
                             </ul>
 
-                            <p class="text-muted small flex-grow-1">
-                                {{ Str::limit(strip_tags($post->description), 100) }}
-                            </p>
+                            
 
                             <div class="d-flex justify-content-between align-items-center mt-auto">
-                                <small class="text-muted">
-                                    Mã tin: {{ $post->post_code ?? '---' }}
-                                </small>
                                 <a href="{{ route('posts.show', $post->slug) }}" class="btn btn-sm btn-outline-primary">
                                     Xem chi tiết
                                 </a>
