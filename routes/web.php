@@ -191,7 +191,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/{room}/staffs', [RoomStaffController::class, 'edit'])->name('staffs.edit');
         Route::post('/{room}/staffs', [RoomStaffController::class, 'update'])->name('staffs.update');
         Route::post('{room}/kick', [RoomController::class, 'kickTenants'])
-    ->name('rooms.kick');
+            ->name('rooms.kick');
         // Deposit (minh chứng đặt cọc)
         Route::get('/{room}/deposit', [RoomController::class, 'showDepositForm'])
             ->name('deposit.form');

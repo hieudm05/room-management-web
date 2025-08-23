@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Landlord;
+
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\RoomUser;
@@ -8,7 +9,7 @@ use App\Models\userInfo;
 use Illuminate\Support\Str;
 use App\Models\RoomLeaveLog;
 use Illuminate\Http\Request;
-use Smalot\PdfParser\Parser;
+
 use App\Models\Landlord\Room;
 use Illuminate\Support\Carbon;
 use App\Models\RentalAgreement;
@@ -30,11 +31,10 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Landlord\RoomEditRequest;
 use Illuminate\Support\Facades\Response;
 use PhpOffice\PhpWord\TemplateProcessor;
-use PhpOffice\PhpWord\Writer\HTML;
+
 use Smalot\PdfParser\Parser;
-use App\Mail\RoomUpdatedNotification;
 
-
+use Dotenv\Parser\Parser as ParserParser;
 
 class RoomController extends Controller
 {
@@ -97,12 +97,12 @@ class RoomController extends Controller
         foreach ($rooms as $room) {
             $status = $room->currentAgreement->status ?? null;
             $room->currentAgreementValid = in_array($status, ['Active', 'Signed']);
-        // Tất cả khu trọ để filter
-        $allProperties = \App\Models\Landlord\Property::all();
+            // Tất cả khu trọ để filter
+            $allProperties = \App\Models\Landlord\Property::all();
 
-        return view('landlord.rooms.index', compact('rooms', 'allProperties'));
+            return view('landlord.rooms.index', compact('rooms', 'allProperties'));
+        }
     }
-}
 
     public function create()
     {
@@ -611,7 +611,7 @@ public function confirmContract2(Request $request, Room $room)
 
     // Đọc PDF
     try {
-        $parser = new Parser();
+        $parser = new \Smalot\PdfParser\Parser();
         $pdf = $parser->parseFile($fullPath);
         $text = $pdf->getText();
     } catch (\Exception $e) {
@@ -665,15 +665,26 @@ public function confirmContract2(Request $request, Room $room)
         return redirect()->route('landlords.rooms.contract.contractIndex', $room->room_id)
             ->withErrors('❌ Vui lòng tải lên minh chứng đặt cọc trước khi xác nhận hợp đồng.');
     }
-    // Tạo hoặc lấy user
-    $user = User::firstOrCreate(
-        ['email' => $tenantEmail],
-        [
-            'name' => $fullName,
-            'password' => Hash::make(Str::random(8)),
-            'role' => 'Renter',
-        ]
-    );
+
+    // Tạo hoặc lấy user renter
+    $user = User::where('email', $tenantEmail)->first();
+    if (!$user && $tenantEmail) {
+        $password = Str::random(8);
+        $user = User::create([
+            'name'     => $fullName ?: 'Người thuê',
+            'email'    => $tenantEmail,
+            'password' => Hash::make($password),
+            'role'     => 'Renter',
+        ]);
+
+        // Gửi mail tài khoản
+        Mail::raw(
+            "Chào $fullName,\n\nTài khoản của bạn đã được tạo:\nEmail: $tenantEmail\nMật khẩu: $password\n\nVui lòng đổi mật khẩu sau khi đăng nhập.",
+            function ($message) use ($tenantEmail) {
+                $message->to($tenantEmail)->subject('Tài khoản thuê phòng đã được tạo');
+            }
+        );
+    }
 
     // Tạo hợp đồng
     $agreement = RentalAgreement::create([
@@ -692,7 +703,7 @@ public function confirmContract2(Request $request, Room $room)
     // Gắn rental_id vào ảnh để đánh dấu đã dùng
     $depositImage->update(['rental_id' => $agreement->rental_id]);
 
-    // Cập nhật hoặc tạo user_infos giống logic controller approve
+    // Cập nhật hoặc tạo user_infos
     UserInfo::updateOrCreate(
         ['user_id' => $user->id],
         [
@@ -712,6 +723,7 @@ public function confirmContract2(Request $request, Room $room)
     return redirect()->route('landlords.rooms.contract.contractIndex', $room->room_id)
         ->with('success', '✅ Hợp đồng đã được xác nhận, phòng đã chuyển sang trạng thái Rented.');
 }
+
 
     public function contractIndex(Room $room)
     {
@@ -998,7 +1010,98 @@ public function confirmContract2(Request $request, Room $room)
 
         return back()->with('success', 'Hợp đồng đã xác nhận và tài khoản người thuê đã được xử lý.');
     }
+    public function showForm($roomId)
+    {
+        $room = Room::with(['facilities', 'services', 'property.landlord'])
+            ->findOrFail($roomId);
 
+        $landlord = optional($room->property)->landlord;
+        $deposit_price = $room->deposit_price;
+        $activeAgreement = RentalAgreement::where('room_id', $room->room_id)
+            ->whereIn('status', ['Signed', 'Active'])
+            ->latest()
+            ->first();
+        return view('landlord.rooms.form-contract', compact('room', 'landlord', 'deposit_price', 'activeAgreement'));
+    }
+    public function generate(Request $request, $roomId)
+    {
+        $request->validate([
+            'ten' => 'required|string',
+            'cccd' => 'required|string',
+            'phone' => 'required|string',
+            'email' => 'required|email',
+            'so_nguoi_o' => 'required|integer',
+            'so_nguoi_toi_da' => 'required|integer',
+            'ngay_bat_dau' => 'required|date',
+            'ngay_ket_thuc' => 'required|date',
+            'dien_tich' => 'required|numeric',
+            'gia_thue' => 'required|numeric',
+            'gia_coc' => 'required|numeric',
+        ]);
+
+        $room = Room::with(['facilities', 'services', 'property.landlord'])
+            ->findOrFail($roomId);
+
+        $landlord = optional($room->property)->landlord;
+        $data = $request->all();
+
+        $facilities = $room->facilities->pluck('name')->toArray();
+
+        $services = [];
+        foreach ($room->services as $service) {
+            $unitLabel = match ($service->service_id) {
+                1 => 'số',
+                2 => $service->pivot->unit === 'per_m3' ? 'm³' : 'người',
+                3, 4 => $service->pivot->unit === 'per_room' ? 'phòng' : 'người',
+                5, 6, 7 => 'phòng',
+                default => $service->pivot->unit ?? '',
+            };
+            $services[] = [
+                'name' => $service->name,
+                'price' => $service->pivot->is_free ? 'Miễn phí' : number_format($service->pivot->price) . " VNĐ/$unitLabel",
+            ];
+        }
+
+        $deposit_price = $data['gia_coc'] ?? 0;
+        $rules = $data['noi_quy'] ?? ($room->property->rules ?? '');
+
+        // Format ngày bắt đầu và kết thúc
+        $ngay_bat_dau = Carbon::parse($data['ngay_bat_dau'])->format('d/m/Y');
+        $ngay_ket_thuc = Carbon::parse($data['ngay_ket_thuc'])->format('d/m/Y');
+
+        // Ngày hôm nay
+        $today = Carbon::now();
+        $ngay_hop_dong = $today->format('d');
+        $thang_hop_dong = $today->format('m');
+        $nam_hop_dong = $today->format('Y');
+
+        $pdf = Pdf::loadView('landlord.rooms.pdf.Contract', [
+            'landlord' => $landlord,
+            'ten_nguoi_thue' => $data['ten'],
+            'cccd_nguoi_thue' => $data['cccd'],
+            'sdt_nguoi_thue' => $data['phone'],
+            'email_nguoi_thue' => $data['email'],
+            'so_luong_nguoi_o' => $data['so_nguoi_o'],
+            'so_luong_nguoi_toi_da' => $data['so_nguoi_toi_da'],
+            'ngay_bat_dau' => $ngay_bat_dau,
+            'ngay_ket_thuc' => $ngay_ket_thuc,
+            'room_number' => $room->room_number,
+            'dien_tich' => $data['dien_tich'],
+            'gia_thue' => $data['gia_thue'],
+            'deposit_price' => $deposit_price,
+            'facilities' => $facilities,
+            'services' => $services,
+            'rules' => $rules,
+            // truyền ngày hôm nay
+            'ngay_hop_dong' => $ngay_hop_dong,
+            'thang_hop_dong' => $thang_hop_dong,
+            'nam_hop_dong' => $nam_hop_dong,
+        ]);
+
+        $filename = "Hop_dong_Phong_{$room->room_number}.pdf";
+
+        return $pdf->download($filename);
+    }
     public function lockContract(Room $room)
     {
         // Vô hiệu hóa tất cả hợp đồng đang hoạt động của phòng
@@ -1034,5 +1137,4 @@ public function confirmContract2(Request $request, Room $room)
         $rooms = Room::where('property_id', $property_id)->get(['room_id', 'room_number']);
         return response()->json(['rooms' => $rooms]);
     }
-
 }
