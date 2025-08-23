@@ -192,12 +192,10 @@
                                 📝 Tải Word (.docx)
                             </a>
                         @endif
-                        @if ($room->status === 'Available')
                             <a href="{{ route('landlords.rooms.deposit.form', $room) }}"
                                 class="btn btn-outline-info ">
                                 💰 Đặt cọc
                             </a>
-                        @endif
                     </div>
                 @endif
 

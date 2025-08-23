@@ -56,11 +56,10 @@ class ApprovalController extends Controller
         if (preg_match('/BÊN THUÊ PHÒNG TRỌ\s*\(gọi tắt là Bên B\):\s*(.*?)(?:Căn cứ pháp lý|BÊN CHO THUÊ)/siu', $text, $match)) {
             $infoBlock = $match[1];
 
-            preg_match('/- Ông\/Bà:\s*(.+)/u', $infoBlock, $nameMatch);
-            preg_match('/- CMND\/CCCD số:\s*([0-9]+)/u', $infoBlock, $cccdMatch);
-            preg_match('/- SĐT:\s*([0-9]+)/u', $infoBlock, $phoneMatch);
-            preg_match('/- Email:\s*([^\s]+)/iu', $infoBlock, $emailMatch);
-
+            preg_match('/Họ\/tên:\s*(.+)/u', $infoBlock, $nameMatch);
+            preg_match('/CMND\/CCCD\s*số:\s*([0-9]+)/u', $infoBlock, $cccdMatch);
+            preg_match('/SĐT:\s*([0-9]+)/u', $infoBlock, $phoneMatch);
+            preg_match('/Email:\s*([^\s]+)/iu', $infoBlock, $emailMatch);
             $fullName    = $nameMatch[1] ?? '';
             $cccd        = $cccdMatch[1] ?? '';
             $phone       = $phoneMatch[1] ?? '';

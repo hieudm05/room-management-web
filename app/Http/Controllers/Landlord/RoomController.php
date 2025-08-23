@@ -2,37 +2,40 @@
 
 namespace App\Http\Controllers\Landlord;
 
+use Illuminate\Support\Facades\Log;
+use App\Models\User;
+use App\Models\RoomUser;
+use App\Models\userInfo;
+use Illuminate\Support\Str;
+use App\Models\RoomLeaveLog;
+use Illuminate\Http\Request;
+
+use App\Models\Landlord\Room;
+use Illuminate\Support\Carbon;
+use App\Models\RentalAgreement;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Landlord\Service;
+use PhpOffice\PhpWord\IOFactory;
+use App\Models\Landlord\Facility;
+use App\Models\Landlord\ImageDeposit;
+use App\Models\Landlord\Property;
+use App\Models\Landlord\RoomPhoto;
+
 use App\Http\Controllers\Controller;
 use App\Mail\RoomJoinSuccessNotification;
 use App\Mail\RoomUpdatedNotification;
 use App\Mail\TenantMovedNotification;
-use App\Models\Landlord\Facility;
-use App\Models\Landlord\Property;
-use App\Models\Landlord\Room;
-use App\Models\Landlord\RoomEditRequest;
-use App\Models\Landlord\RoomPhoto;
-use App\Models\Landlord\Service;
-use App\Models\RentalAgreement;
-use App\Models\RoomUser;
-use App\Models\User;
-use App\Models\UserInfo;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use PhpOffice\PhpWord\IOFactory;
+
 use PhpOffice\PhpWord\TemplateProcessor;
-use PhpOffice\PhpWord\Writer\HTML;
 
 use Smalot\PdfParser\Parser;
 
-
-
+use Dotenv\Parser\Parser as ParserParser;
 
 class RoomController extends Controller
 {
@@ -951,8 +954,99 @@ class RoomController extends Controller
 
         return back()->with('success', 'Hợp đồng đã xác nhận và tài khoản người thuê đã được xử lý.');
     }
+    public function showForm($roomId)
+    {
+        $room = Room::with(['facilities', 'services', 'property.landlord'])
+            ->findOrFail($roomId);
 
-    public function lockRoom(Request $request, Room $room)
+        $landlord = optional($room->property)->landlord;
+        $deposit_price = $room->deposit_price;
+        $activeAgreement = RentalAgreement::where('room_id', $room->room_id)
+            ->whereIn('status', ['Signed', 'Active'])
+            ->latest()
+            ->first();
+        return view('landlord.rooms.form-contract', compact('room', 'landlord', 'deposit_price', 'activeAgreement'));
+    }
+    public function generate(Request $request, $roomId)
+    {
+        $request->validate([
+            'ten' => 'required|string',
+            'cccd' => 'required|string',
+            'phone' => 'required|string',
+            'email' => 'required|email',
+            'so_nguoi_o' => 'required|integer',
+            'so_nguoi_toi_da' => 'required|integer',
+            'ngay_bat_dau' => 'required|date',
+            'ngay_ket_thuc' => 'required|date',
+            'dien_tich' => 'required|numeric',
+            'gia_thue' => 'required|numeric',
+            'gia_coc' => 'required|numeric',
+        ]);
+
+        $room = Room::with(['facilities', 'services', 'property.landlord'])
+            ->findOrFail($roomId);
+
+        $landlord = optional($room->property)->landlord;
+        $data = $request->all();
+
+        $facilities = $room->facilities->pluck('name')->toArray();
+
+        $services = [];
+        foreach ($room->services as $service) {
+            $unitLabel = match ($service->service_id) {
+                1 => 'số',
+                2 => $service->pivot->unit === 'per_m3' ? 'm³' : 'người',
+                3, 4 => $service->pivot->unit === 'per_room' ? 'phòng' : 'người',
+                5, 6, 7 => 'phòng',
+                default => $service->pivot->unit ?? '',
+            };
+            $services[] = [
+                'name' => $service->name,
+                'price' => $service->pivot->is_free ? 'Miễn phí' : number_format($service->pivot->price) . " VNĐ/$unitLabel",
+            ];
+        }
+
+        $deposit_price = $data['gia_coc'] ?? 0;
+        $rules = $data['noi_quy'] ?? ($room->property->rules ?? '');
+
+        // Format ngày bắt đầu và kết thúc
+        $ngay_bat_dau = Carbon::parse($data['ngay_bat_dau'])->format('d/m/Y');
+        $ngay_ket_thuc = Carbon::parse($data['ngay_ket_thuc'])->format('d/m/Y');
+
+        // Ngày hôm nay
+        $today = Carbon::now();
+        $ngay_hop_dong = $today->format('d');
+        $thang_hop_dong = $today->format('m');
+        $nam_hop_dong = $today->format('Y');
+
+        $pdf = Pdf::loadView('landlord.rooms.pdf.Contract', [
+            'landlord' => $landlord,
+            'ten_nguoi_thue' => $data['ten'],
+            'cccd_nguoi_thue' => $data['cccd'],
+            'sdt_nguoi_thue' => $data['phone'],
+            'email_nguoi_thue' => $data['email'],
+            'so_luong_nguoi_o' => $data['so_nguoi_o'],
+            'so_luong_nguoi_toi_da' => $data['so_nguoi_toi_da'],
+            'ngay_bat_dau' => $ngay_bat_dau,
+            'ngay_ket_thuc' => $ngay_ket_thuc,
+            'room_number' => $room->room_number,
+            'dien_tich' => $data['dien_tich'],
+            'gia_thue' => $data['gia_thue'],
+            'deposit_price' => $deposit_price,
+            'facilities' => $facilities,
+            'services' => $services,
+            'rules' => $rules,
+            // truyền ngày hôm nay
+            'ngay_hop_dong' => $ngay_hop_dong,
+            'thang_hop_dong' => $thang_hop_dong,
+            'nam_hop_dong' => $nam_hop_dong,
+        ]);
+
+        $filename = "Hop_dong_Phong_{$room->room_number}.pdf";
+
+        return $pdf->download($filename);
+    }
+    public function lockContract(Room $room)
     {
         $request->validate([
             'lock_reason' => 'required|string|max:500',
@@ -1175,12 +1269,6 @@ class RoomController extends Controller
         );
 
         return back()->with('success', 'Tenant đã chuyển sang phòng mới thành công!');
-    }
-
-    public function getRoomsByProperty($property_id)
-    {
-        $rooms = Room::where('property_id', $property_id)->get(['room_id']);
-        return response()->json(['rooms' => $rooms]);
     }
 
     public function getRoomsByProperty($property_id)
