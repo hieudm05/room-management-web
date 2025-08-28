@@ -68,7 +68,7 @@
                             <td class="fw-semibold">{{ $booking->user->name ?? $booking->guest_name }}</td>
                             <td>
                                 @if ($booking->user)
-                                    {{ $booking->user->phone_number ?? 'Không xác định' }}
+                                    {{ $booking->phone ?? 'Không xác định' }}
                                 @else
                                     {{ $booking->phone ?? 'Không xác định' }}
                                 @endif
@@ -167,6 +167,11 @@
                     @endforelse
                 </tbody>
             </table>
+             @if($bookings->hasPages())
+                <div class="d-flex justify-content-center mt-4 mb-3">
+                    {{ $bookings->links('pagination::bootstrap-4') }}
+                </div>
+            @endif
             <!-- Modal Upload -->
             <div class="modal fade" id="uploadProofModal" tabindex="-1" aria-labelledby="uploadProofLabel"
                 aria-hidden="true">

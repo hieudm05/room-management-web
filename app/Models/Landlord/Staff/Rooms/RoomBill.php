@@ -20,6 +20,9 @@ class RoomBill extends Model
         'electric_total', 'water_price', 'water_unit', 'water_occupants', 'water_start', 'water_end',
         'water_m3', 'water_total', 'total', 'status', 'complaint_user_cost', 'complaint_landlord_cost',
     ];
+    protected $casts = [
+        'month' => 'datetime',
+    ];
 
     // ✅ 1. Quan hệ với phòng
     public function room()

@@ -142,12 +142,13 @@
                                     @enderror
                                 </div>
 
-                                <div class="col-md-6">
-                                    <label for="title" class="form-label fw-semibold text-dark">Ngày Nhập Phòng</label>
-                                    <input type="text" name="title" id="title"
-                                        class="form-control shadow-sm rounded-3" placeholder="Nhập tiêu đề bài viết"
-                                        value="{{ old('title', $post->move_in_date) }}" required>
-                                    @error('title')
+                               <div class="col-md-6">
+                                    <label for="move_in_date" class="form-label fw-semibold text-dark">Ngày Nhập Phòng</label>
+                                    <input type="date" name="move_in_date" id="move_in_date"
+                                        class="form-control shadow-sm rounded-3" placeholder="Chọn ngày nhập phòng"
+                                        value="{{ old('move_in_date', $post->move_in_date ? $post->move_in_date->format('Y-m-d') : '') }}"
+                                        required>
+                                    @error('move_in_date')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>

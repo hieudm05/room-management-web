@@ -39,6 +39,7 @@ private function removeVietnameseAccents($str)
 public function index(Request $request)
 {
     $posts = $this->filterPosts($request)->latest()->paginate(10);
+    dd($posts);
     return view('home.render', compact('posts'));
 }
 

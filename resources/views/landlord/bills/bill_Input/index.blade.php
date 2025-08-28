@@ -149,11 +149,11 @@
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label">Khách thuê</label>
-                                                        <input type="text" class="form-control" value="{{ $item['tenant_name'] }}" readonly>
+                                                        <input type="text" class="form-control" value="{{ $item['tenant_name'] }}" >
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label">Diện tích (m²)</label>
-                                                        <input type="text" class="form-control" value="{{ $item['area'] }}" readonly>
+                                                        <input type="text" class="form-control" value="{{ $item['area'] }}" >
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label">Tháng</label>
@@ -203,11 +203,11 @@
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label">Chỉ số đầu (kWh)</label>
-                                                        <input type="number" class="form-control electric-start" data-room-id="{{ $item['room_id'] }}" name="data[electric_start]" value="{{ $item['electric_start'] ?? 0 }}" readonly>
+                                                        <input type="number" class="form-control electric-start" data-room-id="{{ $item['room_id'] }}" name="data[electric_start]" value="{{ $item['electric_start'] ?? 0 }}">
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label">Chỉ số cuối (kWh)</label>
-                                                        <input type="number" class="form-control electric-end" data-room-id="{{ $item['room_id'] }}" name="data[electric_end]" value="{{ $item['electric_end'] ?? '' }}" placeholder="0" min="0" {{ $item['is_bill_locked'] ? 'readonly' : '' }}>
+                                                        <input type="number" class="form-control electric-end" data-room-id="{{ $item['room_id'] }}" name="data[electric_end]" value="{{ $item['electric_end'] ?? '' }}" placeholder="0" min="0" >
                                                         <div class="error-message electric-end-error"></div>
                                                     </div>
                                                     <div class="col-md-2">
@@ -508,12 +508,12 @@
                 const newStatus = selectBox.val();
                 const msgSpan = $('#status-msg-' + billId);
 
-                if (newStatus === 'pending' || newStatus === 'paid') {
-                    msgSpan.text('⚠️ Trạng thái này không thể chỉnh sửa.')
-                        .removeClass('text-success').addClass('text-warning');
-                    selectBox.prop('disabled', true);
-                    return;
-                }
+                // if (newStatus === 'pending' || newStatus === 'paid') {
+                //     msgSpan.text('⚠️ Trạng thái này không thể chỉnh sửa.')
+                //         .removeClass('text-success').addClass('text-warning');
+                //     selectBox.prop('disabled', true);
+                //     return;
+                // }
 
                 $.ajax({
                     url: '/landlords/staff/payment/room-bills/' + billId + '/update-status',
@@ -592,9 +592,9 @@
                 if (electricEndInput && !electricEndInput.readOnly) {
                     electricEndInput.classList.remove('invalid-input');
                     form.querySelector('.electric-end-error').textContent = '';
-                    if (electricEnd < electricStart) {
+                    if (electricEnd <= electricStart) {
                         electricEndInput.classList.add('invalid-input');
-                        form.querySelector('.electric-end-error').textContent = 'Chỉ số cuối phải lớn hơn hoặc bằng chỉ số đầu';
+                        form.querySelector('.electric-end-error').textContent = 'Chỉ số cuối phải lớn hơn chỉ số đầu';
                         form.querySelector('.electric-total').value = 'Lỗi chỉ số';
                         isValid = false;
                     } else {
@@ -641,9 +641,9 @@
                     if (waterEndInput && !waterEndInput.readOnly) {
                         waterEndInput.classList.remove('invalid-input');
                         form.querySelector('.water-end-error').textContent = '';
-                        if (waterEnd < waterStart) {
+                        if (waterEnd <= waterStart) {
                             waterEndInput.classList.add('invalid-input');
-                            form.querySelector('.water-end-error').textContent = 'Chỉ số cuối phải lớn hơn hoặc bằng chỉ số đầu';
+                            form.querySelector('.water-end-error').textContent = 'Chỉ số cuối phải lớn hơn chỉ số đầu';
                             form.querySelector('.water-total').value = 'Lỗi chỉ số';
                             isValid = false;
                         } else {
@@ -702,9 +702,9 @@
                     const actualTotal = price * qty;
                     
                     if (originalTotalInput) {
-                        originalTotalInput.value = new Intl.NumberFormat('vi-VN').format(originalTotal);
+                        originalTotalInput.value = originalTotal;
                     }
-                    totalInput.value = new Intl.NumberFormat('vi-VN').format(actualTotal);
+                    totalInput.value = actualTotal;
                     additionalFeesTotal += actualTotal;
 
                     // Update names for form submission

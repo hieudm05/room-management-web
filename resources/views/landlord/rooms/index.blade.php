@@ -300,7 +300,7 @@
         </script>
     @endsection
 
-    @push('scripts')
+   @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         @if (session('success'))
@@ -309,6 +309,17 @@
                     title: "Thành công!",
                     text: "{{ session('success') }}",
                     icon: "success",
+                    confirmButtonText: "OK"
+                });
+            </script>
+        @endif
+
+        @if ($errors->has('delete'))
+            <script>
+                Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: "{{ $errors->first('delete') }}",
                     confirmButtonText: "OK"
                 });
             </script>

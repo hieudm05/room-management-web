@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-4">
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header bage-primary text-white">
             <h5 class="mb-0 fw-bold">📑 Quản lý hợp đồng thuê phòng</h5>
         </div>
         <div class="card-body">

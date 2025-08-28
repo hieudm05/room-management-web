@@ -11,7 +11,7 @@ use Carbon\Carbon;
 class PostApprovalController extends Controller
 {
     // Danh sách bài đăng cần duyệt
-    public function index()
+   public function index()
     {
         $landlordId = Auth::id();
 
@@ -26,9 +26,11 @@ class PostApprovalController extends Controller
             ->latest()
             ->paginate(10);
 
+        // Chỉ lấy bài viết có status = 1 và is_public = 1
         $approvedPosts = StaffPost::with(['category', 'features', 'property'])
             ->where('landlord_id', $landlordId)
             ->where('status', 1)
+            ->where('is_public', 1) // Thêm điều kiện để loại bỏ bài viết ẩn
             ->latest()
             ->paginate(10);
 
@@ -47,6 +49,7 @@ class PostApprovalController extends Controller
 
         return view('landlord.posts.approval.index', compact('allPosts', 'pendingPosts', 'approvedPosts', 'rejectedPosts', 'hiddenPosts'));
     }
+
 
     // Duyệt bài đăng
     public function approve(StaffPost $post)
@@ -119,10 +122,9 @@ class PostApprovalController extends Controller
         $request->validate([
             'hidden_reason' => 'required|string|max:255',
         ]);
-
         $post->update([
             'is_public' => 0,
-            'hidden_reason' => $request->hidden_reason,
+            'auto_hidden_reason' => $request->hidden_reason,
         ]);
 
         return redirect()->route('landlord.posts.approval.index', ['tab' => 'approved'])->with('success', 'Đã ẩn bài viết.');

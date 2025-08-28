@@ -51,7 +51,9 @@ class PaymentController extends Controller
     }
 
     $monthStart = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
-    $monthEnd = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+    $monthEnd = Carbon::today('Asia/Ho_Chi_Minh')
+    ->endOfDay()
+    ->setTimezone('Asia/Ho_Chi_Minh');
     $contractStart = Carbon::parse($rentalAgreement->start_date);
     $contractEnd = $rentalAgreement->end_date ? Carbon::parse($rentalAgreement->end_date) : null;
 
@@ -140,6 +142,7 @@ class PaymentController extends Controller
                 'services',
             ])
             ->get();
+            // dd($rooms->toArray());
           $data = [];
         foreach ($rooms as $room) {
             // Tính toán ngày tính tiền
@@ -299,6 +302,7 @@ class PaymentController extends Controller
                 'room_name' => $room->room_number ?? $room->room_name ?? 'P101',
                 'tenant_name' => $tenant ? $tenant->name : 'Chưa có',
                 'area' => $room->area ?? 0,
+
                 
                 // Thông tin tính tiền theo ngày
                 'billing_start_date' => $billingInfo['billing_start_date']->format('d/m/Y'),
@@ -312,7 +316,7 @@ class PaymentController extends Controller
                 'billing_reason' => $billingReason,
                 
                 // Giá phòng
-                'original_rent_price' => $originalRentPrice,
+                'original_rent_price' => $bill ? $bill->original_rent_price :  $originalRentPrice,
                 'rent_price' => $bill ? $bill->rent_price : $actualRentPrice,
                 
                 'month' => $month,
@@ -558,7 +562,7 @@ class PaymentController extends Controller
         // Lấy dịch vụ
         $services = BillService::where('bill_id', $bill->id)->get()->map(function ($sv) {
             return [
-                'name' => optional($sv->service)->name ?? 'Không rõ',
+                'name' => $sv->name ?? 'Không rõ',
                 'price' => $sv->price,
                 'qty' => $sv->qty,
                 'total' => $sv->total,

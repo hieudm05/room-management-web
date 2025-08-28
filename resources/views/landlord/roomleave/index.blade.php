@@ -48,7 +48,7 @@
                                 {{-- Nếu là rời phòng --}}
                                 @if ($req->action_type === 'leave')
                                     <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#approveLeaveModal{{ $req->id }}">
+data-bs-target="#approveLeaveModal{{ $req->id }}">
                                         ✅ Duyệt
                                     </button>
                                 @endif
@@ -98,7 +98,7 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label">📞 Số điện thoại</label>
+<label class="form-label">📞 Số điện thoại</label>
                                         <input type="text" class="form-control"
                                             value="{{ $req->newRenter->info->phone ?? 'Không có' }}" readonly>
                                     </div>
@@ -140,7 +140,7 @@
                                         @if ($req->deposit_qr_image)
                                             <div class="mt-3">
                                                 <label class="form-label">📷 QR đặt cọc</label>
-                                                <img src="{{ Storage::url($req->deposit_qr_image) }}"
+<img src="{{ Storage::url($req->deposit_qr_image) }}"
                                                     class="img-fluid rounded border">
                                             </div>
                                         @endif
@@ -167,7 +167,7 @@
                                         <div class="mt-3" id="proofDiv{{ $req->id }}">
                                             <label class="form-label">📎 Ảnh minh chứng hoàn cọc</label>
                                             <input type="file" class="form-control" name="proof_image"
-                                                accept="image/*">
+                                                accept="image/*" required>
                                         </div>
                                     @endif
                                     <div class="mt-3">
@@ -177,7 +177,7 @@
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
-                                    <button type="submit" class="btn btn-success">Xác nhận duyệt</button>
+<button type="submit" class="btn btn-success">Xác nhận duyệt</button>
                                 </div>
                             </form>
                         </div>
@@ -222,7 +222,7 @@
                                         người thuê trong phòng sẽ bị cập nhật thành đã rời.</p>
                                     <p><strong>Số tiền cọc:</strong>
                                         {{ number_format($req->room->rentalAgreement?->deposit ?? 0) }} đ</p>
-                                    @if ($req->deposit_qr_image)
+@if ($req->deposit_qr_image)
                                         <div class="mt-3">
                                             <label class="form-label">📷 QR đặt cọc</label>
                                             <img src="{{ Storage::url($req->deposit_qr_image) }}"
@@ -260,7 +260,7 @@
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
-                                    <button type="submit" class="btn btn-warning">Xác nhận duyệt rời toàn bộ</button>
+<button type="submit" class="btn btn-warning">Xác nhận duyệt rời toàn bộ</button>
                                 </div>
                             </form>
                         </div>
@@ -287,4 +287,3 @@
         @endforelse
     </div>
 @endsection
-

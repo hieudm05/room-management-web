@@ -62,6 +62,8 @@ class StaffPostController extends Controller
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg',
             'gallery.*' => 'nullable|image|mimes:jpeg,png,jpg',
         ]);
+        // dd($request->all());
+         // Tạo bài viết mới
 
         $post = new StaffPost();
         $post->category_id = $request->category_id;

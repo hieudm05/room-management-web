@@ -49,12 +49,13 @@ class Booking extends Model
         return $this->belongsTo(User::class);
     }
 
+
     public function confirmer()
     {
         return $this->belongsTo(User::class, 'confirmed_by');
     }
     public function info()
     {
-        return $this->hasOne(UserInfo::class);
+        return $this->belongsTo(UserInfo::class, 'user_id');
     }
 }

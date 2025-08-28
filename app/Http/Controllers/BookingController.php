@@ -1,174 +1,47 @@
 <?php
 
-namespace App\Http\Controllers\Landlord;
+namespace App\Http\Controllers;
 
 use App\Models\Booking;
-use App\Models\Notification;
+use App\Models\StaffPost;
+use App\Models\UserInfo;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 
-class BookingsController extends Controller
+class BookingController extends Controller
 {
-    public function index(Request $request)
+    public function store(Request $request)
     {
-        $bookings = Booking::with(['user', 'post', 'room'])->orderByDesc('created_at')->get();
-        return view('landlord.bookings.index', compact('bookings'));
-    }
+     $request->validate([
+    'post_id' => 'required|exists:staff_posts,post_id',
+    'check_in' => 'required|date_format:d/m/Y H:i|after_or_equal:today',
+    'note' => 'nullable|string|max:255',
+    'guest_name' => 'nullable|string|max:255',
+    'phone' => [
+        'nullable',
+        'regex:/^(0[3-9][0-9]{8}|\+84[3-9][0-9]{8})$/'
+    ],
+    'email' => 'nullable|email|max:255', // ✅ validate email
+]);
+// dd($request->all());
+$userInfo = UserInfo::where('user_id', $request->user_id)->first();
 
-    public function approve($id)
-    {
-        $booking = Booking::with('post')->findOrFail($id);
-
-        if (!$booking->post) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy bài đăng.']);
-        }
-
-        // Nhân viên và chủ đều được approve
-        if ($booking->post->posted_by_type === 'landlord') {
-            $booking->confirmed_by = auth()->id();
-        } else { // staff
-            $booking->confirmed_by = $booking->post->post_by ?? null;
-        }
-
-        $booking->status = 'approved';
-        $booking->confirmed_by = $booking->post->staff_id;
-        $booking->save();
-
-        return response()->json(['success' => true]);
-    }
-
-
-
-    public function reject($id)
-    {
-        $booking = Booking::with('post')->findOrFail($id);
-        $booking->status = 'rejected';
-        $booking->save();
-
-        return response()->json(['success' => true]);
-    }
-
-    public function waiting($id)
-    {
-        $booking = Booking::with(['post', 'user'])->findOrFail($id);
-
-        // Chỉ landlord mới được set waiting
-        if ($booking->post->post_by != auth()->id()) {
-            return response()->json(['success' => false, 'message' => 'Bạn không có quyền đổi trạng thái này.']);
-        }
-
-        $booking->status = 'waiting';
-        $booking->save();
-
-        // ✅ Lấy thông tin landlord
-        $landlord = auth()->user();
-        $customerEmail = $booking->user->email ?? $booking->email;
-
-        // ✅ Lấy địa chỉ từ post
-        $address = null;
-        if ($booking->post) {
-            $addressParts = array_filter([
-                $booking->post->address,
-                $booking->post->ward,
-                $booking->post->district,
-                $booking->post->city,
-            ]);
-            $address = implode(', ', $addressParts);
-        }
-
-        // ✅ Gửi mail cho khách
-        if ($customerEmail) {
-            Mail::send('landlord.bookings.emails.bookingss', [
-                'customer_name' => $booking->user->name ?? $booking->guest_name,
-                'appointment_time' => $booking->check_in, // dùng check_in
-                'landlord_name' => $landlord->name,
-                'landlord_phone' => $landlord->phone_number ?? 'Không có',
-                'landlord_address' => $address ?? 'Không có',
-            ], function ($message) use ($customerEmail) {
-                $message->to($customerEmail);
-                $message->subject('📅 Thông báo hẹn gặp để xem phòng');
-            });
-        }
-
-        // ✅ Tạo notification cho user (nếu có tài khoản)
-        if ($booking->user) {
-            $notification = Notification::create([
-                'title' => 'Thông báo lịch hẹn xem phòng',
-                'message' => 'Chủ trọ ' . $landlord->name . ' đã hẹn bạn xem phòng ' . ($booking->room->room_number ?? ''),
-                'type' => 'system',
-                'link' => route('user.bookings.index'),
-                'expired_at' => now()->addDays(7),
-                'is_global' => false,
-            ]);
-
-            $notification->users()->attach($booking->user->id, [
-                'is_read' => false,
-                'received_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        return response()->json(['success' => true, 'message' => 'Đã gửi email và thông báo cho khách.']);
-    }
+Booking::create([
+    'post_id' => $request->post_id,
+    'user_id' => Auth::check() ? Auth::id() : null,
+    'check_in' => \Carbon\Carbon::createFromFormat('d/m/Y H:i', $request->check_in),
+    'note' => $request->note,
+    'status' => 'pending',
+    'guest_name' => $request->guest_name,
+    'phone' => $userInfo ? $userInfo->phone : $request->phone,
+    'email' => $userInfo ? $userInfo->email : $request->email, // ✅ lưu email
+    'room_id' => $request->room_id,
+    'confirmed_by' => $request->post_by,
+]);
 
 
-    public function noCancel($id)
-    {
-        $booking = Booking::with('post')->findOrFail($id);
-
-        // Chỉ landlord mới được set no-cancel
-        if ($booking->post->post_by != auth()->id()) {
-            return response()->json(['success' => false, 'message' => 'Bạn không có quyền đổi trạng thái này.']);
-        }
-
-        $booking->status = 'no-cancel';
-        $booking->save();
-
-        return response()->json(['success' => true]);
-    }
-
-    public function completed($id)
-    {
-        $booking = Booking::with('post')->findOrFail($id);
-
-        // Chỉ landlord mới được completed (không kèm ảnh)
-        if ($booking->post->post_by != auth()->id()) {
-            return response()->json(['success' => false, 'message' => 'Bạn không có quyền đổi trạng thái này.']);
-        }
 
 
-        $booking->status = 'completed';
-        $booking->save();
-
-        return response()->json(['success' => true]);
-    }
-
-    // ✅ Hoàn thành kèm ảnh minh chứng
-    public function doneWithImage(Request $request, $id)
-    {
-        try {
-            $booking = Booking::with('post')->findOrFail($id);
-
-            if ($booking->post->posted_by_type !== 'landlord') {
-                return response()->json(['success' => false, 'message' => 'Bạn không có quyền đổi trạng thái này.']);
-            }
-
-            if (!$request->hasFile('proof_image')) {
-                return response()->json(['success' => false, 'message' => 'Không có ảnh được gửi lên.']);
-            }
-
-            $path = $request->file('proof_image')->store('proofs', 'public');
-            $booking->proof_image = $path;
-            $booking->status = 'completed';
-            $booking->save();
-
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            Log::error("Lỗi doneWithImage: " . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Đã xảy ra lỗi server.']);
-        }
+        return redirect()->back()->with('success', 'Booking submitted successfully!');
     }
 }

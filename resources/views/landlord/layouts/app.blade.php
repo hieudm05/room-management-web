@@ -13,7 +13,6 @@
         <header id="page-topbar">
             @include('landlord.blocks.header')
         </header>
-
         <!-- removeNotificationModal -->
         <div id="removeNotificationModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -46,21 +45,21 @@
             <!-- LOGO -->
             <div class="navbar-brand-box">
                 <!-- Dark Logo-->
-                <a href="index.html" class="logo logo-dark">
+                <a href="http://127.0.0.1:8000/landlords/" class="logo logo-dark">
                     <span class="logo-sm">
-                        <img src="{{ asset('assets/client/images/logo-sm.png') }}" alt="" height="22">
+                        <img src="{{ asset('assets/admin/images/logo.png') }}" alt="" height="100">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ asset('assets/client/images/logo-dark.png') }}" alt="" height="17">
+                        <img src="{{ asset('assets/admin/images/logo.png') }}" alt="" height="100">
                     </span>
                 </a>
                 <!-- Light Logo-->
-                <a href="index.html" class="logo logo-light">
+                <a href="http://127.0.0.1:8000/landlords/" class="logo logo-light">
                     <span class="logo-sm">
-                        <img src="{{ asset('assets/client/images/logo-sm.png') }}" alt="" height="22">
+                        <img src="{{ asset('assets/admin/images/logo.png') }}" alt="" height="100">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ asset('assets/client/images/logo-light.png') }}" alt="" height="17">
+                        <img src="{{ asset('assets/admin/images/logo.png') }}" alt="" height="100">
                     </span>
                 </a>
                 <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"
@@ -138,6 +137,3 @@
 <!-- Mirrored from themesbrand.com/velzon/html/material/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 12 May 2025 03:48:01 GMT -->
 
 </html>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

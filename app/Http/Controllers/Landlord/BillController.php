@@ -29,7 +29,7 @@ class BillController extends Controller
     private function calculateBillingDays($roomId, $month)
 {
     $rentalAgreement = RentalAgreement::where('room_id', $roomId)
-        ->where('status', 'active')
+        ->where('status', 'Active')
         ->first();
 
     if (!$rentalAgreement) {
@@ -47,7 +47,11 @@ class BillController extends Controller
     }
 
     $monthStart = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
-    $monthEnd = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+    $monthEnd = Carbon::today('Asia/Ho_Chi_Minh')
+    ->endOfDay()
+    ->setTimezone('Asia/Ho_Chi_Minh');
+
+    // dd($monthEnd);
     $contractStart = Carbon::parse($rentalAgreement->start_date);
     $contractEnd = $rentalAgreement->end_date ? Carbon::parse($rentalAgreement->end_date) : null;
 
@@ -96,12 +100,11 @@ class BillController extends Controller
     public function list()
     {
         $idLandlord = Auth::id();
-
         // Lấy danh sách room_id mà landlord đang quản lý (qua property)
         $roomIds = Room::whereHas('property', function ($query) use ($idLandlord) {
             $query->where('landlord_id', $idLandlord);
         })
-        ->where('status', 'Rented')
+        // ->where('status', 'Rented')
         ->pluck('room_id');
 
         if ($roomIds->isEmpty()) {
@@ -121,7 +124,8 @@ class BillController extends Controller
 
         // Lấy danh sách property
         $properties = Property::whereIn('property_id', $propertyIds)->get();
-
+        // dd($propertyIds->toArray());
+        // dd($properties->toArray());
         return view('landlord.bills.bill_Input.listBill', compact('properties', 'propertyIds', 'roomIds'));
     }
 
@@ -134,9 +138,8 @@ class BillController extends Controller
         $roomIds = Room::whereHas('property', function ($query) use ($idLandlord) {
             $query->where('landlord_id', $idLandlord);
         })
-        ->where('status', 'Rented')
+        // ->where('status', 'Rented')
         ->pluck('room_id');
-
         $rooms = Room::whereIn('room_id', $roomIds)
             ->where('property_id', $propertyId)
             ->with([
@@ -150,7 +153,7 @@ class BillController extends Controller
         foreach ($rooms as $room) {
             // Tính toán ngày tính tiền
             $billingInfo = $this->calculateBillingDays($room->room_id, $month);
-            
+            // dd($billingInfo);
             $rentalAgreement = $room->rentalAgreement;
             $tenant = $rentalAgreement ? User::find($rentalAgreement->renter_id) : null;
             $bill = $room->bills->first();
@@ -303,8 +306,9 @@ class BillController extends Controller
                 'bill' => $bill ?? null,
                 'room_id' => $room->room_id,
                 'room_name' => $room->room_number ?? $room->room_name ?? 'P101',
-                'tenant_name' => $tenant ? $tenant->name : 'Chưa có',
-                'area' => $room->area ?? 0,
+               'tenant_name' => $bill->tenant_name 
+                 ?? (optional($tenant)->name ?? 'Chưa có'),
+               'area' => $bill->area ?? ($room->area ?? 0),
                 
                 // Thông tin tính tiền theo ngày
                 'billing_start_date' => $billingInfo['billing_start_date']->format('d/m/Y'),
@@ -318,7 +322,7 @@ class BillController extends Controller
                 'billing_reason' => $billingReason,
                 
                 // Giá phòng
-                'original_rent_price' => $originalRentPrice,
+                'original_rent_price' => $bill ? $bill->original_rent_price :  $originalRentPrice,
                 'rent_price' => $bill ? $bill->rent_price : $actualRentPrice,
                 
                 'month' => $month,
@@ -485,6 +489,7 @@ class BillController extends Controller
                     $path = $photo->store('utilities/electric', 'public');
                     RoomUtilityPhoto::create([
                         'room_bill_id' => $bill->id,
+                        'room_utility_id' => 1,
                         'type' => 'electric',
                         'image_path' => $path,
                     ]);
@@ -564,7 +569,7 @@ class BillController extends Controller
         // Lấy dịch vụ
         $services = BillService::where('bill_id', $bill->id)->get()->map(function ($sv) {
             return [
-                'name' => optional($sv->service)->name ?? 'Không rõ',
+                'name' => $sv->name ?? 'Không rõ',
                 'price' => $sv->price,
                 'qty' => $sv->qty,
                 'total' => $sv->total,

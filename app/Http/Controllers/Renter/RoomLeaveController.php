@@ -290,68 +290,87 @@ $leaveRequest->save();
 
     DB::transaction(function () use ($request) {
 
-        // Rời riêng lẻ
-        if ($request->action_type === 'leave') {
-            UserInfo::where('user_id', $request->user_id)
-                ->where('room_id', $request->room_id)
-                ->update([
-                    'room_id' => null,
-                    'rental_id' => null,
-                    'active' => 0,
-                ]);
+    // Rời riêng lẻ
+    if ($request->action_type === 'leave') {
+        UserInfo::where('user_id', $request->user_id)
+            ->where('room_id', $request->room_id)
+            ->update([
+                'room_id'   => null,
+                'rental_id' => null,
+                'active'    => 0,
+                'left_at'   => now(),
+            ]);
 
+        RoomLeaveLog::create([
+            'user_id'            => $request->user_id,
+            'room_id'            => $request->room_id,
+            'rental_id'          => optional($request->room->rentalAgreement)->rental_id,
+            'leave_date'         => $request->leave_date,
+            'action_type'        => 'leave',
+            'previous_renter_id' => $request->user_id,
+            'new_renter_id'      => null,
+            'reason'             => $request->note,
+            'status'             => 'Approved',
+            'handled_by'         => $request->approved_by ?? null,
+        ]);
+
+        // 🔔 Thông báo cho landlord
+        $this->sendNotificationToUser(
+            $request->landlord_id,
+            '🏠 Người thuê đã rời phòng',
+            'Người thuê ' . $request->user->name . ' đã rời khỏi phòng ' . $request->room->room_number,
+            route('landlord.roomleave.processed')
+        );
+    }
+
+    // Rời tất cả
+    if ($request->action_type === 'leave_all') {
+        $usersInRoom = UserInfo::where('room_id', $request->room_id)->get();
+
+        // Cập nhật tất cả user rời phòng
+        UserInfo::where('room_id', $request->room_id)
+            ->update([
+                'room_id'   => null,
+                'rental_id' => null,
+                'active'    => 0,
+                'left_at'   => now(),
+            ]);
+
+        // Ghi log cho từng user
+        foreach ($usersInRoom as $user) {
             RoomLeaveLog::create([
-                'user_id' => $request->user_id,
-                'room_id' => $request->room_id,
-                'rental_id' => optional($request->room->rentalAgreement)->rental_id,
-                'leave_date' => $request->leave_date,
-                'action_type' => 'leave',
-                'previous_renter_id' => $request->user_id,
-                'new_renter_id' => null,
-                'reason' => $request->note,
-                'status' => 'Approved',
-                'handled_by' => $request->approved_by ?? null,
+                'user_id'            => $user->user_id,
+                'room_id'            => $request->room_id,
+                'rental_id'          => optional($request->room->rentalAgreement)->rental_id,
+                'leave_date'         => $request->leave_date,
+                'action_type'        => 'leave_all',
+                'previous_renter_id' => $user->user_id,
+                'new_renter_id'      => null,
+                'reason'             => $request->note,
+                'status'             => 'Approved',
+                'handled_by'         => $request->approved_by ?? null,
             ]);
         }
 
-        // Rời tất cả
-        if ($request->action_type === 'leave_all') {
-            $usersInRoom = UserInfo::where('room_id', $request->room_id)->get();
+        // Cập nhật trạng thái phòng
+        $request->room->update(['status' => 'available']);
 
-            // Cập nhật tất cả user rời phòng
-            UserInfo::where('room_id', $request->room_id)
-                ->update([
-                    'room_id' => null,
-                    'rental_id' => null,
-                    'active' => 0,
-                ]);
+        // 🔔 Thông báo cho landlord
+        $this->sendNotificationToUser(
+            $request->landlord_id,
+            '🏠 Tất cả người thuê đã rời phòng',
+            'Tất cả người thuê đã rời khỏi phòng ' . $request->room->room_number . '. Phòng đã sẵn sàng cho thuê mới.',
+route('landlord.rooms.show', $request->room_id)
+        );
+    }
 
-            // Ghi log cho từng user
-            foreach ($usersInRoom as $user) {
-                RoomLeaveLog::create([
-                    'user_id' => $user->user_id,
-                    'room_id' => $request->room_id,
-                    'rental_id' => optional($request->room->rentalAgreement)->rental_id,
-                    'leave_date' => $request->leave_date,
-                    'action_type' => 'leave_all',
-                    'previous_renter_id' => $user->user_id,
-                    'new_renter_id' => null,
-                    'reason' => $request->note,
-                    'status' => 'Approved',
-                    'handled_by' => $request->approved_by ?? null,
-                ]);
-            }
+    // Cập nhật trạng thái yêu cầu
+    $request->status = 'approved';
+    $request->save();
+});
 
-            // Cập nhật trạng thái phòng nếu cần
-            $request->room->update(['status' => 'available']);
-        }
+return redirect()->route('renter')->with('success', 'Bạn đã rời phòng thành công!');
 
-        // Cập nhật trạng thái yêu cầu
-        $request->status = 'approved';
-        $request->save();
-    });
-
-    return redirect()->route('renter')->with('success', 'Bạn đã rời phòng thành công!');
 }
 
     public function confirmTransfer()

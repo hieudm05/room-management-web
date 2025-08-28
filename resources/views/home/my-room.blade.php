@@ -91,7 +91,7 @@
                     <tbody>
                         @foreach ($bills as $bill)
                             <tr>
-                                <td>{{ $bill->month }}</td>
+                                <td>{{ $bill->month->format('m/Y')  }}</td>
                                 <td>{{ number_format($bill->total) }} đ</td>
                                 <td>
                                     @php
@@ -201,7 +201,7 @@
                                             style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">
                                             <div>
                                                 <h5 class="modal-title fw-bold" id="detailModalLabel{{ $bill->id }}">🧾
-                                                    Hóa Đơn Tháng {{ $bill->month }}</h5>
+                                                    Hóa Đơn Tháng {{ $bill->month->format('m/Y') }}</h5>
                                                 <small class="text-light">Mã HĐ: #{{ $bill->id }}</small>
                                             </div>
                                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
@@ -260,8 +260,7 @@
                                                         class="p-4 bg-white rounded-4 shadow-sm h-100 border border-light-subtle">
                                                         <h6 class="text-muted mb-3">📆 Trạng thái thanh toán</h6>
                                                         <p class="mb-2">
-                                                            <strong>Ngày
-                                                                tạo:</strong><br>{{ $bill->created_at->format('d/m/Y H:i') }}
+                                                            <strong>Khoảng ngày:</strong><br>{{ $bill->created_at->format('d/m/Y') }} - {{ $bill->created_at->format('d/m/Y') }}
                                                         </p>
                                                         <p class="mb-2">
                                                             <strong>Trạng thái:</strong><br>

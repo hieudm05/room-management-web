@@ -12,11 +12,13 @@ use App\Models\Landlord\ContractRenewal;
 use App\Models\Landlord\Staff\Rooms\RoomBill;
 use App\Models\Landlord\Staff\Rooms\RoomUtility;
 use App\Models\StaffPost;
-use Illuminate\Support\Facades\Log; // Thêm dòng này ở đầu file Room.php
+use Illuminate\Support\Facades\Log;
+use App\Models\RentalAgreement;
 
 class Room extends Model
 {
     protected $primaryKey = 'room_id';
+
     protected $fillable = [
         'room_id',
         'property_id',
@@ -33,12 +35,11 @@ class Room extends Model
         'wifi_price_per_person',
         'water_price_per_person',
         'created_by',
-        'id_rental_agreements',
-        'is_contract_locked'
+        'current_rental_id',   // 🔹 Hợp đồng hiện tại
+        'is_contract_locked',
     ];
 
-
-    // Accessor tính tổng tiền
+    /* -------------------- Accessors -------------------- */
     public function getTotalWifiAttribute()
     {
         $wifi = $this->services->firstWhere('service_id', 3);
@@ -48,6 +49,12 @@ class Room extends Model
                 : $this->occupants * $wifi->pivot->price;
         }
         return 0;
+    }
+       public function currentUserInfos()
+    {
+        return $this->hasMany(UserInfo::class, 'room_id', 'room_id')
+            ->where('active', 1)
+            ->whereNull('left_at');
     }
 
     public function getTotalWaterAttribute()
@@ -61,16 +68,20 @@ class Room extends Model
         return 0;
     }
 
+    /* -------------------- Relationships -------------------- */
     public function facilities()
     {
         return $this->belongsToMany(Facility::class, 'room_facilities', 'room_id', 'facility_id');
+    }
+        public function rentalAgreement()
+    {
+        return $this->hasOne(RentalAgreement::class, 'room_id', 'room_id');
     }
 
     public function rentalAgreements()
     {
         return $this->hasMany(RentalAgreement::class, 'room_id', 'room_id');
     }
-
 
     public function property()
     {
@@ -85,15 +96,7 @@ class Room extends Model
     public function services()
     {
         return $this->belongsToMany(Service::class, 'room_services', 'room_id', 'service_id')
-            ->withPivot('is_free', 'price', 'unit'); // thêm unit
-    }
-    // public function rentalAgreement()
-    // {
-    //     return $this->hasOne(\App\Models\RentalAgreement::class);
-    // }
-    public function rentalAgreement()
-    {
-        return $this->hasOne(RentalAgreement::class, 'room_id', 'room_id');
+            ->withPivot('is_free', 'price', 'unit');
     }
 
     public function bills()
@@ -101,26 +104,41 @@ class Room extends Model
         return $this->hasMany(RoomBill::class, 'room_id', 'room_id');
     }
 
+    /* -------------------- Current Agreement -------------------- */
     public function currentAgreement()
     {
-        return $this->belongsTo(RentalAgreement::class, 'id_rental_agreements', 'rental_id')
+        return $this->belongsTo(RentalAgreement::class, 'current_rental_id', 'rental_id')
             ->whereIn('status', ['Active', 'Signed']);
     }
+public function getCurrentAgreementValidAttribute()
+    {
+        $agreement = $this->currentAgreement;
+        return $agreement && in_array($agreement->status, [
+            RentalAgreement::STATUS_ACTIVE,
+            RentalAgreement::STATUS_SIGNED
+        ]);
+    }
+
+    public function getRenterAttribute()
+    {
+        return $this->currentAgreement?->renter;
+    }
+
     public function userInfos()
     {
         return $this->hasMany(UserInfo::class, 'room_id', 'room_id');
     }
-    public function currentUserInfos()
+
+    public function allUserInfos()
     {
-        return $this->hasMany(UserInfo::class, 'room_id', 'room_id')
-            ->where('active', 1)
-            ->whereNull('left_at');
+        return $this->hasMany(UserInfo::class, 'room_id', 'room_id');
     }
 
     public function utilities()
     {
         return $this->hasMany(RoomUtility::class, 'room_id', 'room_id');
     }
+
     public function bankAccount()
     {
         return $this->belongsTo(BankAccount::class, 'property_bank_account_id');
@@ -133,26 +151,21 @@ class Room extends Model
             ->withPivot('status');
     }
 
-    public function getRenterAttribute()
-    {
-        return $this->currentAgreement?->renter;
-    }
-
     public function roomStaff()
     {
         return $this->belongsToMany(User::class, 'room_staff', 'room_id', 'staff_id');
     }
+
     public function complaints()
     {
         return $this->hasMany(\App\Models\Complaint::class, 'room_id', 'room_id');
     }
 
-
-    // RoomUtilityPhoto.php
     public function roomBill()
     {
         return $this->belongsTo(RoomBill::class, 'room_bill_id');
     }
+
     public function leaveRequests()
     {
         return $this->hasMany(RoomLeaveRequest::class, 'room_id');
@@ -167,17 +180,16 @@ class Room extends Model
     {
         return $this->hasMany(ContractRenewal::class, 'room_id', 'room_id');
     }
+
     public function bookings()
     {
         return $this->hasMany(Booking::class, 'room_id');
     }
 
-
+    /* -------------------- Helper -------------------- */
     public static function hidePostsIfFull($roomId)
     {
         $room = self::find($roomId);
-
-
 
         if (!$room) {
             Log::warning("Room $roomId not found!");
@@ -200,50 +212,17 @@ class Room extends Model
                     'is_public' => 1,
                     'auto_hidden_reason' => null
                 ]);
-            Log::info("Room {$room->room_id} NOT FULL → Unhidden {$count} StaffPost(s)");
+Log::info("Room {$room->room_id} NOT FULL → Unhidden {$count} StaffPost(s)");
         }
     }
-    public function allUserInfos()
-    {
-        return $this->hasMany(UserInfo::class, 'room_id', 'room_id');
-    }
+
     public function getCanKickAttribute()
     {
-        // return true nếu phòng có tenant và hóa đơn quá hạn 5 ngày
         return $this->tenants()->count() > 0 && $this->latestInvoice?->isOverdue();
     }
-
-
-    // public function getCurrentAgreementValidAttribute()
-    // {
-    //     // Lấy hợp đồng đang hoạt động gần nhất của phòng
-    //     return $this->rentalAgreements()
-    //         ->whereIn('status', ['Active', 'Signed'])
-    //         ->latest('start_date')
-    //         ->first();
-    // }
-
-    public function getCurrentAgreementValidAttribute()
-    {
-        // Nếu phòng đã gán id_rental_agreements, chỉ lấy khi nó còn hiệu lực
-        if ($this->id_rental_agreements) {
-            return $this->rentalAgreements()
-                ->where('rental_id', $this->id_rental_agreements)
-                ->whereIn('status', ['Active', 'Signed'])
-                ->first();
-        }
-
-        // Nếu chưa, trả về hợp đồng Active/Signed gần nhất
-        return $this->rentalAgreements()
-            ->whereIn('status', ['Active', 'Signed'])
-            ->latest('start_date')
-            ->first();
-    }
-
 
     public function getRouteKeyName()
     {
         return 'room_id';
-
     }
 }

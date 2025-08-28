@@ -85,7 +85,7 @@
                                     {{ $booking->email ?? 'Không xác định' }}
                                 @endif
                             </td>
-                            <td>{{ $booking->room->name ?? 'Không xác định' }}</td>
+                            <td>{{ $booking->room->room_number ?? 'Không xác định' }}</td>
                             <td>{{ $booking->check_in->format('d/m/Y H:i') }}</td>
                             <td>
                                 @if ($booking->proof_image)

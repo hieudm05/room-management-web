@@ -86,13 +86,13 @@
                                 <div id="suggestions-box" class="suggestions-box"></div>
 
                                 {{-- Nút mở bộ lọc (chỉ mở modal) --}}
-                                <button type="button" class="btn btn-secondary btn-lg ms-2" data-bs-toggle="modal"
+                                <button type="button" class="btn btn-secondary btn-xl ms-2" data-bs-toggle="modal"
                                     data-bs-target="#filterModal">
                                     <i class="bi bi-funnel"></i> Bộ lọc
                                 </button>
 
                                 {{-- Nút submit CHÍNH --}}
-                                <button type="submit" class="btn btn-lg btn-danger ms-2">Tìm kiếm</button>
+                                <button type="submit" class="btn btn-xl btn-danger ms-2">Tìm kiếm</button>
                             </form>
 
                         </div>
@@ -227,14 +227,6 @@
                                                 id="amenities_all" value="" form="searchForm">
                                             <label class="btn btn-outline-danger rounded-pill px-3"
                                                 for="amenities_all">Tất cả</label>
-
-
-                                            {{-- Đầy đủ nội thất --}}
-                                            <input type="checkbox" class="btn-check" name="amenities[]"
-                                                id="amenities1" value="Đầy đủ nội thất" form="searchForm"
-                                                {{ in_array('Đầy đủ nội thất', (array) request('amenities', [])) ? 'checked' : '' }}>
-                                            <label class="btn btn-outline-danger rounded-pill px-3"
-                                                for="amenities1">Đầy đủ nội thất</label>
 
                                             {{-- Có máy giặt --}}
                                             <input type="checkbox" class="btn-check" name="amenities[]"

@@ -62,7 +62,7 @@
 
             {{-- Quay lại --}}
             <div class="mt-4">
-                <a href="{{ route('landlords.rooms.contract.contractIndex', $room->room_id) }}" class="btn btn-secondary">
+                <a href="{{ route('landlords.rooms.show', $room->room_id) }}" class="btn btn-secondary">
                     🔙 Quay lại phòng này
                 </a>
             </div>

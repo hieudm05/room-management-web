@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-4">
     <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header bage-primary text-white">
             <h5 class="mb-0 fw-bold">📤 Tải lên minh chứng đặt cọc</h5>
         </div>
         <div class="card-body">

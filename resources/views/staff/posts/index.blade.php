@@ -3,9 +3,9 @@
 @section('content')
     <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-5">
-            <h2 class="fw-bold text-primary display-5">
+            <h4 class="fw-bold text-primary display-6">
                 <i class="bi bi-list-ul me-2"></i> Danh sách bài đăng
-            </h2>
+            </h4>
             <a href="{{ Auth::user()->role === 'Landlord' ? route('landlord.posts.create') : route('staff.posts.create') }}"
                 class="btn btn-gradient-primary px-5 py-3 rounded-pill fw-bold">
                 <i class="bi bi-plus-circle-fill me-2"></i> Tạo bài đăng mới
@@ -89,13 +89,13 @@
                                                         class="btn btn-outline-primary btn-sm rounded-start-pill">
                                                         <i class="bi bi-eye-fill me-1"></i> Xem
                                                     </a>
-                                                    @if ($post->status == 0 || $post->status == 2)
+                                                    {{-- @if ($post->status == 0 || $post->status == 2) --}}
                                                         <a href="{{ route('staff.posts.edit', $post->post_id) }}"
                                                             class="btn btn-outline-warning btn-sm">
                                                             <i class="bi bi-pencil-fill me-1"></i> Sửa
                                                         </a>
-                                                    @endif
-                                                    @if ($post->status == 0)
+                                                    {{-- @endif
+                                                    @if ($post->status == 0) --}}
                                                         <form action="{{ route('staff.posts.destroy', $post->post_id) }}"
                                                             method="POST" class="d-inline-block"
                                                             onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài đăng này?')">
@@ -106,7 +106,7 @@
                                                                 <i class="bi bi-trash3-fill me-1"></i> Xóa
                                                             </button>
                                                         </form>
-                                                    @endif
+                                                    {{-- @endif --}}
                                                 </div>
                                             </td>
                                         </tr>

@@ -7,7 +7,7 @@
     <div class="row justify-content-center mx-0">
         <div class="col-12">
             <div class="card border-0 rounded-0 shadow-none">
-                <div class="card-header bg-primary text-white text-center py-3">
+                <div class="card-header bage-primary text-white text-center py-3">
                     <h4 class="mb-0 fw-bold">📄 Xem trước hợp đồng thuê</h4>
                 </div>
 

@@ -109,7 +109,10 @@ $user = Auth::user(); ?>
                             <a href="{{ route('landlord.posts.approval.index') }}" class="nav-link">Duyệt bài đăng</a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('staff.posts.index') }}" class="nav-link">Đăng bài</a>
+                            <a href="{{ route('landlord.posts.index') }}" class="nav-link">Đăng Bài</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('features.index') }}" class="nav-link">Tiện nghi</a>
                         </li>
                     @endif
                 </ul>

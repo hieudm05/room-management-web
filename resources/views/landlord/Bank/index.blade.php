@@ -2,8 +2,23 @@
 @section('title', 'Quản lý ngân hàng của tôi')
 @section('content')
 
-
     <h3>Quản lý ngân hàng của tôi</h3>
+    
+    {{-- Hiển thị thông báo thành công hoặc lỗi --}}
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     {{-- Nút thêm tài khoản --}}
     <div class="mb-3 d-flex gap-2">
         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addBankModalLandlord">
@@ -15,8 +30,6 @@
     </div>
     {{-- Danh sách tài khoản ngân hàng --}}
     <div class="card">
-
-
 
         {{-- Modal: Thêm tài khoản cho chủ trọ --}}
         <div class="modal fade" id="addBankModalLandlord" tabindex="-1" aria-hidden="true">
@@ -235,7 +248,7 @@
 
                     @if ($bankAccounts->isEmpty() && $staffs->every(fn($s) => $s->bankAccounts->isEmpty()))
                         <tr>
-                            <td colspan="6" class="text-center text-muted">Chưa có tài khoản nào.</td>
+                            <td colspan="7" class="text-center text-muted">Chưa có tài khoản nào.</td>
                         </tr>
                     @endif
                 </tbody>

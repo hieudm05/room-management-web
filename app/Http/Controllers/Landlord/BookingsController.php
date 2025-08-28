@@ -7,12 +7,14 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\Controller;   
 
 class BookingsController extends Controller
 {
     public function index(Request $request)
     {
-        $bookings = Booking::with(['user', 'post', 'room'])->orderByDesc('created_at')->get();
+        $bookings = Booking::with(['user', 'post', 'room'])->orderByDesc('created_at')->paginate(8);
+        // dd($bookings);
         return view('landlord.bookings.index', compact('bookings'));
     }
 

@@ -50,7 +50,8 @@ class StaffPost extends Model
         'latitude',
         'longitude',
         'is_public', // New field added
-        'move_in_date'
+        'move_in_date',
+        'auto_hidden_reason'
     ];
 
     protected $casts = [

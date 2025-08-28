@@ -3,7 +3,7 @@
 @section('content')
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="fw-bold text-primary">Danh sách Features</h2>
+            <h3 class="fw-bold text-primary">Danh sách tiện ích</h3>
             <a href="{{ route('features.create') }}" class="btn btn-success shadow-sm">
                 <i class="bi bi-plus-circle"></i> Thêm mới
             </a>
@@ -38,13 +38,13 @@
                                 <td>{{ $f->updated_at?->format('d/m/Y H:i') ?? '-' }}</td>
                                 <td class="text-center">
                                     <a href="{{ route('features.edit', $f) }}" class="btn btn-sm btn-warning me-1">
-                                        <i class="bi bi-pencil-square"></i>
+                                       Sửa
                                     </a>
                                     <form action="{{ route('features.destroy', $f) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" onclick="return confirm('Xóa feature này?')"
                                             class="btn btn-sm btn-danger">
-                                            <i class="bi bi-trash"></i>
+                                            Xoá
                                         </button>
                                     </form>
                                 </td>

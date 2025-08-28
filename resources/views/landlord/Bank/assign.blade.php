@@ -27,9 +27,9 @@
                     <div class="card shadow-sm mb-3">
                         <div class="card-header bg-primary text-white fw-bold">Chọn tài khoản ngân hàng</div>
                         <div class="card-body">
-                            @foreach ($bankAccounts as $bank)
+                            @forelse ($bankAccounts as $bank)
                                 <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="bank_account_id"
+                                    <input class="form-check-input bank-radio" type="radio" name="bank_account_id"
                                         id="bank_{{ $bank->id }}" value="{{ $bank->id }}" required>
                                     <label class="form-check-label" for="bank_{{ $bank->id }}">
                                         <strong>{{ $bank->bank_name }}</strong> - {{ $bank->bank_account_number }}<br>
@@ -37,7 +37,15 @@
                                                 class="text-primary">{{ $bank->owner_name }}</span></small>
                                     </label>
                                 </div>
-                            @endforeach
+                            @empty
+                                <div class="text-muted text-center py-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Chưa có tài khoản ngân hàng nào. 
+                                    <a href="{{ route('landlords.bank_accounts.index') }}" class="text-decoration-none">
+                                        Thêm tài khoản ngân hàng
+                                    </a>
+                                </div>
+                            @endforelse
                         </div>
                     </div>
                 </div>
@@ -52,37 +60,66 @@
                             </div>
                         </div>
                         <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                            <div class="row">
-                                @foreach ($properties as $property)
+                            <div class="row" id="properties-container">
+                                @forelse ($properties as $property)
                                     @php
                                         $isAssigned = $property->bank_account_id ? true : false;
+                                        $bankStatus = null;
+                                        $bankInfo = '';
+                                        
+                                        if ($isAssigned && $property->bankAccount) {
+                                            $bankStatus = $property->bankAccount->status;
+                                            $bankInfo = $property->bankAccount->bank_name . ' - ' . $property->bankAccount->bank_account_number;
+                                        }
                                     @endphp
                                     <div class="col-md-6 mb-2">
                                         <div
-                                            class="form-check p-2 rounded
-                                        {{ $isAssigned ? 'bg-success bg-opacity-10 border-success' : 'bg-secondary bg-opacity-10 border-secondary' }}">
+                                            class="form-check p-2 rounded property-item
+                                        @if($isAssigned && $bankStatus == 'active') 
+                                            bg-success bg-opacity-10 border-success
+                                        @elseif($isAssigned && $bankStatus == 'inactive')
+                                            bg-danger bg-opacity-10 border-danger
+                                        @else
+                                            bg-secondary bg-opacity-10 border-secondary
+                                        @endif"
+                                            data-bank-id="{{ $property->bank_account_id }}"
+                                            data-bank-status="{{ $bankStatus }}">
                                             <input class="form-check-input property-checkbox" type="checkbox"
                                                 name="property_ids[]" value="{{ $property->property_id }}"
                                                 id="property_{{ $property->property_id }}"
-                                                {{ $isAssigned ? 'checked' : '' }}>
+                                                {{ $isAssigned && $bankStatus == 'active' ? 'checked' : '' }}>
                                             <label class="form-check-label" for="property_{{ $property->property_id }}">
                                                 {{ $property->name }}
-                                                @if ($isAssigned)
+                                                @if ($isAssigned && $bankStatus == 'active')
                                                     <span class="badge bg-success ms-1">Đã gán</span>
+                                                @elseif ($isAssigned && $bankStatus == 'inactive')
+                                                    <span class="badge bg-danger ms-1">TK bị khóa</span>
                                                 @else
                                                     <span class="badge bg-secondary ms-1">Chưa gán</span>
                                                 @endif
                                                 <br>
                                                 <small class="text-muted">{{ $property->address }}</small>
+                                                @if ($bankInfo)
+                                                    <br>
+                                                    <small class="text-info">{{ $bankInfo }}</small>
+                                                @endif
                                             </label>
                                         </div>
                                     </div>
-                                @endforeach
+                                @empty
+                                    <div class="col-12 text-muted text-center py-3">
+                                        <i class="fas fa-building me-2"></i>
+                                        Chưa có tòa nhà nào.
+                                    </div>
+                                @endforelse
                             </div>
                         </div>
                     </div>
                     <div class="text-end">
-                        <button type="submit" class="btn btn-success px-4">Gán tài khoản</button>
+                        <button type="submit" class="btn btn-success px-4" 
+                                {{ $bankAccounts->isEmpty() ? 'disabled' : '' }}>
+                            Gán tài khoản
+                        </button>
                     </div>
                 </div>
             </form>
@@ -92,47 +129,100 @@
 
 @push('scripts')
     <script>
-    let banks = [];
-    fetch('https://api.vietqr.io/v2/banks')
-        .then(res => res.json())
-        .then(data => banks = data.data);
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkAllBox = document.getElementById('checkAll');
+            const propertyCheckboxes = document.querySelectorAll('.property-checkbox');
+            const bankRadios = document.querySelectorAll('.bank-radio');
+            const propertiesContainer = document.getElementById('properties-container');
 
-    document.getElementById('bank_name').addEventListener('input', function() {
-        const val = this.value.toLowerCase();
-        const suggestions = banks.filter(b => b.name.toLowerCase().includes(val) || b.shortName.toLowerCase().includes(val));
-        let html = '';
-        suggestions.slice(0, 8).forEach(b => {
-            html += `<button type="button" class="list-group-item list-group-item-action" data-code="${b.code}" data-name="${b.name}">${b.name} (${b.code})</button>`;
+            // Xử lý chọn tất cả
+            if (checkAllBox) {
+                checkAllBox.addEventListener('change', function() {
+                    propertyCheckboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                });
+
+                // Cập nhật trạng thái "Chọn tất cả" khi có thay đổi checkbox con
+                propertyCheckboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const totalCheckboxes = propertyCheckboxes.length;
+                        const checkedCheckboxes = document.querySelectorAll('.property-checkbox:checked').length;
+                        
+                        checkAllBox.checked = totalCheckboxes === checkedCheckboxes;
+                        checkAllBox.indeterminate = checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes;
+                    });
+                });
+            }
+
+            // Khi chọn tài khoản ngân hàng, hiển thị các tòa nhà đã gán cho tài khoản đó
+            bankRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        const selectedBankId = this.value;
+                        updatePropertySelection(selectedBankId);
+                    }
+                });
+            });
+
+            function updatePropertySelection(bankId) {
+                const propertyItems = document.querySelectorAll('.property-item');
+                
+                propertyItems.forEach(item => {
+                    const checkbox = item.querySelector('.property-checkbox');
+                    const badge = item.querySelector('.badge');
+                    const itemBankId = item.dataset.bankId;
+                    const itemBankStatus = item.dataset.bankStatus;
+                    
+                    // Reset trạng thái
+                    item.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-secondary', 'bg-opacity-10', 
+                                         'border-success', 'border-warning', 'border-danger', 'border-secondary');
+                    
+                    if (itemBankId && itemBankId === bankId) {
+                        // Tòa nhà đang được gán cho tài khoản được chọn
+                        checkbox.checked = true;
+                        item.classList.add('bg-success', 'bg-opacity-10', 'border-success');
+                        badge.textContent = 'Đã gán';
+                        badge.className = 'badge bg-success ms-1';
+                    } else if (itemBankId && itemBankId !== bankId) {
+                        // Tòa nhà đang được gán cho tài khoản khác
+                        checkbox.checked = false;
+                        
+                        if (itemBankStatus === 'inactive') {
+                            // Tài khoản khác bị khóa
+                            item.classList.add('bg-danger', 'bg-opacity-10', 'border-danger');
+                            badge.textContent = 'TK bị khóa';
+                            badge.className = 'badge bg-danger ms-1';
+                        } else {
+                            // Tài khoản khác đang hoạt động
+                            item.classList.add('bg-warning', 'bg-opacity-10', 'border-warning');
+                            badge.textContent = 'Có TK khác';
+                            badge.className = 'badge bg-warning ms-1';
+                        }
+                    } else {
+                        // Tòa nhà chưa được gán
+                        checkbox.checked = false;
+                        item.classList.add('bg-secondary', 'bg-opacity-10', 'border-secondary');
+                        badge.textContent = 'Chưa gán';
+                        badge.className = 'badge bg-secondary ms-1';
+                    }
+                });
+
+                // Cập nhật trạng thái "Chọn tất cả"
+                const totalCheckboxes = propertyCheckboxes.length;
+                const checkedCheckboxes = document.querySelectorAll('.property-checkbox:checked').length;
+                
+                if (checkAllBox) {
+                    checkAllBox.checked = totalCheckboxes === checkedCheckboxes;
+                    checkAllBox.indeterminate = checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes;
+                }
+            }
+
+            // Khởi tạo trạng thái ban đầu nếu có tài khoản được chọn sẵn
+            const selectedBank = document.querySelector('.bank-radio:checked');
+            if (selectedBank) {
+                updatePropertySelection(selectedBank.value);
+            }
         });
-        document.getElementById('bank_suggestions').innerHTML = html;
-        document.getElementById('bank_suggestions').style.display = html ? 'block' : 'none';
-    });
-
-    document.getElementById('bank_suggestions').addEventListener('click', function(e) {
-        if (e.target.dataset.code) {
-            document.getElementById('bank_name').value = e.target.dataset.name;
-            document.getElementById('bank_code').value = e.target.dataset.code;
-            this.innerHTML = '';
-            this.style.display = 'none';
-        }
-    });
-
-    // Bắt buộc phải chọn ngân hàng từ gợi ý
-    document.getElementById('addBankForm').addEventListener('submit', function(e) {
-        if (!document.getElementById('bank_code').value) {
-            alert('Vui lòng chọn ngân hàng từ gợi ý để lấy đúng mã ngân hàng!');
-            document.getElementById('bank_name').focus();
-            e.preventDefault();
-        }
-    });
-
-    // Ẩn gợi ý khi click ra ngoài
-    document.addEventListener('click', function(e) {
-        if (!document.getElementById('bank_name').contains(e.target) &&
-            !document.getElementById('bank_suggestions').contains(e.target)) {
-            document.getElementById('bank_suggestions').innerHTML = '';
-            document.getElementById('bank_suggestions').style.display = 'none';
-        }
-    });
-</script>
+    </script>
 @endpush

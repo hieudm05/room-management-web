@@ -47,7 +47,20 @@
                     <td>{{ $complaint->phone }}</td>
                     <td>{{ $complaint->commonIssue->name ?? 'N/A' }}</td>
                     <td>{{ $complaint->created_at->format('d/m/Y H:i') }}</td>
-                    <td class="text-capitalize">{{ $complaint->status }}</td>
+                    <td>
+                            @php
+                                $statusMap = [
+                                    'pending'  => 'Đang chờ',
+                                    'approved' => 'Đã duyệt',
+                                    'rejected' => 'Từ chối',
+                                    'resolved' => 'Đã xử lý',
+                                    'cancelled'   => 'Đã hủy'
+                                ];
+                            @endphp
+
+                            {{ $statusMap[$complaint->status] ?? $complaint->status }}
+                        </td>
+                    {{-- <td class="text-capitalize">{{ $complaint->status }}</td> --}}
 
                     <td>
                         <div class="d-flex flex-wrap gap-1 justify-content-center">

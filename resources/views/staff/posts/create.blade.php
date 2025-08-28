@@ -298,7 +298,7 @@
             integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
         {{-- JavaScript for Address Handling, Map Integration, and Form Validation --}}
-        <script>
+        {{-- <script>
             const VIET_MAP_API_KEY = '{{ env('VIET_MAP_API_KEY') }}';
             const LOCATIONIQ_API_KEY = '{{ env('LOCATIONIQ_API_KEY') }}';
             const provinceSelect = document.getElementById('province');
@@ -861,16 +861,579 @@
                 });
 
                 // Format price input
-                $('#price').on('input', function() {
-                    let value = $(this).val().replace(/[^0-9]/g, '');
-                    if (value) {
-                        $(this).val(Number(value).toLocaleString('vi-VN'));
-                    }
+               $('#price').on('input', function() {
+                    let value = $(this).val().replace(/[^0-9]/g, ''); // Loại bỏ tất cả ký tự không phải số
+                    $(this).val(value); // Gán lại giá trị chỉ chứa số
                 });
             });
 
             // Load provinces on page load
             loadProvinces();
+        </script> --}}
+        <script>
+            // JavaScript for Address Handling, Map Integration, and Form Validation with VietMap API
+const VIET_MAP_API_KEY =  "{{ config('services.viet_map.key') }}";
+
+console.log(VIET_MAP_API_KEY);
+const provinceSelect = document.getElementById('province');
+const districtSelect = document.getElementById('district');
+const wardSelect = document.getElementById('ward');
+const addressInput = document.getElementById('address');
+const searchInput = document.getElementById('search-map');
+const searchButton = document.getElementById('search-button');
+const latitudeInput = document.getElementById('latitude');
+const longitudeInput = document.getElementById('longitude');
+
+// Initialize Leaflet Map with VietMap tiles
+const map = L.map('map', {
+    center: [10.7769, 106.7009], // Ho Chi Minh City [lat, lng]
+    zoom: 13,
+    attributionControl: true
+});
+
+// Use VietMap tiles instead of generic tiles
+L.tileLayer(`https://maps.vietmap.vn/api/tm/{z}/{x}/{y}.png?apikey=${VIET_MAP_API_KEY}`, {
+    maxZoom: 18,
+    attribution: '&copy; <a href="https://www.vietmap.vn/">VietMap</a>'
+}).addTo(map);
+
+let marker = null;
+let userIsEditingAddress = false;
+
+// Store province, district, ward data
+let provincesData = [];
+let districtsData = {};
+let wardsData = {};
+
+// Cache keys for localStorage
+const CACHE_KEY_PROVINCES = 'provinces_data';
+const CACHE_KEY_DISTRICTS = 'districts_data';
+const CACHE_KEY_WARDS = 'wards_data';
+
+// Normalize Vietnamese text for comparison
+function normalizeName(name) {
+    if (!name) return '';
+    return name
+        .replace(/^(Thành phố|Tỉnh|Quận|Huyện|Phường|Xã)\s+/i, '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+
+// VietMap search function
+async function vietMapSearch(query) {
+    try {
+        const response = await fetch(
+            `https://maps.vietmap.vn/api/search/v3?apikey=${VIET_MAP_API_KEY}&text=${encodeURIComponent(query)}`
+        );
+        const data = await response.json();
+        return data || [];
+    } catch (error) {
+        console.error('Error searching with VietMap:', error);
+        return [];
+    }
+}
+
+// VietMap reverse geocoding function
+async function vietMapReverseGeocode(lat, lon) {
+    try {
+        const response = await fetch(
+            `https://maps.vietmap.vn/api/reverse/v3?apikey=${VIET_MAP_API_KEY}&point.lat=${lat}&point.lng=${lon}`
+        );
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error reverse geocoding with VietMap:', error);
+        return null;
+    }
+}
+
+// Load provinces
+async function loadProvinces() {
+    const cachedProvinces = localStorage.getItem(CACHE_KEY_PROVINCES);
+    if (cachedProvinces) {
+        provincesData = JSON.parse(cachedProvinces);
+        populateProvinces();
+        return;
+    }
+
+    try {
+        const response = await fetch('https://provinces.open-api.vn/api/p/');
+        provincesData = await response.json();
+        localStorage.setItem(CACHE_KEY_PROVINCES, JSON.stringify(provincesData));
+        populateProvinces();
+    } catch (error) {
+        console.error('Error loading provinces:', error);
+        alert('Không thể tải danh sách tỉnh/thành. Vui lòng thử lại.');
+    }
+}
+
+function populateProvinces() {
+    provinceSelect.innerHTML = '<option value="">-- Chọn Tỉnh/Thành --</option>';
+    provincesData.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.name;
+        option.textContent = item.name;
+        option.dataset.code = item.code;
+        provinceSelect.appendChild(option);
+    });
+}
+
+// Load districts
+provinceSelect.addEventListener('change', async function() {
+    const provinceName = this.value;
+    const provinceCode = Array.from(this.options).find(option => option.value === provinceName)?.dataset.code;
+    districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+    wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+
+    if (provinceCode) {
+        const cacheKey = `${CACHE_KEY_DISTRICTS}_${provinceCode}`;
+        const cachedDistricts = localStorage.getItem(cacheKey);
+        if (cachedDistricts) {
+            districtsData[provinceCode] = JSON.parse(cachedDistricts);
+            populateDistricts(provinceCode);
+            updateMapFromAddress();
+            return;
+        }
+
+        try {
+            const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+            const data = await response.json();
+            districtsData[provinceCode] = data.districts;
+            localStorage.setItem(cacheKey, JSON.stringify(data.districts));
+            populateDistricts(provinceCode);
+            updateMapFromAddress();
+        } catch (error) {
+            console.error('Error loading districts:', error);
+            alert('Không thể tải danh sách quận/huyện. Vui lòng thử lại.');
+        }
+    }
+});
+
+function populateDistricts(provinceCode) {
+    districtsData[provinceCode].forEach(district => {
+        const option = document.createElement('option');
+        option.value = district.name;
+        option.textContent = district.name;
+        option.dataset.code = district.code;
+        districtSelect.appendChild(option);
+    });
+}
+
+// Load wards
+districtSelect.addEventListener('change', async function() {
+    const districtName = this.value;
+    const districtCode = Array.from(this.options).find(option => option.value === districtName)?.dataset.code;
+    wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+
+    if (districtCode) {
+        const cacheKey = `${CACHE_KEY_WARDS}_${districtCode}`;
+        const cachedWards = localStorage.getItem(cacheKey);
+        if (cachedWards) {
+            wardsData[districtCode] = JSON.parse(cachedWards);
+            populateWards(districtCode);
+            updateMapFromAddress();
+            return;
+        }
+
+        try {
+            const response = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+            const data = await response.json();
+            wardsData[districtCode] = data.wards;
+            localStorage.setItem(cacheKey, JSON.stringify(data.wards));
+            populateWards(districtCode);
+            updateMapFromAddress();
+        } catch (error) {
+            console.error('Error loading wards:', error);
+            alert('Không thể tải danh sách phường/xã. Vui lòng thử lại.');
+        }
+    }
+});
+
+function populateWards(districtCode) {
+    wardsData[districtCode].forEach(ward => {
+        const option = document.createElement('option');
+        option.value = ward.name;
+        option.textContent = ward.name;
+        option.dataset.code = ward.code;
+        wardSelect.appendChild(option);
+    });
+}
+
+// Update map based on address fields using VietMap
+async function updateMapFromAddress() {
+    const provinceName = provinceSelect.value;
+    const districtName = districtSelect.value;
+    const wardName = wardSelect.value;
+    const address = addressInput.value;
+
+    if (!provinceName) return;
+
+    // Build search query
+    let parts = [];
+    if (address) parts.push(address);
+    if (wardName) parts.push(wardName);
+    if (districtName) parts.push(districtName);
+    if (provinceName) parts.push(provinceName);
+    parts.push("Việt Nam");
+
+    let query = parts.join(', ');
+
+    try {
+        const searchResults = await vietMapSearch(query);
+        
+        if (!searchResults.length) {
+            // Try with simplified query
+            query = [wardName, districtName, provinceName].filter(Boolean).join(', ');
+            const fallbackResults = await vietMapSearch(query);
+            
+            if (fallbackResults.length > 0) {
+                const result = fallbackResults[0];
+                updateMapLocation(result.lat, result.lng);
+            } else {
+                alert('Không tìm thấy địa chỉ chính xác. Vui lòng chọn trực tiếp trên bản đồ.');
+            }
+            return;
+        }
+
+        const result = searchResults[0];
+        
+        // If we have ref_id, get precise location using place API
+        if (result.ref_id) {
+            try {
+                const placeResponse = await fetch(
+                    `https://maps.vietmap.vn/api/place/v3?apikey=${VIET_MAP_API_KEY}&refid=${encodeURIComponent(result.ref_id)}`
+                );
+                const place = await placeResponse.json();
+                updateMapLocation(place.lat, place.lng);
+            } catch (error) {
+                console.error('Error getting place details:', error);
+                updateMapLocation(result.lat, result.lng);
+            }
+        } else {
+            updateMapLocation(result.lat, result.lng);
+        }
+    } catch (error) {
+        console.error('Error updating map from address:', error);
+        alert('Có lỗi xảy ra khi định vị địa chỉ. Vui lòng thử lại.');
+    }
+}
+
+function updateMapLocation(lat, lng) {
+    const latNum = parseFloat(lat);
+    const lngNum = parseFloat(lng);
+    
+    if (marker) {
+        marker.setLatLng([latNum, lngNum]);
+    } else {
+        marker = L.marker([latNum, lngNum], { draggable: true }).addTo(map);
+        
+        // Add drag event listener to marker
+        marker.on('dragend', async function(e) {
+            const pos = marker.getLatLng();
+            await reverseGeocodeAndUpdateAddress(pos.lat, pos.lng);
+        });
+    }
+    
+    map.setView([latNum, lngNum], 17);
+    latitudeInput.value = latNum.toFixed(6);
+    longitudeInput.value = lngNum.toFixed(6);
+}
+
+// Map click event for reverse geocoding using VietMap
+map.on('click', async function(e) {
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+
+    if (marker) {
+        marker.setLatLng([lat, lng]);
+    } else {
+        marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+        
+        // Add drag event listener to new marker
+        marker.on('dragend', async function(e) {
+            const pos = marker.getLatLng();
+            await reverseGeocodeAndUpdateAddress(pos.lat, pos.lng);
+        });
+    }
+
+    latitudeInput.value = lat.toFixed(6);
+    longitudeInput.value = lng.toFixed(6);
+
+    await reverseGeocodeAndUpdateAddress(lat, lng);
+});
+
+// Reverse geocoding function using VietMap
+async function reverseGeocodeAndUpdateAddress(lat, lng) {
+    if (userIsEditingAddress) return;
+    
+    try {
+        const data = await vietMapReverseGeocode(lat, lng);
+        if (!data || !data.address) return;
+
+        const addr = data.address;
+
+        // Update detailed address if not being edited
+        if (!userIsEditingAddress && addr.road) {
+            addressInput.value = addr.road;
+        }
+
+        const provinceText = addr.state;
+        const districtText = addr.county;
+        const wardText = addr.suburb || addr.village;
+
+        // Update province
+        if (provinceText) {
+            const provinceMatched = provincesData.find(p => 
+                normalizeName(p.name).includes(normalizeName(provinceText))
+            );
+            
+            if (provinceMatched) {
+                provinceSelect.value = provinceMatched.name;
+                
+                // Load districts
+                const provinceCode = provinceMatched.code;
+                const cacheKey = `${CACHE_KEY_DISTRICTS}_${provinceCode}`;
+                const cachedDistricts = localStorage.getItem(cacheKey);
+                
+                if (cachedDistricts) {
+                    districtsData[provinceCode] = JSON.parse(cachedDistricts);
+                } else {
+                    const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+                    const districtData = await response.json();
+                    districtsData[provinceCode] = districtData.districts;
+                    localStorage.setItem(cacheKey, JSON.stringify(districtData.districts));
+                }
+                
+                populateDistricts(provinceCode);
+                
+                // Update district
+                if (districtText) {
+                    const district = districtsData[provinceCode].find(d =>
+                        normalizeName(d.name).includes(normalizeName(districtText))
+                    );
+                    
+                    if (district) {
+                        districtSelect.value = district.name;
+                        
+                        // Load wards
+                        const wardCacheKey = `${CACHE_KEY_WARDS}_${district.code}`;
+                        const cachedWards = localStorage.getItem(wardCacheKey);
+                        
+                        if (cachedWards) {
+                            wardsData[district.code] = JSON.parse(cachedWards);
+                        } else {
+                            const wardResponse = await fetch(`https://provinces.open-api.vn/api/d/${district.code}?depth=2`);
+                            const wardData = await wardResponse.json();
+                            wardsData[district.code] = wardData.wards;
+                            localStorage.setItem(wardCacheKey, JSON.stringify(wardData.wards));
+                        }
+                        
+                        populateWards(district.code);
+                        
+                        // Update ward
+                        if (wardText) {
+                            const ward = wardsData[district.code].find(w =>
+                                normalizeName(w.name).includes(normalizeName(wardText))
+                            );
+                            
+                            if (ward) {
+                                wardSelect.value = ward.name;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error reverse geocoding:', error);
+        alert('Có lỗi xảy ra khi lấy thông tin địa chỉ. Vui lòng thử lại.');
+    }
+}
+
+// Search address using VietMap
+async function searchAddress() {
+    let query = searchInput.value.trim();
+    if (!query) {
+        alert('Vui lòng nhập địa chỉ để tìm kiếm.');
+        return;
+    }
+
+    try {
+        const searchResults = await vietMapSearch(query);
+        
+        if (!searchResults.length) {
+            alert('Không tìm thấy địa chỉ. Vui lòng thử nhập địa chỉ khác hoặc chọn trực tiếp trên bản đồ.');
+            return;
+        }
+
+        const result = searchResults[0];
+        
+        // If we have ref_id, get precise location
+        if (result.ref_id) {
+            try {
+                const placeResponse = await fetch(
+                    `https://maps.vietmap.vn/api/place/v3?apikey=${VIET_MAP_API_KEY}&refid=${encodeURIComponent(result.ref_id)}`
+                );
+                const place = await placeResponse.json();
+                updateMapLocation(place.lat, place.lng);
+                await reverseGeocodeAndUpdateAddress(place.lat, place.lng);
+            } catch (error) {
+                console.error('Error getting place details:', error);
+                updateMapLocation(result.lat, result.lng);
+                await reverseGeocodeAndUpdateAddress(result.lat, result.lng);
+            }
+        } else {
+            updateMapLocation(result.lat, result.lng);
+            await reverseGeocodeAndUpdateAddress(result.lat, result.lng);
+        }
+    } catch (error) {
+        console.error('Error searching address:', error);
+        alert('Có lỗi xảy ra khi tìm kiếm địa chỉ. Vui lòng thử lại.');
+    }
+}
+
+searchButton.addEventListener('click', searchAddress);
+searchInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchAddress();
+    }
+});
+
+wardSelect.addEventListener('change', updateMapFromAddress);
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+// Address input with debounced update
+let debounceTimer;
+addressInput.addEventListener('input', function() {
+    userIsEditingAddress = true;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        userIsEditingAddress = false;
+        updateMapFromAddress();
+    }, 2000);
+});
+
+// Image preview functionality (keeping original)
+const thumbnailInput = document.getElementById('thumbnail');
+const thumbnailImg = document.getElementById('thumbnail-img');
+const galleryInput = document.getElementById('gallery');
+const galleryPreview = document.getElementById('gallery-preview');
+
+thumbnailInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            thumbnailImg.src = e.target.result;
+            thumbnailImg.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        thumbnailImg.src = '';
+        thumbnailImg.style.display = 'none';
+    }
+});
+
+galleryInput.addEventListener('change', function(e) {
+    galleryPreview.innerHTML = '';
+    const files = e.target.files;
+    Array.from(files).forEach(file => {
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'img-fluid rounded-3 shadow-sm';
+                img.style.maxHeight = '100px';
+                img.alt = 'Ảnh trong album';
+                galleryPreview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+});
+
+// Room selection (keeping original jQuery code)
+$(document).ready(function() {
+    $('#property_id').change(function() {
+        const propertyId = $(this).val();
+        const roomSelect = $('#room_id');
+
+        roomSelect.empty().append('<option value="">-- Chọn Phòng --</option>');
+        roomSelect.prop('disabled', true);
+
+        if (propertyId) {
+            $.ajax({
+                url: '/get-rooms/' + propertyId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.rooms && Array.isArray(data.rooms)) {
+                        roomSelect.prop('disabled', false);
+                        $.each(data.rooms, function(index, room) {
+                            roomSelect.append(
+                                `<option value="${room.room_id}">${room.room_number}</option>`
+                            );
+                        });
+                    } else {
+                        alert('Không tìm thấy phòng cho bất động sản này.');
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Error fetching rooms:', textStatus, errorThrown);
+                    alert('Không thể tải danh sách phòng. Vui lòng thử lại.');
+                }
+            });
+        }
+    });
+
+    // Client-side validation
+    $('#rental-form').on('submit', function(e) {
+        const price = $('#price').val().replace(/[^0-9]/g, '');
+        const area = $('#area').val();
+        const latitude = $('#latitude').val();
+        const longitude = $('#longitude').val();
+
+        if (!price || isNaN(price) || Number(price) <= 0) {
+            e.preventDefault();
+            alert('Vui lòng nhập giá cho thuê hợp lệ.');
+            $('#price').focus();
+            return;
+        }
+
+        if (!area || isNaN(area) || Number(area) <= 0) {
+            e.preventDefault();
+            alert('Vui lòng nhập diện tích hợp lệ.');
+            $('#area').focus();
+            return;
+        }
+
+        if (!latitude || !longitude) {
+            e.preventDefault();
+            alert('Vui lòng chọn vị trí trên bản đồ.');
+            $('#search-map').focus();
+            return;
+        }
+    });
+
+    // Format price input
+    $('#price').on('input', function() {
+        let value = $(this).val().replace(/[^0-9]/g, '');
+        $(this).val(value);
+    });
+});
+
+// Load provinces on page load
+loadProvinces();
         </script>
 
         {{-- Custom Styles --}}

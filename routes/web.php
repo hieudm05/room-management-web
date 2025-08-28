@@ -28,6 +28,7 @@ use App\Http\Controllers\Client\ChangePasswordController;
 use App\Http\Controllers\Client\ResetPasswordController;
 use App\Http\Controllers\Landlord\BankAccountController;
 use App\Http\Controllers\Client\ForgotPasswordController;
+use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\Landlord\ApprovalUserController;
 use App\Http\Controllers\Landlord\BillController;
 use App\Http\Controllers\Landlord\LandlordBillController;
@@ -75,10 +76,23 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
     Route::get('/filter-stats', [HomeLandLordController::class, 'filterStats'])->name('filter-stats');
     Route::get('/register', [AuthLandlordController::class, 'showForm'])->name('register.form');
     Route::post('/register', [AuthLandlordController::class, 'submit'])->name('register.submit');
-    // Duyệt hợp đồng
+  // Duyệt hợp đồng
     Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
-    Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
-    Route::delete('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
+
+    // Duyệt hợp đồng (theo approval_id)
+    Route::post('/approvals/{id}/approve-contract', [ApprovalController::class, 'approveContract'])
+        ->whereNumber('id')
+        ->name('approvals.approve.contract');
+
+    // Duyệt minh chứng đặt cọc (theo approval_id)
+    Route::post('/approvals/{id}/approve-deposit', [ApprovalController::class, 'approveDeposit'])
+        ->whereNumber('id')
+        ->name('approvals.approve.deposit');
+
+    Route::delete('/approvals/{id}/reject', [ApprovalController::class, 'reject'])
+        ->whereNumber('id')
+        ->name('approvals.reject');
+
 
     // Duyệt thêm người
     Route::get('/approvals/users', [ApprovalUserController::class, 'index'])->name('approvals.users.index');
@@ -155,7 +169,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/', [RoomController::class, 'index'])->name('index');
         Route::get('/create', [RoomController::class, 'create'])->name('create');
         Route::post('/store', [RoomController::class, 'store'])->name('store');
-        // Route::post('/{room}/lock', [RoomController::class, 'lockContract'])->name('lockContract');
+        Route::post('/{room}/lock', [RoomController::class, 'lockContract'])->name('lockContract');
 
         // Khóa phòng
         Route::post('/{room}/lock', [RoomController::class, 'lockRoom'])->name('lock');
@@ -190,6 +204,7 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::post('/{room}/staffs', [RoomStaffController::class, 'update'])->name('staffs.update');
         Route::post('{room}/kick', [RoomController::class, 'kickTenants'])
             ->name('rooms.kick');
+        
             // Deposit (minh chứng đặt cọc)
         Route::get('/{room}/deposit', [RoomController::class, 'showDepositForm'])
             ->name('deposit.form');
@@ -203,10 +218,19 @@ Route::prefix('landlords')->name('landlords.')->middleware(['auth'])->group(func
         Route::get('/', [StaffRoomController::class, 'index'])->name('index');
         Route::get('/{room}/show', [StaffRoomController::class, 'show'])->name('show');
 
+         Route::get('/{room}/deposit', [StaffRoomController::class, 'depositForm'])
+            ->name('deposit.form');
+
+        Route::post('/{room}/deposit', [StaffRoomController::class, 'depositUpload'])
+            ->name('deposit.upload');
 
         Route::prefix('contract')->name('contract.')->group(function () {
-            Route::get('/{room}', [ContractController::class, 'index']);
+            Route::get('/{room}', [ContractController::class, 'index'])->name('index');
             Route::post('/{room}/upload', [ContractController::class, 'uploadAgreementFile'])->name('upload');
+            Route::post('/{room}/preview', [ContractController::class, 'preview'])->name('preview');
+            Route::post('/{room}/confirm', [ContractController::class, 'confirm'])->name('confirm');
+            Route::get('/{room}/form', [ContractController::class, 'showForm'])->name('form');
+            Route::post('/{room}/generate', [ContractController::class, 'generate'])->name('generate');
         });
 
         Route::prefix('services')->name('services.')->group(function () {
@@ -402,14 +426,17 @@ Route::middleware(['auth'])->group(function () {
      * ====================================
      */
     Route::prefix('landlord')->name('landlord.')->group(function () {
-        // Khiếu nại
-        Route::get('/complaints', [LandLordComplaintController::class, 'index'])->name('complaints.index');
-        Route::get('/complaints/{id}', [LandlordComplaintController::class, 'show'])->name('complaints.show');
-        Route::post('/complaints/{id}/approve', [LandlordComplaintController::class, 'approve'])->name('complaints.approve');
-        Route::get('/complaints/{id}/rejection', [LandlordComplaintController::class, 'showRejection'])->name('complaints.rejection');
-        Route::get('/complaints/{id}/assign', [LandLordComplaintController::class, 'assignForm'])->name('complaints.assign.form');
-        Route::post('/complaints/{id}/assign', [LandLordComplaintController::class, 'assign'])->name('complaints.assign');
-        Route::post('/complaints/{id}/accept-reject', [LandLordComplaintController::class, 'acceptReject'])->name('complaints.accept-reject');
+        Route::get('/complaints', [LandlordComplaintController::class, 'index'])->name('complaints.index');
+Route::get('/complaints/{id}', [LandlordComplaintController::class, 'show'])->name('complaints.show');
+Route::post('/complaints/{id}/approve', [LandlordComplaintController::class, 'approve'])->name('complaints.approve');
+Route::get('/complaints/{id}/rejection', [LandlordComplaintController::class, 'showRejection'])->name('complaints.rejection');
+Route::get('/complaints/{id}/assign', [LandLordComplaintController::class, 'assignForm'])->name('complaints.assign.form');
+Route::post('/complaints/{id}/assign', [LandLordComplaintController::class, 'assign'])->name('complaints.assign');
+Route::post('/complaints/{id}/accept-reject', [LandLordComplaintController::class, 'acceptReject'])->name('complaints.accept-reject');
+Route::get('/complaints/{id}/resolve', [LandLordComplaintController::class, 'showResolveForm'])->name('complaints.resolve.form');
+Route::post('/complaints/{id}/resolve', [LandLordComplaintController::class, 'resolveAsLandlord'])->name('complaints.resolve');
+Route::get('/complaints/{id}/reject', [LandLordComplaintController::class, 'rejectAsLandlordForm'])->name('complaints.reject.form');
+Route::post('/complaints/{id}/reject', [LandLordComplaintController::class, 'rejectAsLandlord'])->name('complaints.reject');
 
         // Thông báo
         Route::prefix('notifications')->name('notifications.')->group(function () {
@@ -481,7 +508,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/transfer/accept', [RoomLeaveController::class, 'acceptTransfer'])->name('renter.transfer.accept');
         Route::get('/transfer/confirm', [RoomLeaveController::class, 'confirmTransfer'])->name('roomleave.confirmTransfer');
         Route::get('/transfer/deposits', [RoomLeaveController::class, 'depositHistory'])->name('home.roomleave.deposits');
-
+        Route::post('/transfer/reject/{id}', [RoomLeaveController::class, 'rejectTransfer'])
+            ->name('renter.transfer.reject');
     });
     // Staff xử lý yêu cầu rời phòng
     Route::prefix('staff')->name('landlord.staff.')->group(function () {
@@ -521,13 +549,12 @@ Route::middleware(['auth'])->prefix('staff/posts')->name('staff.posts.')->group(
     Route::get('/', [StaffPostController::class, 'index'])->name('index');
     Route::get('/create', [StaffPostController::class, 'create'])->name('create');
     Route::post('/', [StaffPostController::class, 'store'])->name('store');
-
-
-    // 🔧 Sửa lại ở đây
-    Route::get('/{post}', [StaffPostController::class, 'show'])->name('show');
     Route::get('/{post}/edit', [StaffPostController::class, 'edit'])->name('edit');
+
+    Route::get('/{post}', [StaffPostController::class, 'show'])->name('show');
     Route::put('/{post}', [StaffPostController::class, 'update'])->name('update');
     Route::delete('/{post}', [StaffPostController::class, 'destroy'])->name('destroy');
+    Route::post('{post}/resubmit', [StaffPostController::class, 'resubmit'])->name('staff.posts.resubmit');
 });
 
 Route::prefix('landlords')->middleware(['auth'])->group(function () {
@@ -578,6 +605,8 @@ Route::prefix('staff/bookings')->group(function () {
 Route::middleware(['auth', 'role:Landlord'])->prefix('landlord')->group(function () {
     Route::get('/posts', [App\Http\Controllers\Landlord\PostController::class, 'index'])->name('landlord.posts.index');
     Route::get('/posts/create', [App\Http\Controllers\Landlord\PostController::class, 'create'])->name('landlord.posts.create');
+    Route::get('/posts/{id}/edit', [App\Http\Controllers\Landlord\PostController::class, 'edit'])->name('landlord.posts.edit'); // Thêm edit
+    Route::put('/posts/{id}', [App\Http\Controllers\Landlord\PostController::class, 'update'])->name('landlord.posts.update'); // Thêm update
     Route::post('/posts', [App\Http\Controllers\Landlord\PostController::class, 'store'])->name('landlord.posts.store');
     Route::delete('/posts/{id}', [App\Http\Controllers\Landlord\PostController::class, 'destroy'])->name('landlord.posts.destroy');
     Route::get('/posts/{id}', [App\Http\Controllers\Landlord\PostController::class, 'show'])->name('landlord.posts.show');
@@ -589,5 +618,11 @@ Route::prefix('search')->group(function () {
     Route::get('/search', [HomeController::class, 'search'])->name('search.results');
     Route::get('/districts/{city}', [HomeController::class, 'getDistricts'])->name('districts');
     Route::get('/wards/{district}', [HomeController::class, 'getWards'])->name('wards');
-    Route::post('/posts/suggest-nearby', [HomeController::class, 'suggestNearby'])->name('posts.suggestNearby');
+    // Route::post('/posts/suggest-nearby', [HomeController::class, 'suggestNearby'])->name('posts.suggestNearby');
 });
+
+Route::prefix('client')->name('client.')->middleware(['auth'])->group(function () {
+    Route::get('/rooms/{room}/join/{agreement?}', [\App\Http\Controllers\Client\RoomJoinController::class, 'join'])
+        ->name('rooms.join');
+});
+Route::resource('features', FeatureController::class);

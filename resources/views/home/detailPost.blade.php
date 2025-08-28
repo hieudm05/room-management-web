@@ -99,7 +99,8 @@
             left: 20px;
             z-index: 2;
         }
-.gallery-side img:nth-child(3) {
+
+        .gallery-side img:nth-child(3) {
             top: 40px;
             left: 40px;
             z-index: 1;
@@ -151,33 +152,45 @@
 
 @section('content')
     <!-- Hero Gallery Section -->
-    <section class="gallery-section pt-4 pb-4 d-none d-xl-block">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-8 col-md-7 pe-lg-2">
-                    <div class="gallery-main">
-                        <a href="{{ asset('storage/' . $post->thumbnail) }}" class="mfp-gallery">
-                            <img src="{{ asset('storage/' . $post->thumbnail) }}" alt="{{ $post->title }}"
-                                class="img-fluid rounded w-100 object-fit-cover" loading="lazy">
-                        </a>
-                    </div>
+<section class="gallery-section pt-4 pb-4 d-none d-xl-block">
+    <div class="container">
+        <div class="row g-2">
+            <!-- Ảnh chính -->
+            <div class="col-lg-8 col-md-7">
+                <div class="gallery-main position-relative">
+                    <a href="{{ asset('storage/' . $post->thumbnail) }}" class="mfp-gallery d-block h-100">
+                        <img src="{{ asset('storage/' . $post->thumbnail) }}" 
+                             alt="{{ $post->title }}"
+                             class="img-fluid rounded w-100 h-100"
+                             style="object-fit: cover; max-height: 500px;"
+                             loading="lazy">
+                    </a>
                 </div>
-                <div class="col-lg-4 col-md-5 ps-lg-2">
-                    <div class="gallery-side d-flex flex-column gap-2">
-                        @php
-                            $galleryImages = $post->gallery ? array_slice(json_decode($post->gallery, true), 0, 3) : [];
-                        @endphp
-                        @foreach ($galleryImages as $image)
-                            <a href="{{ asset('storage/' . $image) }}" class="mfp-gallery">
-                                <img src="{{ asset('storage/' . $image) }}" alt="Gallery Image" class="img-fluid rounded"
-                                    loading="lazy">
+            </div>
+
+            <!-- Album phụ -->
+            <div class="col-lg-4 col-md-5">
+                <div class="gallery-side row g-2">
+                    @php
+                        $galleryImages = $post->gallery ? array_slice(json_decode($post->gallery, true), 0, 3) : [];
+                    @endphp
+
+                    @foreach ($galleryImages as $image)
+                        <div class="col-12">
+                            <a href="{{ asset('storage/' . $image) }}" class="mfp-gallery d-block">
+                                <img src="{{ asset('storage/' . $image) }}" 
+                                     alt="Gallery Image"
+                                     class="img-fluid rounded w-100"
+                                     style="object-fit: cover; height: 160px;"
+                                     loading="lazy">
                             </a>
-                        @endforeach
-                    </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
     <!-- Mobile Gallery Slider -->
     <section class="gallery-slider d-block d-xl-none">
@@ -185,7 +198,7 @@
             <div class="gallery-carousel owl-carousel">
                 <div class="gallery-item">
                     <a href="{{ asset('storage/' . $post->thumbnail) }}" class="mfp-gallery">
-<img src="{{ asset('storage/' . $post->thumbnail) }}" alt="{{ $post->title }}"
+                        <img src="{{ asset('storage/' . $post->thumbnail) }}" alt="{{ $post->title }}"
                             class="img-fluid rounded" loading="lazy">
                     </a>
                 </div>
@@ -220,15 +233,12 @@
                                 <li><strong>Tiền Phòng/tháng:</strong> {{ number_format($post->price, 2) }} VND</li>
                                 <li><strong>Diện Tích:</strong> {{ $post->area }} m²</li>
                                 <li><strong>Địa Chỉ:</strong> {{ $post->address }}, {{ $post->ward }},
-                                <li>
-                                    <strong>Ngày chuyển vào dự kiến:</strong>
-                                    {{ \Carbon\Carbon::parse($post->move_in_date)->format('d/m/Y') }}
-                                </li>
+                                    {{ $post->district }}, {{ $post->city }}</li>
                                 <li><strong>Ngày đăng:</strong>
-                                    {{ $post->published_at ? $post->published_at->format('d/m/Y') : 'Chưa xác định' }}
+                                    {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Chưa xác định' }}
                                 </li>
                                 <li><strong>Hết hạn:</strong>
-                                    {{ $post->expired_at ? $post->expired_at->format('d/m/Y') : 'Không giới hạn' }}
+                                    {{ $post->expired_at ? $post->expired_at->format('M d, Y') : 'Không giới hạn' }}</li>
                             </ul>
                         </div>
                     </div>
@@ -239,7 +249,7 @@
                             <h4 class="mb-0 fw-semibold text-primary">Mô Tả</h4>
                         </div>
                         <div class="card-body p-4">
-<div class="description-content lh-lg text-black">
+                            <div class="description-content lh-lg text-black">
                                 {!! $post->description !!}
                             </div>
                         </div>
@@ -274,8 +284,8 @@
                             <div class="map-container">
                                 <div id="map"></div>
                             </div>
-                            <button id="getDirections" class="btn btn-primary mt-2">Hiển thị đường đi từ vị trí của bạn</button>
-                            <button id="toggleSatellite" class="btn btn-secondary mt-2">Chuyển sang chế độ vệ tinh</button>
+                            <button id="getDirections" class="btn btn-primary mt-2  btn btn-sm">Hiển thị đường đi từ vị trí của bạn</button>
+                            <button id="toggleSatellite" class="btn btn-secondary mt-2  btn btn-sm">Chuyển sang chế độ vệ tinh</button>
                            <div id="routeInfo" class="mt-3 p-3 bg-light rounded" style="display: none;">
                                 <h5>Thông tin tuyến đường <button id="closeRouteInfo" class="btn btn-sm btn-danger float-end">X</button></h5>
                                 <p><strong>Khoảng cách:</strong> <span id="distance"></span></p>
@@ -289,24 +299,26 @@
                             </select>
                         </div>
                     </div>
+
                 </div>
 
                 <!-- Sidebar -->
                 <div class="col-lg-4 col-md-12">
                     <!-- Booking Widget -->
                     <div class="card mb-4 shadow-sm border-0 rounded-3">
-                        <div class="card-header bg-primary text-white border-0 rounded-top-3">
-                            <h4 class="mb-0">{{ number_format($post->price, 2) }} VND/tháng</h4>
+                        <div class="card-header  border-0 rounded-top-3" style="background-color: #a70a29 !important; ">
+                            <h4 class="mb-0 text-white">{{ number_format($post->price, 2) }} VND/tháng</h4>
                         </div>
                         <div class="card-body">
                             <form action="{{ route('bookings') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="post_id" value="{{ $post->post_id }}">
                                 <input type="hidden" name="room_id" value="{{ $post->room_id }}">
+                                <input type="hidden" name="user_id" value="{{ auth()->id() }}">
                                 <div class="row g-3">
                                     <!-- Check In Date -->
                                     <div class="col-12">
-                            <label for="checkIn" class="form-label">Chọn ngày đặt lịch</label>
+                                        <label for="checkIn" class="form-label">Chọn ngày đặt lịch</label>
                                         <div class="input-group">
                                             <span class="input-group-text" id="calendarTrigger" style="cursor: pointer;">
                                                 <i class="fas fa-calendar-alt"></i>
@@ -349,52 +361,69 @@
                                     @endguest
 
                                     <div class="col-12">
-                                <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex justify-content-between align-items-center">
                                             <span>Tổng số tiền thanh toán</span>
                                             <h4 class="text-primary mb-0">{{ number_format($post->price, 2) }} VND</h4>
                                         </div>
                                     </div>
 
                                     <div class="col-12">
-                                        <button type="submit" class="btn btn-primary rounded-pill w-100">Đặt lịch
+                                        <button type="submit" class="btn btn-primary rounded-pill w-100 " style="background-color: #a70a29 !important;">Đặt lịch
                                             ngay</button>
                                     </div>
                                 </div>
                             </form>
                         </div>
                     </div>
-                </div>
 
-                <!-- Similar Properties -->
-                <div class="card shadow-sm">
-                    <div class="card-header bg-light">
-                        <h4 class="mb-0">Bài Viết Liên Quan</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="property-list">
-                            @foreach ($post->category->posts()->where('post_id', '!=', $post->post_id)->where('status', 1)->where('is_public', 1)->take(4)->get() as $similar)
-                                <div class="property-item d-flex mb-3">
-                                    <a href="{{ route('posts.show', $similar->slug) }}">
-                                        <img src="{{ asset('storage/' . $similar->thumbnail) }}"
-                                            class="img-fluid rounded me-3"
-                                            style="width: 100px; max-height: 100px; object-fit: cover;"
-                                            alt="{{ $similar->title }}" loading="lazy">
-                                    </a>
-                                    <div>
-                                        <h5>
-                                            <a href="{{ route('posts.show', $similar->slug) }}"
-                                                class="text-decoration-none">
-                                                {{ $similar->title }}
-                                            </a>
-                                        </h5>
-                                        <p class="mb-1"><i class="fas fa-map-marker-alt me-1"></i>
-                                            {{ $similar->city }}</p>
-                                        <span class="badge bg-primary">For Rent</span>
-                                        <h6 class="mt-1">${{ number_format($similar->price, 2) }}</h6>
-                                    </div>
-                                @endforeach
-                            </div>
+                    <!-- Similar Properties -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h4 class="mb-0">Bài viết liên quan</h4>
                         </div>
+                        <div class="card-body">
+    <h5 class="mb-3 fw-bold">Bài viết tương tự</h5>
+    <div class="property-list">
+        @foreach ($post->category->posts()
+            ->where('post_id', '!=', $post->post_id)
+            ->where('status', 1)
+            ->where('is_public', 1)
+            ->take(4)
+            ->get() as $similar)
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="row g-0 align-items-center">
+                    <div class="col-4">
+                        <a href="{{ route('posts.show', $similar->slug) }}">
+                            <img src="{{ asset('storage/' . $similar->thumbnail) }}"
+                                 class="img-fluid rounded-start"
+                                 alt="{{ $similar->title }}"
+                                 loading="lazy"
+                                 style="height: 100px; object-fit: cover; width: 100%;">
+                        </a>
+                    </div>
+                    <div class="col-8">
+                        <div class="card-body py-2">
+                            <h6 class="card-title mb-1">
+                                <a href="{{ route('posts.show', $similar->slug) }}" 
+                                   class="text-decoration-none text-dark small fw-semibold">
+                                    {{ $similar->title }}
+                                </a>
+                            </h6>
+                            <p class="card-text mb-1 text-muted small">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ $similar->city }}
+                            </p>
+                            <span class="badge bg-primary">For Rent</span>
+                            <p class="card-text fw-bold text-success mt-1 mb-0">
+                                ${{ number_format($similar->price, 2) }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
+
                     </div>
                 </div>
             </div>
@@ -478,12 +507,13 @@
 <!-- VietMap Script -->
 <script src="https://cdn.jsdelivr.net/npm/@mapbox/polyline@1.2.0/src/polyline.min.js"></script>
 
+
 <script>
     let vietMapInstance = null;
     let userMarker = null;
     let routeLayer = null;
     let isSatellite = false;
-
+    
     const defaultLayer = L.tileLayer(
         `https://maps.vietmap.vn/api/tm/{z}/{x}/{y}.png?apikey={{ config('services.viet_map.key') }}`, {
             maxZoom: 22,
@@ -492,7 +522,7 @@
             attribution: '&copy; <a href="https://www.vietmap.vn/">VietMap</a>'
         }
     );
-
+    
     const satelliteLayer = L.tileLayer(
         `https://maps.vietmap.vn/api/satellite/{z}/{x}/{y}.png?apikey={{ config('services.viet_map.key') }}`, {
             maxZoom: 22,
@@ -504,18 +534,18 @@
 
     function initializeVietMap() {
         console.log('🗺️ Bắt đầu khởi tạo VietMap...');
-
+        
         if (typeof L === 'undefined') {
             console.error('❌ Leaflet chưa được load');
             return false;
         }
-
+        
         const mapElement = document.getElementById('map');
         if (!mapElement) {
             console.error('❌ Không tìm thấy phần tử #map');
             return false;
         }
-
+        
         // Xóa bản đồ cũ nếu có
         if (vietMapInstance) {
             try {
@@ -526,7 +556,7 @@
             }
             vietMapInstance = null;
         }
-
+        
         mapElement.innerHTML = '';
         mapElement.style.cssText = `
             width: 100% !important;
@@ -536,16 +566,16 @@
             background: #f8f9fa;
             border-radius: 8px;
         `;
-
+        
         const lat = {{ $post->latitude ?? 21.0278 }};
         const lng = {{ $post->longitude ?? 105.8342 }};
-
+        
         try {
             vietMapInstance = L.map('map').setView([lat, lng], 13);
             defaultLayer.addTo(vietMapInstance);
             L.control.zoom({ position: 'topright' }).addTo(vietMapInstance);
             L.control.scale().addTo(vietMapInstance);
-
+            
             const destinationMarker = L.marker([lat, lng]).addTo(vietMapInstance);
             destinationMarker.bindPopup(`
                 <div style="min-width: 200px;">
@@ -557,13 +587,13 @@
                     </small>
                 </div>
             `).openPopup();
-
+            
             setTimeout(() => vietMapInstance.invalidateSize(), 500);
             window.addEventListener('resize', () => vietMapInstance.invalidateSize());
-
+            
             console.log('🎉 VietMap khởi tạo thành công!');
             return true;
-
+            
         } catch (error) {
             console.error('💥 Lỗi khởi tạo VietMap:', error);
             mapElement.innerHTML = `
@@ -579,346 +609,110 @@
         }
     }
 
-  // Thay thế hàm getUserLocationAndDrawRoute() trong file Blade của bạn bằng version cải tiến này:
-
-function getUserLocationAndDrawRoute() {
-    console.log('🔍 Bắt đầu lấy vị trí người dùng với độ chính xác cao...');
-    
-    // Kiểm tra hỗ trợ geolocation
-    if (!navigator.geolocation) {
-        showLocationError(`
-            <div class="alert alert-danger">
-                <strong>❌ Trình duyệt không hỗ trợ</strong><br>
-                Trình duyệt của bạn không hỗ trợ Geolocation.<br>
-                Vui lòng sử dụng Chrome, Firefox, Safari hoặc Edge phiên bản mới.
-            </div>
-        `);
-        return;
-    }
-
-    // Hiển thị loading với thông tin chi tiết
-    const getDirectionsBtn = document.getElementById('getDirections');
-    const originalText = getDirectionsBtn.innerHTML;
-    
-    // Animation loading đẹp hơn
-    getDirectionsBtn.innerHTML = `
-        <i class="fas fa-spinner fa-spin me-2"></i>
-        <span id="loadingText">Đang khởi tạo GPS...</span>
-    `;
-    getDirectionsBtn.disabled = true;
-
-    // Cấu hình lấy vị trí với độ chính xác cao nhất
-    const options = {
-        enableHighAccuracy: true,    // Bắt buộc sử dụng GPS
-        timeout: 20000,              // Tăng timeout lên 20 giây
-        maximumAge: 0                // Không dùng cache, luôn lấy vị trí mới
-    };
-
-    // Thêm loading animation với các bước
-    const loadingSteps = [
-        'Đang khởi tạo GPS...',
-        'Đang tìm kiếm vệ tinh...',
-        'Đang tính toán vị trí...',
-        'Đang tối ưu độ chính xác...'
-    ];
-    
-    let currentStep = 0;
-    const loadingInterval = setInterval(() => {
-        const loadingTextEl = document.getElementById('loadingText');
-        if (loadingTextEl && currentStep < loadingSteps.length - 1) {
-            currentStep++;
-            loadingTextEl.textContent = loadingSteps[currentStep];
+    function getUserLocationAndDrawRoute() {
+        console.log('🔍 Bắt đầu lấy vị trí người dùng...');
+        
+        // Kiểm tra xem trình duyệt có hỗ trợ geolocation không
+        if (!navigator.geolocation) {
+            showLocationError('Trình duyệt của bạn không hỗ trợ Geolocation. Vui lòng sử dụng trình duyệt khác.');
+            return;
         }
-    }, 2000);
 
-    // Lấy vị trí với watchPosition để có độ chính xác cao hơn
-    let watchId;
-    let bestAccuracy = Infinity;
-    let bestPosition = null;
-    let attempts = 0;
-    const maxAttempts = 3;
+        // Hiển thị loading
+        const getDirectionsBtn = document.getElementById('getDirections');
+        const originalText = getDirectionsBtn.innerHTML;
+        getDirectionsBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang lấy vị trí...';
+        getDirectionsBtn.disabled = true;
 
-    function startWatching() {
-        watchId = navigator.geolocation.watchPosition(
+        const options = {
+            enableHighAccuracy: true,    // Yêu cầu độ chính xác cao
+            timeout: 15000,              // Timeout 15 giây
+            maximumAge: 300000           // Cache trong 5 phút
+        };
+
+        navigator.geolocation.getCurrentPosition(
+            // Success callback
             function(position) {
-                attempts++;
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
                 const accuracy = position.coords.accuracy;
                 
-                console.log(`📍 Lần đo ${attempts}: Vị trí ${position.coords.latitude}, ${position.coords.longitude} (±${accuracy}m)`);
-                
-                // Lưu vị trí tốt nhất
-                if (accuracy < bestAccuracy) {
-                    bestAccuracy = accuracy;
-                    bestPosition = position;
-                }
-                
-                // Nếu đạt độ chính xác tốt (≤ 20m) hoặc đã thử đủ số lần
-                if (accuracy <= 20 || attempts >= maxAttempts) {
-                    clearInterval(loadingInterval);
-                    navigator.geolocation.clearWatch(watchId);
-                    
-                    // Reset button
-                    getDirectionsBtn.innerHTML = originalText;
-                    getDirectionsBtn.disabled = false;
-                    
-                    onLocationSuccess(bestPosition || position);
-                }
-            },
-            function(error) {
-                clearInterval(loadingInterval);
-                navigator.geolocation.clearWatch && navigator.geolocation.clearWatch(watchId);
+                console.log(`📍 Vị trí hiện tại: ${userLat}, ${userLng} (độ chính xác: ${accuracy}m)`);
                 
                 // Reset button
                 getDirectionsBtn.innerHTML = originalText;
                 getDirectionsBtn.disabled = false;
                 
-                onLocationError(error);
+                drawRoute(userLat, userLng);
+            },
+            // Error callback
+            function(error) {
+                console.error('❌ Lỗi khi lấy vị trí:', error);
+                
+                // Reset button
+                getDirectionsBtn.innerHTML = originalText;
+                getDirectionsBtn.disabled = false;
+                
+                let message = '';
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        message = `
+                            <div style="text-align: left;">
+                                <strong>⚠️ Quyền truy cập vị trí bị từ chối</strong><br><br>
+                                <strong>Để sử dụng tính năng này, vui lòng:</strong><br>
+                                1. Nhấp vào biểu tượng 🔒 trên thanh địa chỉ<br>
+                                2. Chọn "Cho phép" cho Location/Vị trí<br>
+                                3. Refresh trang và thử lại<br><br>
+                                <small><em>Hoặc vào Settings → Privacy → Location để bật quyền truy cập vị trí.</em></small>
+                            </div>
+                        `;
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        message = `
+                            <strong>📡 Không thể xác định vị trí</strong><br>
+                            Vui lòng kiểm tra:<br>
+                            • GPS đã được bật<br>
+                            • Kết nối internet ổn định<br>
+                            • Không ở trong tòa nhà che chắn tín hiệu
+                        `;
+                        break;
+                    case error.TIMEOUT:
+                        message = `
+                            <strong>⏱️ Hết thời gian chờ</strong><br>
+                            Việc lấy vị trí mất quá nhiều thời gian.<br>
+                            Vui lòng thử lại hoặc kiểm tra kết nối mạng.
+                        `;
+                        break;
+                    default:
+                        message = `
+                            <strong>❌ Lỗi không xác định</strong><br>
+                            Không thể lấy vị trí hiện tại.<br>
+                            Vui lòng thử lại sau.
+                        `;
+                }
+                // showLocationError(message);
             },
             options
         );
     }
 
-    // Bắt đầu theo dõi vị trí
-    startWatching();
-    
-    // Timeout backup
-    setTimeout(() => {
-        if (bestPosition) {
-            clearInterval(loadingInterval);
-            navigator.geolocation.clearWatch && navigator.geolocation.clearWatch(watchId);
-            getDirectionsBtn.innerHTML = originalText;
-            getDirectionsBtn.disabled = false;
-            onLocationSuccess(bestPosition);
-        }
-    }, options.timeout);
-}
-
-function onLocationSuccess(position) {
-    const userLat = position.coords.latitude;
-    const userLng = position.coords.longitude;
-    const accuracy = position.coords.accuracy;
-    const timestamp = new Date(position.timestamp);
-    
-    console.log(`✅ Vị trí tốt nhất: ${userLat}, ${userLng} (±${accuracy}m)`);
-    
-    // Hiển thị thông tin vị trí chi tiết
-    showLocationInfo(position);
-    
-    // Vẽ route
-    drawRoute(userLat, userLng);
-}
-
-function onLocationError(error) {
-    console.error('❌ Lỗi khi lấy vị trí:', error);
-    
-    let title = '';
-    let message = '';
-    let solutions = '';
-
-    switch (error.code) {
-        case error.PERMISSION_DENIED:
-            title = '🔒 Quyền truy cập vị trí bị từ chối';
-            message = 'Bạn đã từ chối quyền truy cập vị trí.';
-            solutions = `
-                <div class="mt-3">
-                    <strong>💡 Cách khắc phục:</strong>
-                    <ol class="mt-2">
-                        <li>Nhấp vào biểu tượng <strong>🔒</strong> hoặc <strong>ℹ️</strong> bên trái thanh địa chỉ</li>
-                        <li>Chọn <strong>"Cho phép"</strong> cho Location/Vị trí</li>
-                        <li>Refresh trang và thử lại</li>
-                        <li>Hoặc vào <strong>Settings → Privacy → Location</strong> để bật quyền</li>
-                    </ol>
-                    <div class="alert alert-info mt-2">
-                        <small><strong>Lưu ý:</strong> Trên mobile, hãy đảm bảo Location Services được bật trong Settings hệ thống.</small>
-                    </div>
-                </div>
-            `;
-            break;
-            
-        case error.POSITION_UNAVAILABLE:
-            title = '📡 Không thể xác định vị trí';
-            message = 'Hệ thống định vị không khả dụng.';
-            solutions = `
-                <div class="mt-3">
-                    <strong>🔧 Hãy kiểm tra:</strong>
-                    <ul class="mt-2">
-                        <li><strong>GPS</strong> đã được bật trên thiết bị</li>
-                        <li><strong>Kết nối internet</strong> ổn định</li>
-                        <li><strong>Location Services</strong> được bật trong cài đặt</li>
-                        <li>Không ở trong <strong>tòa nhà che chắn</strong> tín hiệu</li>
-                        <li>Thử <strong>ra ngoài trời</strong> để có tín hiệu GPS tốt hơn</li>
-                    </ul>
-                </div>
-            `;
-            break;
-            
-        case error.TIMEOUT:
-            title = '⏱️ Hết thời gian chờ';
-            message = 'Việc lấy vị trí mất quá nhiều thời gian.';
-            solutions = `
-                <div class="mt-3">
-                    <strong>🚀 Thử các cách sau:</strong>
-                    <ul class="mt-2">
-                        <li><strong>Ra ngoài trời</strong> để GPS hoạt động tốt hơn</li>
-                        <li><strong>Khởi động lại</strong> ứng dụng GPS/Maps trên điện thoại</li>
-                        <li><strong>Đợi vài phút</strong> rồi thử lại</li>
-                        <li><strong>Kiểm tra kết nối mạng</strong> và thử lại</li>
-                        <li>Đảm bảo <strong>không có ứng dụng nào khác</strong> đang sử dụng GPS</li>
-                    </ul>
-                </div>
-            `;
-            break;
-            
-        default:
-            title = '❌ Lỗi không xác định';
-            message = 'Đã xảy ra lỗi khi lấy vị trí.';
-            solutions = `
-                <div class="mt-3">
-                    <strong>🔄 Vui lòng:</strong>
-                    <ul class="mt-2">
-                        <li>Refresh trang và thử lại</li>
-                        <li>Kiểm tra cài đặt trình duyệt</li>
-                        <li>Thử trên trình duyệt khác</li>
-                        <li>Liên hệ hỗ trợ nếu vấn đề vẫn tiếp diễn</li>
-                    </ul>
-                </div>
-            `;
-    }
-
-    const errorHtml = `
-        <div class="alert alert-warning alert-dismissible fade show" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-            <h5 class="alert-heading">${title}</h5>
-            <p class="mb-2">${message}</p>
-            ${solutions}
-            <hr>
-            <div class="d-flex justify-content-between">
-                <button class="btn btn-outline-primary btn-sm" onclick="getUserLocationAndDrawRoute()">
-                    <i class="fas fa-redo me-1"></i> Thử lại
-                </button>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        </div>
-    `;
-    
-    // Xóa alert cũ nếu có
-    const oldAlert = document.querySelector('.alert[style*="position: fixed"]');
-    if (oldAlert) oldAlert.remove();
-    
-    document.body.insertAdjacentHTML('beforeend', errorHtml);
-    
-    // Tự động ẩn sau 15 giây
-    setTimeout(() => {
-        const alert = document.querySelector('.alert[style*="position: fixed"]');
-        if (alert) alert.remove();
-    }, 15000);
-}
-
-function showLocationInfo(position) {
-    const { latitude, longitude, accuracy, altitude, speed, heading } = position.coords;
-    const timestamp = new Date(position.timestamp);
-    
-    // Xác định mức độ chính xác
-    let accuracyLevel, accuracyColor, accuracyIcon;
-    if (accuracy <= 10) {
-        accuracyLevel = 'Rất chính xác';
-        accuracyColor = 'success';
-        accuracyIcon = 'fa-bullseye';
-    } else if (accuracy <= 30) {
-        accuracyLevel = 'Chính xác';
-        accuracyColor = 'primary';
-        accuracyIcon = 'fa-crosshairs';
-    } else if (accuracy <= 100) {
-        accuracyLevel = 'Khá chính xác';
-        accuracyColor = 'warning';
-        accuracyIcon = 'fa-dot-circle';
-    } else {
-        accuracyLevel = 'Ít chính xác';
-        accuracyColor = 'danger';
-        accuracyIcon = 'fa-circle';
-    }
-
-    const infoHtml = `
-        <div class="alert alert-info mt-3" style="background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%); border-left: 4px solid #2196F3;">
-            <h5 class="alert-heading">
-                <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                Thông tin vị trí của bạn
-            </h5>
-            <hr>
-            <div class="row">
-                <div class="col-md-6">
-                    <strong><i class="fas fa-globe me-1"></i> Tọa độ:</strong><br>
-                    <code style="background: #fff; padding: 2px 6px; border-radius: 4px;">
-                        ${latitude.toFixed(6)}, ${longitude.toFixed(6)}
-                    </code>
-                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyToClipboard('${latitude}, ${longitude}')">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
-                </div>
-                <div class="col-md-6">
-                    <strong><i class="fas ${accuracyIcon} me-1"></i> Độ chính xác:</strong><br>
-                    <span class="badge bg-${accuracyColor}">${accuracyLevel} (±${Math.round(accuracy)}m)</span>
-                </div>
-            </div>
-            
-            ${altitude !== null ? `
-                <div class="mt-2">
-                    <strong><i class="fas fa-mountain me-1"></i> Độ cao:</strong>
-                    <span class="badge bg-info">${Math.round(altitude)}m</span>
-                </div>
-            ` : ''}
-            
-            <div class="mt-2">
-                <strong><i class="fas fa-clock me-1"></i> Thời gian:</strong>
-                <small>${timestamp.toLocaleString('vi-VN')}</small>
-            </div>
-            
-            <div class="mt-3">
-                <button class="btn btn-primary btn-sm me-2" onclick="window.open('https://maps.google.com/?q=${latitude},${longitude}', '_blank')">
-                    <i class="fab fa-google me-1"></i> Mở Google Maps
-                </button>
-                <button class="btn btn-success btn-sm" onclick="copyCoordinates(${latitude}, ${longitude})">
-                    <i class="fas fa-share me-1"></i> Chia sẻ vị trí
-                </button>
-            </div>
-        </div>
-    `;
-    
-    // Thêm thông tin vào container map
-    const mapContainer = document.querySelector('.map-container');
-    let infoContainer = document.getElementById('locationInfoContainer');
-    if (!infoContainer) {
-        infoContainer = document.createElement('div');
-        infoContainer.id = 'locationInfoContainer';
-        mapContainer.parentNode.insertBefore(infoContainer, mapContainer.nextSibling);
-    }
-    infoContainer.innerHTML = infoHtml;
-}
-
-// Hàm tiện ích
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        // Hiển thị thông báo thành công
-        const toast = document.createElement('div');
-        toast.className = 'toast show position-fixed';
-        toast.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999;';
-        toast.innerHTML = `
-            <div class="toast-body bg-success text-white">
-                <i class="fas fa-check me-2"></i>Đã copy: ${text}
+    function showLocationError(message) {
+        // Hiển thị modal hoặc alert với thông tin chi tiết
+        const alertHtml = `
+            <div class="alert alert-warning alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         `;
-        document.body.appendChild(toast);
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
         
-        setTimeout(() => toast.remove(), 3000);
-    }).catch(err => {
-        console.error('Không thể copy:', err);
-        alert('Không thể copy tự động. Vui lòng copy thủ công: ' + text);
-    });
-}
+        // Tự động ẩn sau 10 giây
+        setTimeout(() => {
+            const alert = document.querySelector('.alert');
+            if (alert) alert.remove();
+        }, 10000);
+    }
 
-function copyCoordinates(lat, lng) {
-    const text = `Vị trí của tôi: ${lat.toFixed(6)}, ${lng.toFixed(6)}\nGoogle Maps: https://maps.google.com/?q=${lat},${lng}`;
-    copyToClipboard(text);
-}
     function drawRoute(userLat, userLng) {
         console.log('🗺️ Bắt đầu vẽ tuyến đường...');
         
@@ -1100,4 +894,3 @@ function copyCoordinates(lat, lng) {
 </script>
 
 {{-- <script src="https://unpkg.com/@turf/polyline@6.x.x/dist/polyline.min.js"></script> --}}
-

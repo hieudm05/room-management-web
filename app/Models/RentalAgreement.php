@@ -22,6 +22,7 @@ class RentalAgreement extends Model
         'rental_price',
         'deposit',
         'status',
+        'deposit_id',
         'contract_file',
         'agreement_terms',
         'price_edit_count',
@@ -50,7 +51,7 @@ class RentalAgreement extends Model
 
     public function renter()
     {
-        return $this->belongsTo(User::class, 'renter_id');
+        return $this->belongsTo(User::class, 'renter_id', 'id');
     }
 
     public function landlord()
@@ -59,12 +60,13 @@ class RentalAgreement extends Model
     }
 
     public function userInfos()
-    {
-        return $this->hasMany(UserInfo::class, 'rental_id');
-    }
+{
+    return $this->hasMany(\App\Models\UserInfo::class, 'rental_id', 'rental_id');
+}
 
     public function roomUser()
     {
         return $this->hasMany(RoomUser::class, 'rental_id');
     }
+
 }

@@ -1,3 +1,5 @@
+ <?php use Illuminate\Support\Facades\Auth;
+$user = Auth::user(); ?>
     <div class="layout-width">
         <div class="navbar-header">
             <div class="d-flex">
@@ -5,19 +7,19 @@
                 <div class="navbar-brand-box horizontal-logo">
                     <a href="index.html" class="logo logo-dark">
                         <span class="logo-sm">
-                            <img src="{{ asset('assets/images/logo-sm.png') }}" alt="" height="22">
+                           Trang Quản Trị
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ asset('assets/images/logo-dark.png') }}" alt="" height="17">
+                           Trang Quản Trị
                         </span>
                     </a>
 
                     <a href="index.html" class="logo logo-light">
                         <span class="logo-sm">
-                            <img src="{{ asset('assets/images/logo-sm.png') }}" alt="" height="22">
+                           Trang Quản Trị
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ asset('assets/images/logo-light.png') }}" alt="" height="17">
+                            Trang Quản Trị
                         </span>
                     </a>
                 </div>
@@ -32,114 +34,16 @@
                         <span></span>
                     </span>
                 </button>
-
-                <!-- App Search-->
-                <form class="app-search d-none d-md-block">
-                    <div class="position-relative">
-                        <input type="text" class="form-control" placeholder="Search..." autocomplete="off"
-                            id="search-options" value="">
-                        <span class="mdi mdi-magnify search-widget-icon"></span>
-                        <span class="mdi mdi-close-circle search-widget-icon search-widget-icon-close d-none"
-                            id="search-close-options"></span>
-                    </div>
-                    <div class="dropdown-menu dropdown-menu-lg" id="search-dropdown">
-                        <div data-simplebar style="max-height: 320px;">
-                            <!-- item-->
-                            <div class="dropdown-header">
-                                <h6 class="text-overflow text-muted mb-0 text-uppercase">Recent Searches</h6>
-                            </div>
-
-                            <div class="dropdown-item bg-transparent text-wrap">
-                                <a href="index.html" class="btn btn-soft-secondary btn-sm rounded-pill">how to setup <i
-                                        class="mdi mdi-magnify ms-1"></i></a>
-                                <a href="index.html" class="btn btn-soft-secondary btn-sm rounded-pill">buttons <i
-                                        class="mdi mdi-magnify ms-1"></i></a>
-                            </div>
-                            <!-- item-->
-                            <div class="dropdown-header mt-2">
-                                <h6 class="text-overflow text-muted mb-1 text-uppercase">Pages</h6>
-                            </div>
-
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <i class="ri-bubble-chart-line align-middle fs-18 text-muted me-2"></i>
-                                <span>Analytics Dashboard</span>
-                            </a>
-
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <i class="ri-lifebuoy-line align-middle fs-18 text-muted me-2"></i>
-                                <span>Help Center</span>
-                            </a>
-
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <i class="ri-user-settings-line align-middle fs-18 text-muted me-2"></i>
-                                <span>My account settings</span>
-                            </a>
-
-                            <!-- item-->
-                            <div class="dropdown-header mt-2">
-                                <h6 class="text-overflow text-muted mb-2 text-uppercase">Members</h6>
-                            </div>
-
-
-                        </div>
-
-                        <div class="text-center pt-3 pb-1">
-                            <a href="pages-search-results.html" class="btn btn-primary btn-sm">View All Results <i
-                                    class="ri-arrow-right-line ms-1"></i></a>
-                        </div>
-                    </div>
-                </form>
             </div>
 
             <div class="d-flex align-items-center">
 
-                <div class="dropdown d-md-none topbar-head-dropdown header-item">
-                    <button type="button"
-                        class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle shadow-none"
-                        id="page-header-search-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false">
-                        <i class="bx bx-search fs-22"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
-                        aria-labelledby="page-header-search-dropdown">
-                        <form class="p-3">
-                            <div class="form-group m-0">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="Search ..."
-                                        aria-label="Recipient's username">
-                                    <button class="btn btn-primary" type="submit"><i
-                                            class="mdi mdi-magnify"></i></button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="ms-1 header-item d-none d-sm-flex">
-                    <button type="button"
-                        class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle shadow-none"
-                        data-toggle="fullscreen">
-                        <i class='bx bx-fullscreen fs-22'></i>
-                    </button>
-                </div>
-
-                <div class="ms-1 header-item d-none d-sm-flex">
-                    <button type="button"
-                        class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode shadow-none">
-                        <i class='bx bx-moon fs-22'></i>
-                    </button>
-                </div>
-
                 @php
                     use Illuminate\Support\Str;
-                    use App\Models\Landlord\Staff\Rooms\RoomBill;
-                    use App\Models\Landlord\Room;
-                    use Carbon\Carbon;
 
                     $user = auth()->user();
                     $userType = $user->role;
+
                     $notifications = $user
                         ->customNotifications()
                         ->orderByDesc('notification_user.received_at') // hoặc 'notifications.created_at'
@@ -147,22 +51,6 @@
                         ->get();
 
                     $unreadCount = $user->customNotifications()->wherePivot('is_read', false)->count();
-                    $notificationskich = collect(RoomBill::where('status', 'unpaid')->get())
-                        ->filter(fn($bill) => Carbon::now()->gte(Carbon::parse($bill->month)->addDays(5)))
-                        ->map(function ($bill) {
-                            $room = Room::find($bill->room_id);
-                            return (object) [
-                                'id' => $bill->id,
-                                'title' => "Phòng {$room->room_number} quá hạn hóa đơn",
-                                'message' => "Hóa đơn tháng {$bill->month} chưa thanh toán. Bạn có thể kick tenant nếu cần.",
-                                'link' => route('landlords.rooms.rooms.kick', $room),
-                                'received_at' => now(),
-                                'pivot' => (object) ['is_read' => false],
-                            ];
-                        })
-                        ->all();
-
-                    $unreadCount = count($notifications ?? []);
                 @endphp
 
 
@@ -190,19 +78,23 @@
 
                         <div data-simplebar style="max-height: 300px;" class="pe-2">
                             @forelse($notifications as $n)
-                                <form action="{{ $n->link }}" method="POST"
-                                    class="dropdown-item d-flex justify-content-between align-items-center">
-                                    @csrf
-                                    <div>
+                                <a href="{{ $n->link }}" class="dropdown-item d-flex align-items-start"
+                                    onclick="event.preventDefault(); document.getElementById('dropdown-read-{{ $n->id }}').submit();">
+                                    <div class="flex-grow-1">
                                         <h6 class="mt-0 mb-1 @if (!$n->pivot->is_read) fw-bold @endif">
-                                            {{ Str::limit($n->title, 40) }}</h6>
+                                            {{ Str::limit($n->title, 40) }}
+                                        </h6>
                                         <div class="text-muted fs-13">{{ Str::limit($n->message, 60) }}</div>
                                         <p class="mb-0 fs-11 fw-medium text-uppercase text-muted">
                                             <i class="mdi mdi-clock-outline"></i>
-                                            {{ \Carbon\Carbon::parse($n->received_at)->diffForHumans() }}
+                                            {{ \Carbon\Carbon::parse($n->pivot->received_at)->diffForHumans() }}
                                         </p>
                                     </div>
-                                    <button type="submit" class="btn btn-sm btn-danger">Kick</button>
+                                </a>
+                                <form id="dropdown-read-{{ $n->id }}"
+                                    action="{{ route(($userType === 'staff' ? 'staff' : 'landlord') . '.notifications.read', $n->id) }}"
+                                    method="POST" class="d-none">
+                                    @csrf
                                 </form>
                             @empty
                                 <div class="text-center p-3 text-muted">Không có thông báo mới</div>
@@ -218,7 +110,6 @@
                     </div>
                 </div>
 
-
                 <div class="dropdown ms-sm-3 header-item topbar-user">
                     <button type="button" class="btn shadow-none" id="page-header-user-dropdown"
                         data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -226,14 +117,13 @@
                             <img class="rounded-circle header-profile-user"
                                 src="{{ asset('assets/images/users/avatar-1.jpg') }}" alt="Header Avatar">
                             <span class="text-start ms-xl-2">
-                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Anna Adame</span>
-                                <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">Founder</span>
+                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{$user->name}}</span>
+                                <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">{{$user->role === "Landlord" ? "Chủ trọ" : "Nhân viên"}}</span>
                             </span>
                         </span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end">
                         <!-- item-->
-                        <h6 class="dropdown-header">Welcome Anna!</h6>
                         <a class="dropdown-item" href="{{ route('auth.logout') }}">
                             <i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>
                             <span class="align-middle" data-key="t-logout">Logout</span>

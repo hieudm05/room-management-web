@@ -70,10 +70,6 @@
                     $agreementId = $lastTerminated->rental_id ?? null;
                 @endphp
 
-                <a
-                    href="{{ route('client.rooms.join', ['room' => $suggested->room_id, 'agreement' => $agreementId]) }}">
-                    ✅ Tham gia phòng này
-                </a>
 
 
             </li>
@@ -82,3 +78,7 @@
 @endif
 
 <p>Xin cảm ơn bạn đã thông cảm.</p>
+<p>Trân trọng,</p>
+<p><strong>Ban quản lý khu trọ</strong></p>
+<p>Liên hệ: 0365016573</p>
+<p><em>chucho123@gmail.com<em></p>

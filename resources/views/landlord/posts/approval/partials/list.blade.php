@@ -50,7 +50,7 @@
                                 <i class="bi bi-eye"></i> Chi tiết
                             </a>
                         @elseif ($type === 'approved')
-                            <button class="btn btn-sm btn-outline-warning mb-1" data-bs-toggle="modal"
+                            <button type="button" class="btn btn-sm btn-outline-warning mb-1" data-bs-toggle="modal"
                                 data-bs-target="#hideModal-{{ $post->post_id }}">
                                 <i class="bi bi-eye-slash"></i> Ẩn bài
                             </button>
@@ -109,3 +109,4 @@
         </tbody>
     </table>
 </div>
+

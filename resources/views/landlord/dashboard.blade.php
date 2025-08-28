@@ -519,9 +519,9 @@ $(document).ready(function() {
         };
 
         const data = bookingsData || defaultData;
-        const labels = ['Đang chờ', 'Đã duyệt', 'Từ chối', 'Đang đợi'];
-        const values = [data.pending || 0, data.approved || 0, data.rejected || 0, data.waiting || 0];
-        const colors = ['#ffc107', '#28a745', '#dc3545', '#6c757d'];
+        const labels = ['Đang chờ', 'Đã duyệt', 'Từ chối', 'Đang đợi', "Đã gặp"];
+        const values = [data.pending || 0, data.approved || 0, data.rejected || 0, data.waiting || 0, data.completed || 0];
+        const colors = ['#ffc107', '#28a745', '#dc3545', '#6c757d', '#17a2b8'];
 
         bookingsChart = new Chart(ctx, {
             type: 'bar',

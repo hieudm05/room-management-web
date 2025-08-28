@@ -21,14 +21,14 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
         $this->call([
-            UserSeeder::class,
-            FacilitySeeder::class,
-            RoomPhotoSeeder::class,
-            ServiceSeeder::class,
-            AttachAllServicesToRoomsSeeder::class,
-            BankAccountsTableSeeder::class,
+            // UserSeeder::class,
+            // FacilitySeeder::class,
+            // RoomPhotoSeeder::class,
+            // ServiceSeeder::class,
+            // AttachAllServicesToRoomsSeeder::class,
+            // BankAccountsTableSeeder::class,
             CommonIssueSeeder::class,
-            RoomBillSeeder::class,
+            // RoomBillSeeder::class,
 
 
         ]);

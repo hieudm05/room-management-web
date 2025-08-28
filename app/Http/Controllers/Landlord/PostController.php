@@ -90,7 +90,8 @@ class PostController extends Controller
             $post->gallery = json_encode($gallery);
         }
 
-        $post->status = 0;
+        $post->status = 1;
+        $post->is_public = 1; // Mặc định là công khai
         $post->save();
 
         if ($request->has('features')) {
@@ -131,89 +132,115 @@ class PostController extends Controller
         return view('landlord.posts.edit', compact('post', 'categories', 'properties', 'features', 'rooms'));
     }
 
-    public function update(Request $request, $id)
-    {
-        $post = StaffPost::where('landlord_id', auth()->id())->findOrFail($id);
+   public function update(Request $request, $id)
+{
+    // Tìm bài đăng, đảm bảo thuộc về landlord hiện tại
+    $post = StaffPost::where('landlord_id', auth()->id())->findOrFail($id);
 
-        $request->validate([
-            'category_id' => 'required|exists:categories,category_id',
-            'title' => 'required|string|max:255',
-            'price' => 'required|string|max:255',
-            'area' => 'required|integer',
-            'address' => 'required|string|max:255',
-            'province' => 'required|string|max:255',
-            'district' => 'required|string|max:255',
-            'ward' => 'required|string|max:255',
-            'property_id' => [
-                'required',
-                'exists:properties,property_id',
-                function ($attribute, $value, $fail) {
-                    if (!Property::where('property_id', $value)->where('landlord_id', auth()->id())->exists()) {
-                        $fail('Bất động sản không thuộc quyền sở hữu của bạn.');
-                    }
+    // Validation rules
+    $request->validate([
+        'category_id' => 'required|exists:categories,category_id',
+        'title' => 'required|string|max:255',
+        'price' => 'required|string|max:255', // Chấp nhận chuỗi giá có dấu phẩy
+        'area' => 'required|integer|min:1',
+        'address' => 'required|string|max:255',
+        'province' => 'required|string|max:255',
+        'district' => 'required|string|max:255',
+        'ward' => 'required|string|max:255',
+        'property_id' => [
+            'required',
+            'exists:properties,property_id',
+            function ($attribute, $value, $fail) {
+                if (!Property::where('property_id', $value)->where('landlord_id', auth()->id())->exists()) {
+                    $fail('Bất động sản không thuộc quyền sở hữu của bạn.');
                 }
-            ],
-            'room_id' => [
-                'nullable',
-                'exists:rooms,room_id',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($value && !Room::where('room_id', $value)->where('property_id', $request->property_id)->exists()) {
-                        $fail('Phòng không thuộc bất động sản đã chọn.');
-                    }
-                }
-            ],
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'gallery.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'move_in_date' => 'required|date|after_or_equal:today', // ✅ validate ngày dọn vào
-        ], [
-            'move_in_date.required' => 'Ngày dọn vào là bắt buộc.',
-            'move_in_date.date' => 'Ngày dọn vào không hợp lệ.',
-            'move_in_date.after_or_equal' => 'Ngày dọn vào phải từ hôm nay trở đi.',
-        ]);
-
-        $post->fill([
-            'category_id' => $request->category_id,
-            'property_id' => $request->property_id,
-            'room_id' => $request->room_id ?: null,
-            'title' => $request->title,
-            'slug' => Str::slug($request->title) . '-' . time(),
-            'price' => $request->price,
-            'area' => $request->area,
-            'address' => $request->address,
-            'district' => $request->district,
-            'ward' => $request->ward,
-            'city' => $request->province,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'description' => $request->description,
-            'move_in_date' => $request->move_in_date, // ✅ lưu ngày dọn vào
-        ]);
-
-        if ($request->hasFile('thumbnail')) {
-            if ($post->thumbnail) {
-                Storage::disk('public')->delete($post->thumbnail);
             }
-            $post->thumbnail = $request->file('thumbnail')->store('thumbnails', 'public');
-        }
+        ],
+        'room_id' => [
+            'nullable',
+            'exists:rooms,room_id',
+            function ($attribute, $value, $fail) use ($request) {
+                if ($value && !Room::where('room_id', $value)->where('property_id', $request->property_id)->exists()) {
+                    $fail('Phòng không thuộc bất động sản đã chọn.');
+                }
+            }
+        ],
+        'latitude' => 'required|numeric|between:-90,90',
+        'longitude' => 'required|numeric|between:-180,180',
+        'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'gallery.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'move_in_date' => 'required|date|after_or_equal:today',
+        'description' => 'nullable|string',
+        'features' => 'nullable|array',
+        'features.*' => 'exists:features,feature_id',
+    ], [
+        'move_in_date.required' => 'Ngày dọn vào là bắt buộc.',
+        'move_in_date.date' => 'Ngày dọn vào không hợp lệ.',
+        'move_in_date.after_or_equal' => 'Ngày dọn vào phải từ hôm nay trở đi.',
+        'price.required' => 'Giá cho thuê là bắt buộc.',
+        'area.min' => 'Diện tích phải lớn hơn 0.',
+    ]);
 
-        if ($request->hasFile('gallery')) {
-            if ($post->gallery) {
-                foreach (json_decode($post->gallery, true) as $image) {
+    // Xử lý giá: Loại bỏ dấu phẩy và chuyển thành số
+    $price = str_replace(',', '', $request->price); // Xóa dấu phẩy
+    if (!is_numeric($price)) {
+        return back()->withErrors(['price' => 'Giá cho thuê phải là số hợp lệ.'])->withInput();
+    }
+
+    // Cập nhật dữ liệu bài đăng
+    $post->fill([
+        'category_id' => $request->category_id,
+        'property_id' => $request->property_id,
+        'room_id' => $request->room_id ?: null,
+        'title' => $request->title,
+        'slug' => Str::slug($request->title) . '-' . time(),
+        'price' => $price, // Lưu giá dạng số
+        'area' => $request->area,
+'address' => $request->address,
+        'district' => $request->district,
+        'ward' => $request->ward,
+        'city' => $request->province,
+        'latitude' => $request->latitude,
+        'longitude' => $request->longitude,
+        'description' => $request->description,
+        'move_in_date' => $request->move_in_date,
+    ]);
+
+    // Xử lý ảnh thumbnail
+    if ($request->hasFile('thumbnail')) {
+        // Xóa ảnh cũ nếu tồn tại
+        if ($post->thumbnail && Storage::disk('public')->exists($post->thumbnail)) {
+            Storage::disk('public')->delete($post->thumbnail);
+        }
+        $post->thumbnail = $request->file('thumbnail')->store('thumbnails', 'public');
+    }
+
+    // Xử lý album ảnh
+    if ($request->hasFile('gallery')) {
+        // Xóa các ảnh cũ trong gallery
+        if ($post->gallery) {
+            foreach (json_decode($post->gallery, true) as $image) {
+                if (Storage::disk('public')->exists($image)) {
                     Storage::disk('public')->delete($image);
                 }
             }
-            $gallery = [];
-            foreach ($request->file('gallery') as $image) {
-                $gallery[] = $image->store('galleries', 'public');
-            }
-            $post->gallery = json_encode($gallery);
         }
-
-        $post->save();
-        $post->features()->sync($request->input('features', []));
-
-        return redirect()->route('landlord.posts.index')->with('success', 'Cập nhật bài viết thành công');
+        // Lưu các ảnh mới
+        $gallery = [];
+        foreach ($request->file('gallery') as $image) {
+            $gallery[] = $image->store('galleries', 'public');
+        }
+        $post->gallery = json_encode($gallery);
     }
+
+    // Lưu bài đăng
+    $post->save();
+
+    // Đồng bộ features
+    $post->features()->sync($request->input('features', []));
+
+    // Chuyển hướng với thông báo thành công
+    return redirect()->route('landlord.posts.index')->with('success', 'Cập nhật bài viết thành công');
+}
+
 }

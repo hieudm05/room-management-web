@@ -337,7 +337,7 @@
                             <div class="mt-3" id="qrUpload" style="display: none;">
                                 <label for="deposit_file" class="form-label">📷 Tải QR nhận lại tiền cọc</label>
                                 <input type="file" name="deposit_qr_image" id="deposit_file" class="form-control"
-                                    accept="image/*">
+                                    accept="image/*" required>
                                 <small class="text-muted">Hãy tải lên ảnh QR để nhận lại tiền cọc.</small>
                             </div>
 

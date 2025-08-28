@@ -93,7 +93,6 @@
                                                     @endif
                                                 </div>
                                                 </div>
-<<<<<<< HEAD
                                                 <div class="mt-2">
                                                     <small class="text-info">
                                                         <i class="fas fa-info-circle"></i>
@@ -108,56 +107,6 @@
                                                                 Tiền phòng, dịch vụ tính theo người và chi phí phát sinh sẽ được tính theo tỷ lệ ngày ở thực tế.
                                                         @endswitch
                                                         Tiền điện và nước (tính theo m³) giữ nguyên theo chỉ số sử dụng.
-=======
-                                            </div>
-                                            <div class="row mt-3">
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Tiền thuê (VND)</label>
-                                                    <input type="text" class="form-control"
-                                                        value="{{ number_format($item['rent_price']) }}" readonly>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Tháng</label>
-                                                    <input type="text" class="form-control"
-                                                        value="{{ $item['month'] }}" readonly>
-                                                </div>
-
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Trạng thái thanh toán</label>
-                                                    <div class="input-group">
-                                                        @if (!empty($item['bill']))
-                                                            <select
-                                                                class="form-control status-select
-                                       @if ($item['bill']->status == 'unpaid') border-warning shadow-sm @endif"
-                                                                data-id="{{ $item['id_bill'] }}"
-                                                                @if (!$item['bill']->status == 'pending') disabled @endif
-                                                                title="Chọn trạng thái thanh toán">
-
-                                                                <option value="unpaid"
-                                                                    {{ $item['bill']->status == 'unpaid' ? 'selected' : '' }}>
-                                                                    ⏳ Chưa thanh toán
-                                                                </option>
-                                                                <option value="pending"
-                                                                    {{ $item['bill']->status == 'pending' ? 'selected' : '' }}>
-                                                                    🔄 Đang xử lý
-                                                                </option>
-                                                                <option value="paid"
-                                                                    {{ $item['bill']->status == 'paid' ? 'selected' : '' }}>
-                                                                    ✅ Đã thanh toán
-                                                                </option>
-                                                            </select>
-                                                        @else
-                                                            <input type="text" class="form-control text-muted bg-light"
-                                                                value="Chưa tạo hóa đơn" disabled>
-                                                        @endif
-                                                    </div>
-                                                    <small class="form-text text-muted">
-                                                        @if (!empty($item['bill']))
-                                                            Bấm để thay đổi nếu chưa thanh toán
-                                                        @else
-                                                            Không thể thao tác khi chưa có hóa đơn
-                                                        @endif
->>>>>>> 466ba03bcde68b2f538482123108db543f4e3617
                                                     </small>
                                                 </div>
                                             </div>
@@ -197,15 +146,15 @@
                                                 <div class="row">
                                                     <div class="col-md-3">
                                                         <label class="form-label">Phòng</label>
-                                                        <input type="text" class="form-control" value="{{ $item['room_name'] }}" readonly>
+                                                        <input type="text" class="form-control" value="{{ $item['room_name'] }}" >
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label">Khách thuê</label>
-                                                        <input type="text" class="form-control" value="{{ $item['tenant_name'] }}" readonly>
+                                                        <input type="text" class="form-control" value="{{ $item['tenant_name'] }}" >
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label">Diện tích (m²)</label>
-                                                        <input type="text" class="form-control" value="{{ $item['area'] }}" readonly>
+                                                        <input type="text" class="form-control" value="{{ $item['area'] }}" >
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label">Tháng</label>
@@ -218,7 +167,7 @@
                                                         <input type="text" class="form-control" value="{{ number_format($item['rent_price']) }}" readonly>
                                                         @if($item['should_show_billing_info'] && $item['billing_ratio'] < 1)
                                                             <div class="price-breakdown">
-                                                                <span class="original-price">{{ number_format($item['original_rent_price'] ?? $item['rent_price']) }} VND</span>
+                                                                <span class="original-price">{{ number_format($item['original_rent_price'] ? $item['original_rent_price'] : $item['rent_price']) }} VND</span>
                                                                 × {{ number_format($item['billing_ratio'] * 100, 1) }}% = 
                                                                 <span class="actual-price">{{ number_format($item['rent_price']) }} VND</span>
                                                             </div>
@@ -255,11 +204,11 @@
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label">Chỉ số đầu (kWh)</label>
-                                                        <input type="number" class="form-control electric-start" data-room-id="{{ $item['room_id'] }}" name="data[electric_start]" value="{{ $item['electric_start'] ?? 0 }}" readonly>
+                                                        <input type="number" class="form-control electric-start" data-room-id="{{ $item['room_id'] }}" name="data[electric_start]" value="{{ $item['electric_start'] ?? 0 }}">
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label">Chỉ số cuối (kWh)</label>
-                                                        <input type="number" class="form-control electric-end" data-room-id="{{ $item['room_id'] }}" name="data[electric_end]" value="{{ $item['electric_end'] ?? '' }}" placeholder="0" min="0" {{ $item['is_bill_locked'] ? 'readonly' : '' }}>
+                                                        <input type="number" class="form-control electric-end" data-room-id="{{ $item['room_id'] }}" name="data[electric_end]" value="{{ $item['electric_end'] ?? '' }}" placeholder="0" min="0">
                                                         <div class="error-message electric-end-error"></div>
                                                     </div>
                                                     <div class="col-md-2">
@@ -560,12 +509,12 @@
                 const newStatus = selectBox.val();
                 const msgSpan = $('#status-msg-' + billId);
 
-                if (newStatus === 'pending' || newStatus === 'paid') {
-                    msgSpan.text('⚠️ Trạng thái này không thể chỉnh sửa.')
-                        .removeClass('text-success').addClass('text-warning');
-                    selectBox.prop('disabled', true);
-                    return;
-                }
+                // if (newStatus === 'pending' || newStatus === 'paid') {
+                //     msgSpan.text('⚠️ Trạng thái này không thể chỉnh sửa.')
+                //         .removeClass('text-success').addClass('text-warning');
+                //     selectBox.prop('disabled', true);
+                //     return;
+                // }
 
                 $.ajax({
                     url: '/landlords/staff/payment/room-bills/' + billId + '/update-status',
@@ -644,9 +593,9 @@
                 if (electricEndInput && !electricEndInput.readOnly) {
                     electricEndInput.classList.remove('invalid-input');
                     form.querySelector('.electric-end-error').textContent = '';
-                    if (electricEnd < electricStart) {
+                    if (electricEnd <= electricStart) {
                         electricEndInput.classList.add('invalid-input');
-                        form.querySelector('.electric-end-error').textContent = 'Chỉ số cuối phải lớn hơn hoặc bằng chỉ số đầu';
+                        form.querySelector('.electric-end-error').textContent = 'Chỉ số cuối phải lớn hơn chỉ số đầu';
                         form.querySelector('.electric-total').value = 'Lỗi chỉ số';
                         isValid = false;
                     } else {
@@ -693,9 +642,9 @@
                     if (waterEndInput && !waterEndInput.readOnly) {
                         waterEndInput.classList.remove('invalid-input');
                         form.querySelector('.water-end-error').textContent = '';
-                        if (waterEnd < waterStart) {
+                        if (waterEnd <= waterStart) {
                             waterEndInput.classList.add('invalid-input');
-                            form.querySelector('.water-end-error').textContent = 'Chỉ số cuối phải lớn hơn hoặc bằng chỉ số đầu';
+                            form.querySelector('.water-end-error').textContent = 'Chỉ số cuối phải lớn hơn chỉ số đầu';
                             form.querySelector('.water-total').value = 'Lỗi chỉ số';
                             isValid = false;
                         } else {
@@ -754,9 +703,9 @@
                     const actualTotal = price * qty;
                     
                     if (originalTotalInput) {
-                        originalTotalInput.value = new Intl.NumberFormat('vi-VN').format(originalTotal);
+                        originalTotalInput.value = originalTotal;
                     }
-                    totalInput.value = new Intl.NumberFormat('vi-VN').format(actualTotal);
+                    totalInput.value = actualTotal;
                     additionalFeesTotal += actualTotal;
 
                     // Update names for form submission

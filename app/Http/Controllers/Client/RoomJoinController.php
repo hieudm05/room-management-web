@@ -7,7 +7,7 @@ use App\Models\Landlord\Room;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\RoomJoinSuccessNotification;
 use App\Mail\TenantMovedNotification;
-use App\Models\Landlord\RentalAgreement;
+use App\Models\RentalAgreement;
 
 class RoomJoinController extends Controller
 {

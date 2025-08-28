@@ -91,6 +91,7 @@ class HomeLandLordController extends Controller
                     'approved' => $bookings->where('status', 'approved')->count(),
                     'rejected' => $bookings->where('status', 'rejected')->count(),
                     'waiting' => $bookings->where('status', 'waiting')->count(),
+                    'completed' => $bookings->where('status', 'completed')->count(),
                 ];
 
                 return [

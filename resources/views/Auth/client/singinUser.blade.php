@@ -40,11 +40,11 @@
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
                                 <a href="{{ url('/') }}" class="d-inline-block auth-logo">
-                                    <img src="{{ asset('assets/admin/images/logo-light.png') }}" alt=""
-                                        width="200">
+                                    <img src="{{ asset('assets/admin/images/logo.png') }}" alt=""
+                                        width="150">
                                 </a>
                             </div>
-                        <p class="mt-1 fs-15 fw-medium">Website quản lý phòng trọ</p>
+
                         </div>
                     </div>
                 </div>
@@ -54,8 +54,8 @@
                         <div class="card mt-4">
                             <div class="card-body p-4">
                                 <div class="text-center mt-2">
-                                    <h5 class="text-primary">Welcome Back !</h5>
-                                    <p class="text-muted">Sign in to continue to SevenStay.</p>
+                                    <h5 class="text-primary">Xin chào quý khách</h5>
+                                    <p class="text-muted">Chào mừng đến với SevenStay.</p>
                                 </div>
                                 @if (session('status'))
                                     <div class="alert alert-success">
@@ -86,8 +86,7 @@
 
                                         <div class="mb-3">
                                             <div class="float-end">
-                                                <a href="{{ route('password.request') }}" class="text-muted">Forgot
-                                                    password?</a>
+                                                <a href="{{ route('password.request') }}" class="text-muted">Quên mật khẩu?</a>
                                             </div>
                                             <label for="password-input" class="form-label">Password</label>
                                             <div class="position-relative auth-pass-inputgroup mb-3">
@@ -108,57 +107,29 @@
                                         <div class="form-check mb-3">
                                             <input class="form-check-input" type="checkbox" id="auth-remember-check"
                                                 name="remember" {{ old('remember') ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="auth-remember-check">Remember
-                                                me</label>
+                                            <label class="form-check-label" for="auth-remember-check">Ghi nhớ</label>
                                         </div>
 
-                                        <div class="mt-4">
-                                            <button class="btn btn-success w-100" type="submit">Sign In</button>
+                                        <div class="mt-4 d-flex flex-column gap-2">
+                                            <button class="btn btn-success w-100" type="submit">Đăng nhập</button>
+                                            <a href="http://127.0.0.1:8000/" class="btn btn-primary w-100">Quay về trang chủ</a>
                                         </div>
 
-                                        <div class="mt-4 text-center">
-                                            <div class="signin-other-title">
-                                                <h5 class="fs-13 mb-4 title text-muted">Tạo tài khoản với</h5>
-                                            </div>
-                                            <div class="d-grid gap-3">
-                                                <a href="#" class="btn btn-primary btn-lg w-100">
-                                                    <i class="ri-facebook-fill fs-20 me-2"></i> Đăng ký bằng Facebook
-                                                </a>
-                                                <a href="#" class="btn btn-danger btn-lg w-100">
-                                                    <i class="ri-google-fill fs-20 me-2"></i> Đăng ký bằng Google
-                                                </a>
-                                            </div>
-                                        </div>
+                                        
                                     </form>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mt-4 text-center">
-                            <p class="mb-0">Don't have an account ? <a href="{{ route('auth.register') }}"
-                                    class="fw-semibold text-primary text-decoration-underline"> Signup </a></p>
+                            <p class="mb-0">Bạn chưa có tài khoản ? <a href="{{ route('auth.register') }}"
+                                    class="fw-semibold text-primary text-decoration-underline"> Đăng ký </a></p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <footer class="footer">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="text-center">
-                            <p class="mb-0 text-muted">&copy;
-                                <script>
-                                    document.write(new Date().getFullYear())
-                                </script> Velzon. Crafted with
-                                <i class="mdi mdi-heart text-danger"></i> by Themesbrand
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </footer>
     </div>
 
     <script src="{{ asset('assets/admin/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>

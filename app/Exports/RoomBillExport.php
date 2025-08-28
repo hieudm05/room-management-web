@@ -62,9 +62,9 @@ class RoomBillExport implements FromArray, WithHeadings, WithStyles, WithEvents
 
         // Thông tin hóa đơn
         $rows[] = ['THÔNG TIN HÓA ĐƠN', '', '', '', '', ''];
-        $rows[] = ['Phòng', $this->data['room_name'], '', 'Địa chỉ phòng', $this->data['room_address'] ?? 'Không có thông tin', ''];
-        $rows[] = ['Khách thuê', $this->data['tenant_name'], '', 'SĐT khách thuê', $this->data['tenant_phone'] ?? 'Không có thông tin', ''];
-        $rows[] = ['Diện tích (m²)', $this->data['area'], '', 'Tiền thuê mặc định (VND)', $this->data['default_rent_price'] ?? $this->data['rent_price'], ''];
+        $rows[] = ['Phòng', $this->data['room_name'], '', '', ''];
+        $rows[] = ['Khách thuê', $this->data['tenant_name'], '', '' , ''];
+        $rows[] = ['Diện tích (m²)', $this->data['area'], '', 'Tiền thuê mặc định (VND)', $this->data['default_rent_price'] ?? $this->data['original_rent_price'], ''];
         $rows[] = ['Tháng', $this->data['month'], '', '', '', ''];
         $rows[] = [];
 
@@ -125,9 +125,9 @@ class RoomBillExport implements FromArray, WithHeadings, WithStyles, WithEvents
 
                 $rows[] = [
                     $fee['name'],
-                    number_format($fee['price'], 0, ',', '.'), // Format tiền
+                    $fee['price'], 
                     $fee['qty'],
-                    number_format($total, 0, ',', '.'),
+                    $fee['total'],
                     '',
                     ''
                 ];
@@ -137,7 +137,7 @@ class RoomBillExport implements FromArray, WithHeadings, WithStyles, WithEvents
                 'Tổng chi phí phát sinh',
                 '',
                 '',
-                number_format($totalAdditional, 0, ',', '.'),
+                $totalAdditional,
                 '',
                 ''
             ];

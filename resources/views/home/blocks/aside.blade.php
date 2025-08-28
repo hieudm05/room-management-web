@@ -32,16 +32,17 @@
 <nav id="navigation" class="navigation navigation-landscape">
     <div class="nav-header">
         <a class="nav-brand static-logo" href="{{ url('/') }}">
-            <img src="{{ asset('assets/client/img/logo.png') }}" class="logo" alt="" />
+            <img src="{{ asset('assets/client/img/logoL.png') }}" class="logo" alt="" />
         </a>
         <a class="nav-brand fixed-logo" href="#">
-            <img src="{{ asset('assets/client/img/logo.png') }}" class="logo" alt="" />
+            <img src="{{ asset('assets/client/img/logoD.png') }}" class="logo" alt="" />
+            
         </a>
         <div class="nav-toggle"></div>
     </div>
 
     <div class="nav-menus-wrapper" style="transition-property: none;">
-        <ul class="nav-menu">
+        <ul class="nav-menu" style="margin-top: 9px;" >
             <li class="active"><a href="#">Trang chủ</a></li>
             <li class="active"><a href="#">Trang giới thiệu</a></li>
             <li class="active"><a href="#">Bài viết</a></li>
@@ -137,7 +138,7 @@
                 </li>
             @else
                 <li>
-                    <a href="{{ route('auth.login') }}" class="text-white bg-success px-3 py-2 rounded">
+                    <a href="{{ route('auth.login') }}" class="text-white bg-danger px-3 py-2 rounded">
                         <i class="fas fa-sign-in-alt me-1"></i><span class="dn-lg">Đăng nhập</span>
                     </a>
                 </li>

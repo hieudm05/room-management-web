@@ -56,13 +56,22 @@ class LandlordBankAccountController extends Controller
         $bank = \App\Models\Landlord\BankAccount::findOrFail($id);
 
         // Kiểm tra quyền: là chủ trọ của tài khoản, hoặc là staff thuộc landlord, hoặc là chính staff đó
-       // Chủ trọ được sửa tài khoản của mình hoặc của nhân viên (staff) thuộc quyền quản lý của mình
-    $isLandlord = $user->id == $bank->user_id;
-    $isStaffOfLandlord = $user->staffs()->where('id', $bank->user_id)->exists();
-
+        // Chủ trọ được sửa tài khoản của mình hoặc của nhân viên (staff) thuộc quyền quản lý của mình
+        $isLandlord = $user->id == $bank->user_id;
+        $isStaffOfLandlord = $user->staffs()->where('id', $bank->user_id)->exists();
 
         if (!($isLandlord || $isStaffOfLandlord)) {
             abort(403, 'Bạn không có quyền cập nhật tài khoản này');
+        }
+
+        // Kiểm tra nếu muốn khóa tài khoản (inactive)
+        if ($request->input('status') === 'inactive') {
+            // Kiểm tra xem tài khoản có đang được gán cho tòa nhà nào không
+            $assignedProperties = Property::where('bank_account_id', $bank->id)->count();
+            
+            if ($assignedProperties > 0) {
+                return back()->with('error', 'Không thể khóa tài khoản này vì đang được gán cho ' . $assignedProperties . ' tòa nhà. Vui lòng hủy gán tài khoản khỏi các tòa nhà trước khi khóa.');
+            }
         }
 
         $bank->status = $request->input('status');
@@ -81,15 +90,19 @@ class LandlordBankAccountController extends Controller
 
         return back()->with('success', 'Xóa thành công.');
     }
+
     public function assignToProperties()
     {
         $user = auth()->user();
 
-        // Lấy tài khoản của landlord
-        $landlordBankAccounts = $user->bankAccounts()->get();
+        // Lấy tài khoản của landlord (chỉ lấy những tài khoản đang hoạt động)
+        $landlordBankAccounts = $user->bankAccounts()->where('status', 'active')->get();
 
-        // Lấy tài khoản của staff
-        $staffs = $user->staffs()->with('bankAccounts')->get();
+        // Lấy tài khoản của staff (chỉ lấy những tài khoản đang hoạt động)
+        $staffs = $user->staffs()->with(['bankAccounts' => function($query) {
+            $query->where('status', 'active');
+        }])->get();
+        
         $staffBankAccounts = collect();
         foreach ($staffs as $staff) {
             foreach ($staff->bankAccounts as $bank) {
@@ -105,10 +118,12 @@ class LandlordBankAccountController extends Controller
             return $b;
         })->concat($staffBankAccounts);
 
-        $properties = $user->properties()->get();
+        // Lấy properties với thông tin bank account đầy đủ
+        $properties = $user->properties()->with('bankAccount')->get();
 
         return view('Landlord.Bank.assign', compact('bankAccounts', 'properties'));
     }
+
     public function assignToPropertiesStore(Request $request)
     {
         $request->validate([
@@ -155,6 +170,7 @@ class LandlordBankAccountController extends Controller
             'bank_account_name' => 'required|string|max:255',
             'bank_account_number' => 'required|string|max:50',
         ]);
+        
         $user = auth()->user(); // chủ trọ
         $staff = $user->staffs()
             ->where('id', $request->staff_id)
